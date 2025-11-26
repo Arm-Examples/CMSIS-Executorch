@@ -1,0 +1,61 @@
+layer:
+  type: AI / Executorch
+  description: AI layer for ExecuTorch ARM runtime
+  
+  add-path:
+    # Core ExecuTorch includes
+    - ./engine/include
+    - ./engine/include/executorch
+    - ./engine/include/executorch/runtime
+    - ./engine/include/executorch/runtime/core
+    - ./engine/include/executorch/runtime/executor
+    # - ./engine/include/executorch/runtime/platform
+    - ./engine/include/executorch/extension
+    - ./engine/include/executorch/extension/data_loader
+    - ./engine/include/executorch/extension/memory_allocator
+    - ./engine/include/executorch/extension/runner_util
+    - ./engine/include/executorch/util
+    - ./engine/include/executorch/schema
+    - ./engine/include/executorch/devtools
+    - ./engine/include/executorch/devtools/etdump
+    
+    # Core C10 includes
+    - ./engine/include/executorch/runtime/core/portable_type/c10
+    
+    # Kernel and backend includes
+    - ./engine/include/executorch/kernels
+    - ./engine/include/executorch/kernels/portable
+    - ./engine/include/executorch/backends
+    - ./engine/include/executorch/backends/xnnpack
+    
+    # Third party includes
+    - ./engine/include/third-party
+    - ./engine/include/third-party/flatbuffers
+    - ./engine/include/third-party/flatbuffers/include
+
+    # Generated model includes
+    - ./model
+    
+  groups:
+    - group: ExecuTorch Libraries
+      files:
+        # Core runtime libraries (actually present in ai_layer/engine/lib)
+        - file: ./engine/lib/libexecutorch.a
+        - file: ./engine/lib/libexecutorch_core.a
+        - file: ./engine/lib/libportable_kernels.a
+        - file: ./engine/lib/libportable_ops_lib.a
+        
+        # ARM Cortex-M optimized libraries
+        - file: ./engine/lib/libcortex_m_kernels.a
+        - file: ./engine/lib/libcortex_m_ops_lib.a
+        
+        # Quantized operation libraries  
+        - file: ./engine/lib/libquantized_kernels.a
+        - file: ./engine/lib/libquantized_ops_lib.a
+        
+        # Ethos-U backend library
+        - file: ./engine/lib/libexecutorch_delegate_ethos_u.a
+
+    - group: Model Files
+      files:
+        - file: ../model/aot_model.py
