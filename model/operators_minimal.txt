@@ -1,0 +1,11 @@
+# Common minimal operators for basic neural networks
+# One operator per line, comments are ignored
+aten::add.out
+aten::mul.out
+aten::relu.out
+aten::view_copy.out
+aten::permute_copy.out
+aten::conv2d.out
+aten::linear.out
+aten::sigmoid.out
+aten::softmax.out

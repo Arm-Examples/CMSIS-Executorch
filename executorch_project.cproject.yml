@@ -1,0 +1,101 @@
+#  SPDX-FileCopyrightText: Copyright 2022-2025 Arm Limited and/or its
+#  affiliates <open-source-office@arm.com>
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+project:
+  packs:
+    - pack: ARM::CMSIS@6.1.0
+    # - pack: ARM::CMSIS-DSP@1.16.0
+    # - pack: ARM::CMSIS-NN@7.0.0
+    # - pack: ARM::CMSIS-RTX@5.9.0
+    - pack: ARM::ethos-u-core-driver@1.25.2
+    - pack: ARM::ml-embedded-eval-kit-uc-api@^24.8.0
+
+  output:
+    type:
+      - elf
+      - bin
+
+  connections:
+    - connect: Board Layer with Audio interface
+      consumes:
+        - AVH_AUDIO
+      provides:
+        - CMSIS-RTOS2
+
+  misc:
+    - CPP:
+        - -std=c++17
+        - -fdiagnostics-color=always
+        - -fpermissive
+        - -Wno-deprecated-declarations
+        - -ffunction-sections
+        - -fdata-sections
+        - -Os
+    - C:
+        - -ffunction-sections
+        - -fdata-sections
+        - -Os
+    - Link:
+        - -Wl,--gc-sections
+        - -Wl,-u,_printf_float
+        - -Wl,--whole-archive
+        - $SolutionDir()$/ai_layer/engine/lib/libexecutorch_delegate_ethos_u.a
+        - $SolutionDir()$/ai_layer/engine/lib/libquantized_ops_lib.a
+        - -idirafter $SolutionDir()$/ai_layer/engine/include/executorch/runtime/platform
+        - -Wl,--no-whole-archive
+
+  define:
+    - ACTIVATION_BUF_SZ: 131072
+    # Memory allocator settings (very conservative to fit in DTCM)
+    - ET_ARM_BAREMETAL_SCRATCH_TEMP_ALLOCATOR_POOL_SIZE: 0x20000    # 128KB 
+    - ET_ARM_BAREMETAL_METHOD_ALLOCATOR_POOL_SIZE: 0x8000           # 32KB 
+    # Core ExecuTorch defines
+    - ET_BUILD_FOR_ARM
+    - ET_USE_CMSIS
+    - ET_MODULE_STATIC_INIT
+    - EXECUTORCH_BUILD_ARM_BAREMETAL
+    - C10_USING_CUSTOM_GENERATED_MACROS
+    # Runtime configuration
+    - ET_NUM_INFERENCES: 1
+    - ET_LOG_DUMP_OUTPUT
+    # Debug buffer for output dumping (very minimal)
+    - ET_DEBUG_BUFFER_SIZE: 0x8000                                 # 32KB
+    # Example defines for Ethos-U
+    - ETHOSU
+    - ETHOSU55
+    - ETHOSU_ARCH: u55
+    
+  add-path:
+    - src/executor_runner/
+
+  groups:
+    - group: Example Arm ExecuTorch runner 
+      files:
+        - file: src/executor_runner/arm_executor_runner.cpp
+        - file: src/executor_runner/arm_memory_allocator.cpp
+        - file: src/executor_runner/arm_perf_monitor.cpp
+
+  components:
+    # - component: CMSIS:OS Tick:SysTick
+    # - component: CMSIS:RTOS2:Keil RTX5&Source
+    - component: ARM::ML Eval Kit:Common:Log
+    - component: ARM::Machine Learning:NPU Support:Ethos-U Driver&Generic U55
+
+  layers:
+    - layer: $Board-Layer$
+      type: Board
+
+    - layer: ./ai_layer/ai_layer.clayer.yml

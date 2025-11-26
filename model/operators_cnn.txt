@@ -1,0 +1,42 @@
+# Comprehensive operator list for CNN models
+# Vision and convolutional neural networks
+aten::conv2d.out
+aten::convolution.out
+aten::max_pool2d_with_indices.out
+aten::avg_pool2d.out
+aten::adaptive_avg_pool2d.out
+
+# Basic math operations
+aten::add.out
+aten::sub.out
+aten::mul.out
+aten::div.out
+
+# Activation functions  
+aten::relu.out
+aten::sigmoid.out
+aten::tanh.out
+aten::gelu.out
+aten::hardtanh.out
+
+# Tensor manipulation
+aten::view_copy.out
+aten::permute_copy.out
+aten::transpose_copy.int_out
+aten::squeeze_copy.dim_out
+aten::unsqueeze_copy.out
+aten::cat.out
+aten::slice_copy.Tensor_out
+
+# Linear/dense layers
+aten::linear.out
+aten::addmm.out
+aten::mm.out
+
+# Normalization
+aten::native_batch_norm.out
+aten::native_layer_norm.out
+
+# Output processing
+aten::softmax.int_out
+aten::log_softmax.int_out

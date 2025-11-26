@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: Copyright 2022-2025 Arm Limited and/or its
+# affiliates <open-source-office@arm.com>
+# SPDX-License-Identifier: Apache-2.0
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+solution:
+  created-for: CMSIS-Toolbox@2.12.0
+  cdefault:
+
+  compiler: GCC
+
+  packs:
+    - pack: ARM::V2M_MPS3_SSE_300_BSP@1.5.0
+    - pack: ARM::V2M_MPS3_SSE_310_BSP@1.4.0
+    - pack: ARM::SSE_315_BSP@1.0.0
+    - pack: ARM::SSE_320_BSP@1.0.0
+    - pack: AlifSemiconductor::Ensemble
+    - pack: ARM::CMSIS
+
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: debug
+
+    - type: Release
+      debug: off
+      optimize: speed
+
+  # The target types use the naming convention <name>-<NPU family>-<NPU MACs> where:
+  # - <name> can be arbitrary name
+  # - <NPU family> is the Ethos-U NPU family name (U55, U65, U85), if omitted Ethos-U NPU won't be used
+  # - <NPU MACs> is the number of MACs in the NPU (128, 256), if omitted 256 MACs is assumed
+  # Examples: myDevice-U55-128, myBoard-U65
+  #
+  # The target types for AVH models are predefined and should not be changed. 
+  # The target types for hardware targets can be added and layer discovery
+  # will be used to find the compatible board layer for the specified device/board.
+  target-types:
+
+    # Arm Corstone targets
+    - type: AVH-SSE-300
+      board: ARM::V2M-MPS3-SSE-300-FVP
+      device: ARM::SSE-300-MPS3
+      variables:
+        - Board-Layer: ./board/Corstone-300/Board.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: executorch_project.Debug
+
+
+  projects:
+    # Simple model example
+    - project: ./executorch_project.cproject.yml

@@ -1,0 +1,50 @@
+layer:
+  type: Board
+  description: Board setup for AI/ML with Ethos U55
+  for-board: ARM::V2M-MPS3-SSE-300-FVP
+  for-device: ARM::SSE-300-MPS3
+
+  connections:
+    - connect: Corstone-300-U55
+      provides:
+        - AVH_VIDEO
+
+  define:
+    - ETHOSU55
+    - CORSTONE300_FVP
+    - ARM_MODEL_USE_PMU_COUNTERS
+
+  packs:
+    - pack: ARM::CMSIS
+    - pack: ARM::V2M_MPS3_SSE_300_BSP@1.5.0
+
+  components:
+    - component: ARM::CMSIS:CORE
+
+    - component: ARM::Device:Definition
+    - component: ARM::Device:Startup&C Startup
+
+    - component: ARM::Device:Native Driver:Timeout
+    - component: ARM::Device:Native Driver:SysCounter
+    - component: ARM::Device:Native Driver:SysTimer
+
+  groups:
+    - group: Board
+      files:
+        - file: ./main.c
+        - file: ./main.h
+        - file: ./uart_cmsdk_apb.c
+        - file: ./uart_stdout.h
+        - file: ./uart_config.h
+        - file: ./retarget.c
+
+    - group: Streaming Interface
+      files:
+        - file: ./vsi/include/arm_vsi.h
+        - file: ./vsi/audio/driver/audio_drv.c
+        - file: ./vsi/audio/include/audio_drv.h
+        - file: ./vsi/video/source/video_drv.c
+        - file: ./vsi/video/include/video_drv.h
+
+  linker:
+    - script: ./Corstone-300.ld
