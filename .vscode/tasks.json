@@ -1,0 +1,66 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Docker: Build ExecuTorch ARM Builder Image",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "build",
+                "-f",
+                ".docker/Dockerfile",
+                "-t",
+                "executorch-arm-builder",
+                "."
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Build the ExecuTorch ARM Docker container image",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Docker: Run ExecuTorch Build",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v",
+                "${workspaceFolder}:/workspace2",
+                "executorch-arm-builder:latest",
+                "/workspace2/scripts/local_workflow.sh"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Run the ExecuTorch build process in Docker container",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "Docker: Build ExecuTorch ARM Builder Image"
+        }
+    ]
+}
