@@ -1,0 +1,59 @@
+/__w/CMSIS-Executorch/CMSIS-Executorch/scripts/generate_ai_layer_report.py:283: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  timestamp = datetime.utcnow().isoformat(timespec='seconds') + 'Z'
+Generating comprehensive AI layer build report...
+✅ Comprehensive report written to /__w/CMSIS-Executorch/CMSIS-Executorch/ai_layer/REPORT.md
+📊 Found 0 libraries and 0 model assets
+2025-11-26 13:55:30 [SUCCESS] Completed: Generate report
+2025-11-26 13:55:30 [INFO] Build summary:
+# ExecuTorch AI Layer Build Report
+
+**Generated:** 2025-11-26T13:55:30Z
+**Git Commit:** a5a8ee828237 on main
+**Repository Status:** 🔄 Modified
+**Last Commit:** 2025-11-26 14:05:43 +0100
+
+## 📊 Build Summary
+
+- **Libraries:** 0 static libraries
+- **Models:** 0 model assets
+- **Operators:** 9 selected operators
+- **Build Type:** unknown
+
+## 📚 Library Assets
+
+*No library assets found.*
+
+## 🤖 Model Assets
+
+*No model assets found.*
+
+## ⚙️ Build Configuration
+
+### CMake Configuration
+- **Build Type:** `unknown`
+- **Toolchain File:** `none`
+- **ARM Baremetal:** `unknown`
+- **Cortex-M Support:** `unknown`
+- **Portable Ops:** `unknown`
+- **Quantized Kernels:** `unknown`
+
+### Selected Operators
+
+**Count:** 9 operators
+
+```
+aten::add.out
+aten::mul.out
+aten::relu.out
+aten::view_copy.out
+aten::permute_copy.out
+aten::conv2d.out
+aten::linear.out
+aten::sigmoid.out
+aten::softmax.out
+```
+
+## 🔄 Model Conversion Details
+
+2025-11-26 13:55:30 [SUCCESS] Build completed successfully!
+📋 Build logs saved to: ai_layer/logs/
