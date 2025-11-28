@@ -16,7 +16,7 @@
 
 project:
   packs:
-    - pack: ARM::CMSIS@6.1.0
+    - pack: ARM::CMSIS
     # - pack: ARM::CMSIS-DSP@1.16.0
     # - pack: ARM::CMSIS-NN@7.0.0
     # - pack: ARM::CMSIS-RTX@5.9.0
