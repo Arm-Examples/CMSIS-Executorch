@@ -4,9 +4,21 @@
 
 A ready-to-fork template for deploying PyTorch models on ARM Cortex-M microcontrollers using ExecuTorch and CMSIS csolution.
 
-# Getting Started with the CMSIS-Executorch Template
+# Quick Start
 
-This guide provides a comprehensive overview of the CMSIS-Executorch template repository, a ready-to-fork solution for deploying PyTorch models on Arm Cortex-M microcontrollers using ExecuTorch and CMSIS-csolution. You will learn how to make the template your own, customize it for your specific model and hardware, and leverage the built-in CI/CD pipeline for automated builds.
+This example is ready to run in Visual Studio Code. Follow these steps to get started:
+
+1. Install **Keil Studio for VS Code** from the Visual Studio Code Marketplace.  
+2. On the repository’s landing page, select **Use this Template**.  
+3. Enter a name for your new repository to identify your project.  
+
+Once the repository is created from the template, it will automatically start building the Docker-based CI environment. You can check the status in the Actions tab. This process can take up to an hour. It is not required to finish before you continue the Quick Start, but will be necessary for further customization. 
+
+4. Clone the repository to your desktop. You can use the built-in [Git tools in VS Code](https://code.visualstudio.com/docs/sourcecontrol/intro-to-git) or the more approachable [GitHub Desktop](https://desktop.github.com/download/) if you’re new to Git.  
+5. Open the cloned folder in Visual Studio Code.  
+6. Visual Studio Code automatically downloads the required tools and software packs. You can monitor progress in **View > Output > CMSIS Solution**.  
+7. Open the [CMSIS View](https://mdk-packs.github.io/vscode-cmsis-solution-docs/userinterface.html#2-main-area-of-the-cmsis-view).  
+8. In the CMSIS View, use the [Action buttons](https://github.com/ARM-software/vscode-cmsis-csolution?tab=readme-ov-file#action-buttons) to build, load, and run the example on the preconfigured FastModel simulation.
 
 ## Prerequisites
 
