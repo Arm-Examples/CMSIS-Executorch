@@ -82,3 +82,7 @@ dkms.conf
 
 # legacy intermediate project file
 *.cprj
+
+# Log files in ai_layer/logs directory
+ai_layer/logs/*.log
+ai_layer/logs/*.txt
