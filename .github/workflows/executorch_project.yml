@@ -1,0 +1,65 @@
+name: Build and Run Project
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install_build_execute:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        compiler: [ 
+          {name: GCC,  ext: elf}
+        ]
+        target: [
+          {type: AVH-SSE-300,     model: FVP_Corstone_SSE-300_Ethos-U55,     dir: Corstone-300,    uart: mps3_board.uart0}
+        ]
+        build: [ 
+          {type: Release},
+          {type: Debug}
+        ]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        uses: ARM-software/cmsis-actions/vcpkg@v1
+
+      - name: Activate Arm tool license
+        uses: ARM-software/cmsis-actions/armlm@v1
+        with:
+          product: KEMDK-COM0
+
+      - name: Cache packs
+        uses: actions/cache@v4
+        with:
+          key: cmsis-packs
+          path: /home/runner/.cache/arm/packs
+
+      - name: Build context executorch_project.Debug.${{ matrix.build.type }}+${{ matrix.target.type }} with ${{ matrix.compiler.name }}
+        working-directory: ./
+        run: |
+            cbuild executorch_project.csolution.yml --packs \
+                --context executorch_project.${{ matrix.build.type }}+${{ matrix.target.type }} \
+                --toolchain ${{ matrix.compiler.name }} --rebuild
+
+      - name: Execute context executorch_project.${{ matrix.build.type }}+${{ matrix.target.type }} with ${{ matrix.compiler.name }}
+        working-directory: ./
+        run: |
+            ${{ matrix.target.model }} \
+               -a ./out/executorch_project/${{ matrix.target.type }}/${{ matrix.build.type }}/executorch_project.${{ matrix.compiler.ext }} \
+               -f ./board/${{ matrix.target.dir }}/fvp_config.txt \
+               -C ${{ matrix.target.uart }}.out_file=./out/executorch_project/${{ matrix.target.type }}/${{ matrix.build.type }}/fvp_stdout.log \
+               --simlimit 50 --stat
+
+            echo " Show simulation UART output"
+            cat  ./out/executorch_project/${{ matrix.target.type }}/${{ matrix.build.type }}/fvp_stdout.log
+            echo "Checking simulation UART output"
+            if [ "$(grep -c "Program complete" ./out/executorch_project/${{ matrix.target.type }}/${{ matrix.build.type }}/fvp_stdout.log)" -eq 1 ]
+            then 
+                 exit 0
+            else 
+                 exit 1
+            fi
