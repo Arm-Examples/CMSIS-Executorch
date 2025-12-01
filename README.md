@@ -1,19 +1,19 @@
 # ExecuTorch CMSIS Project Template
 
-This repository is a project template for embedded applications with Arm Ethos-U that use ExecuTorch AI models. It is based on the PyTorch tutorial [Building and Running ExecuTorch with Arm Ethos-U Backend](https://docs.pytorch.org/executorch/0.3/executorch-arm-delegate-tutorial.html) but simplifies the tool environment with a Docker container that encapsulates the multi-stage build process for the AI Model. The embedded part of the application is a CMSIS Solution project.
+This repository is a project template for embedded applications with Arm Ethos-U that use ExecuTorch AI models. It is based on the PyTorch tutorial [Building and Running ExecuTorch with Arm Ethos-U Backend](https://docs.pytorch.org/executorch/0.3/executorch-arm-delegate-tutorial.html) but simplifies the tool environment with a Docker container that encapsulates the multi-stage build process for the AI [Model](./model/). The embedded application is a CMSIS Solution project that imports the Model using the [AI Layer](./ai_layer/).
 
-The diagram below shows the overall repository structure.
+The diagram below outlines the overall project structure. The embedded application is build with [**Keil Studio for VS Code**](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) on a local desktop computer. The directory [Model](./model/) contains the ML Model and build parameters. A commit to the GitHub repository triggers the action [Build AI Layer](./.github/workflows/build_ai_layer.yml). A pull from the GitHub repository integrates the generated AI Layer with the Model.
 
 ![Repository Structure](./documentation/structure.png "Repository Structure")
 
 ## Quick Start
 
 1. Create your own repository
-   - On the [GitHub page of the CMSIS-Executorch repository](https://github.com/Arm-Examples/CMSIS-Executorch), click on **Use this Template**.  
+   - On the [GitHub page of the CMSIS-Executorch repository](https://github.com/Arm-Examples/CMSIS-Executorch), click on **Use this Template** and select **Create a new Repository**.  
    - Enter a name for your new repository to identify your project.
-   - Note: This starts the [Build Docker Image](./actions/workflows/build_docker.yml) action on your repository.
+   - Note: This starts the [Build Docker Image](./.github/workflows/build_docker.yml) action in your repository that generates the Docker Container.
 
-2. Compile with **Keil Studio for VS Code** on your desktop computer.
+2. Compile with [**Keil Studio for VS Code**](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) on your desktop computer.
    - Install **Keil Studio for VS Code** from the Visual Studio Code Marketplace.
    - **Clone your repository** to a folder on the desktop computer for example using Git in VS Code.
    - Open the folder in VS Code and the [CMSIS View](https://mdk-packs.github.io/vscode-cmsis-solution-docs/userinterface.html#2-main-area-of-the-cmsis-view).
@@ -21,30 +21,17 @@ The diagram below shows the overall repository structure.
 
 You may now [Customize the Model](#customize-the-model) for your own application or [Add Board Layer for Target Hardware](#add-board-layer-for-target-hardware) to run the example on an evaluation board.
 
-## Prerequisites
+## Tool Requirements
 
-Before you begin, ensure you have the following tools installed and a basic understanding of the concepts involved:
+The following tools are used by this template project. The user should have a basic understanding of the tool operation.
 
-| Technology | Requirement | Purpose |
-| --- | --- | --- |
-| Github | Basic proficiency | Version control and repository management. |
-| Docker | Installed and running | Building the AI layer in a containerized environment. |
-
-
-## Making the Template Your Own
-
-To get started, you will first need to create your own copy of the template repository.
-
-1.  **Fork the Repository**: Click the "Use this template" button on the main repository page to create a new repository under your own account. This will give you a personal copy that you can modify freely.
-
-2.  **Clone Your Repository**: Once you have created your own repository, clone it to your local machine:
-
-    ```bash
-    git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY-NAME.git
-    cd YOUR-REPOSITORY-NAME
-    ```
-
-3.  **Explore the Structure**: Familiarize yourself with the repository's structure. The key directories and files are explained in the next section.
+| Tool    | Description  |
+|:--------|:-------------|
+| [VS Code](https://code.visualstudio.com/) | Code Editor with [Git integration](https://code.visualstudio.com/docs/sourcecontrol/overview). |
+| [Keil Studio](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) | Build and debug environment for Cortex-M and Ethos-U targets. |
+| [Docker](https://www.docker.com/)  | Container environment for building the AI layer. |
+| [GitHub Actions](https://github.com/features/actions) | Workflow automation for building the AI layer in Cloud. |
+| [Git](https://git-scm.com/) | Version control and repository management (Optional). |
 
 ## Repository Content
 
@@ -63,15 +50,15 @@ The table below explains the content of this repository.
 
 ## Customize the Model
 
-The heart of this template is the ability to deploy your own PyTorch model. The `model/` directory is where you will make your changes.
+This template project allows you to deploy your own PyTorch model. The `model/` directory is where you will make your changes.
 
 ### 1. Replace the Example Model
 
 The template comes with an example model in `model/aot_model.py`. To use your own model, you will need to:
 
-1.  **Create your model**: Define your model as a `torch.nn.Module` in a Python file. You can either replace the contents of `aot_model.py` or create a new file and update the `local_workflow.sh` and `.github/workflows/build_ai_layer.yml` files to point to your new script.
+1. **Create your model**: Define your model as a `torch.nn.Module` in a Python file. You can either replace the contents of `aot_model.py` or create a new file and update the `local_workflow.sh` and `.github/workflows/build_ai_layer.yml` files to point to your new script.
 
-2.  **Define your model architecture**: The `aot_model.py` script contains the model definition, quantization settings, and the compilation spec for the Ethos-U NPU. You will need to adapt this script to your own model's architecture and requirements.
+2. **Define your model architecture**: The `aot_model.py` script contains the model definition, quantization settings, and the compilation spec for the Ethos-U NPU. You will need to adapt this script to your own model's architecture and requirements.
 
 ### 2. Configure Operator Selection
 
@@ -135,13 +122,13 @@ solution:
 
 You will also need to update the `cproject` file to specify the correct board and device for your new build context.
 
-## Continuous Integration with GitHub Actions
+## GitHub Actions
 
-The template includes a powerful CI/CD pipeline based on GitHub Actions. This pipeline automates the process of building the AI layer whenever you make changes to your model.
+The template project includes GitHub Actions that automates the process of building the AI layer whenever you make changes to your model.
 
 ### How it Works
 
-The CI workflow is defined in the `.github/workflows/build_ai_layer.yml` file. Here's a breakdown of how it works:
+The CI workflow is defined in the [`.github/workflows/build_ai_layer.yml`](./.github/workflows/build_ai_layer.yml) file.
 
 1.  **Trigger**: The workflow is automatically triggered whenever you push changes to the `model/` directory. You can also trigger it manually from the Actions tab in your GitHub repository.
 
@@ -155,11 +142,7 @@ The CI workflow is defined in the `.github/workflows/build_ai_layer.yml` file. H
 
 You can monitor the progress of the CI workflow from the Actions tab in your GitHub repository. When the workflow is complete, you will see a new commit in your repository containing the updated AI layer. The commit message will include the build timestamp and a summary of the changes.
 
-You can also view the detailed build report (`REPORT.md`) and logs in the `ai_layer/` directory to get a comprehensive overview of the build process.
-
-## References
-
-[1] [Arm CMSIS Documentation](https://arm-software.github.io/CMSIS_6/latest/index.html)
+You can also view the detailed build report ([`./ai_layer/REPORT.md`](./ai_layer/REPORT.md)) and logs in the [`ai_layer/`](./ai_layer/) directory to get a comprehensive overview of the build process.
 
 
 ## Understanding the Build Scripts
@@ -305,11 +288,10 @@ Two VSC tasks make the use of the docker environment easy. Find them in **Termin
 
 You can also open an interactive instance with the following command, opening a bash shell inside the container:
 
-```cmd
- docker run -it --rm -v $(pwd):/workspace2 executorch-arm-builder:latest 
- ```
+```bash
+docker run -it --rm -v $(pwd):/workspace2 executorch-arm-builder:latest 
+```
 
+## References
 
-
-
-
+[1] [Arm CMSIS Documentation](https://arm-software.github.io/CMSIS_6/latest/index.html)
