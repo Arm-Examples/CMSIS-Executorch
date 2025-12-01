@@ -295,70 +295,20 @@ The script automates the following steps:
 
 **Usage**
 
-Adding the following tasks to .vscode/tasks.json will allow easy control for local ai_layer build using local_workflow.sh:
+Running the container locally requires a docker environment to be installed on your computer. Installing [Docker Desktop](https://www.docker.com/products/docker-desktop/) is the easiest way to manage the setup.
+
+Two VSC tasks make the use of the docker environment easy. Find them in **Terminal - Run Task**
+
+ "Docker: Build ExecuTorch ARM Builder Image" : This builds the image and only needs to be run once, or whenever updates to .docker/Dockerfile are made.
+ "Docker: Run ExecuTorch Build" : This runs the local_workflow.sh in an instance of the docker image. All output is immidiately generated into ./out and ./ai_layer.
+
+You can also open an interactive instance with the following command, opening a bash shell inside the container:
+
+```cmd
+ docker run -it --rm -v $(pwd):/workspace2 executorch-arm-builder:latest 
+ ```
 
 
-```json
-        {
-            "label": "Docker: Build ExecuTorch ARM Builder Image",
-            "type": "shell",
-            "command": "docker",
-            "args": [
-                "build",
-                "-f",
-                ".docker/Dockerfile",
-                "-t",
-                "executorch-arm-builder",
-                "."
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "problemMatcher": [],
-            "detail": "Build the ExecuTorch ARM Docker container image",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-        {
-            "label": "Docker: Run ExecuTorch Build",
-            "type": "shell",
-            "command": "docker",
-            "args": [
-                "run",
-                "--rm",
-                "-v",
-                "${workspaceFolder}:/workspace2",
-                "executorch-arm-builder:latest",
-                "/workspace2/model/build.sh"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "problemMatcher": [],
-            "detail": "Run the ExecuTorch build process in Docker container",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "dependsOn": "Docker: Build ExecuTorch ARM Builder Image"
-        }
 
-```
+
+
