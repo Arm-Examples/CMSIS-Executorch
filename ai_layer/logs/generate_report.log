@@ -1,0 +1,5 @@
+/__w/CMSIS-Executorch/CMSIS-Executorch/scripts/generate_ai_layer_report.py:283: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  timestamp = datetime.utcnow().isoformat(timespec='seconds') + 'Z'
+Generating comprehensive AI layer build report...
+✅ Comprehensive report written to /__w/CMSIS-Executorch/CMSIS-Executorch/ai_layer/REPORT.md
+📊 Found 9 libraries and 1 model assets

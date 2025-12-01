@@ -1,0 +1,59 @@
+/__w/CMSIS-Executorch/CMSIS-Executorch/scripts/generate_ai_layer_report.py:283: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  timestamp = datetime.utcnow().isoformat(timespec='seconds') + 'Z'
+Generating comprehensive AI layer build report...
+✅ Comprehensive report written to /__w/CMSIS-Executorch/CMSIS-Executorch/ai_layer/REPORT.md
+📊 Found 9 libraries and 1 model assets
+2025-12-01 12:02:41 [SUCCESS] Completed: Generate report
+2025-12-01 12:02:41 [INFO] Build summary:
+# ExecuTorch AI Layer Build Report
+
+**Generated:** 2025-12-01T12:02:41Z
+**Git Commit:** 21f0d3adea36 on main
+**Repository Status:** 🔄 Modified
+**Last Commit:** 2025-12-01 12:01:01 +0100
+
+## 📊 Build Summary
+
+- **Libraries:** 9 static libraries
+- **Models:** 1 model assets
+- **Operators:** 9 selected operators
+- **Build Type:** Release
+
+## 📚 Library Assets
+
+**Total Size:** 11.1 MiB
+
+| Library | Size | Percentage | Modified | Hash |
+|---------|------|------------|----------|------|
+| libcortex_m_kernels.a | 22.1 KiB | 0.2% | 2025-12-01 11:59:52 | `28475885e173e7fd` |
+| libcortex_m_ops_lib.a | 12.6 KiB | 0.1% | 2025-12-01 11:59:52 | `f8120456a0fdba83` |
+| libexecutorch.a | 64.1 KiB | 0.6% | 2025-12-01 11:59:52 | `b5c2cfa13462ca9e` |
+| libexecutorch_core.a | 198.3 KiB | 1.7% | 2025-12-01 11:59:52 | `35209266fd88cb4a` |
+| libexecutorch_delegate_ethos_u.a | 19.2 KiB | 0.2% | 2025-12-01 11:59:52 | `083f56b7084374ed` |
+| libportable_kernels.a | 10.3 MiB | 92.8% | 2025-12-01 11:59:52 | `1eaaea58e28ca400` |
+| libportable_ops_lib.a | 200.9 KiB | 1.8% | 2025-12-01 12:02:40 | `bc93f269208f6cdc` |
+| libquantized_kernels.a | 281.8 KiB | 2.5% | 2025-12-01 11:59:52 | `beb56cf912dea9fa` |
+| libquantized_ops_lib.a | 27.8 KiB | 0.2% | 2025-12-01 11:59:52 | `1379b0c02a03f508` |
+
+## 🤖 Model Assets
+
+| Asset | Type | Size | Modified | Hash |
+|-------|------|------|----------|------|
+| ethos_u_minimal_example.pte | Model | 3.7 KiB | 2025-12-01 12:02:40 | `64b1c8be310fada7` |
+
+## ⚙️ Build Configuration
+
+### CMake Configuration
+- **Build Type:** `Release`
+- **Toolchain File:** `/__w/CMSIS-Executorch/CMSIS-Executorch/model/arm-none-eabi-gcc.cmake`
+- **ARM Baremetal:** `ON`
+- **Cortex-M Support:** `ON`
+- **Portable Ops:** `ON`
+- **Quantized Kernels:** `ON`
+
+### Selected Operators
+
+**Count:** 9 operators
+
+2025-12-01 12:02:41 [SUCCESS] Build completed successfully!
+📋 Build logs saved to: ai_layer/logs/
