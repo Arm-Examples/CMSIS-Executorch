@@ -1260,7 +1260,7 @@ int app_main(int argc, const char* argv[]) {
   ET_CHECK_MSG(model_ok == true, "Problem running model");
 
   ET_LOG(Info, "Program complete, exiting.");
-  printf("Idle...\n");
+  printf("Idle...\x04\n");  // EOT - Terminate Simulation
   while (1) {}
 #if defined(SEMIHOSTING)
   _exit(0);

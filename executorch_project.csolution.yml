@@ -58,6 +58,7 @@ solution:
             name: Arm-FVP
             model: FVP_Corstone_SSE-300_Ethos-U55
             config-file: board/Corstone-300/fvp_config.txt
+            args: --simlimit 10
 
   projects:
     # Simple model example
