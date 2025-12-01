@@ -1,24 +1,25 @@
-
-
 # ExecuTorch CMSIS Project Template
 
-A ready-to-fork template for deploying PyTorch models on ARM Cortex-M microcontrollers using ExecuTorch and CMSIS csolution.
+This repository is a project template for embedded applications with Arm Ethos-U that use ExecuTorch AI models. It is based on the PyTorch tutorial [Building and Running ExecuTorch with Arm Ethos-U Backend](https://docs.pytorch.org/executorch/0.3/executorch-arm-delegate-tutorial.html) but simplifies the tool environment with a Docker container that encapsulates the multi-stage build process for the AI Model. The embedded part of the application is a CMSIS Solution project.
 
-# Quick Start
+The diagram below shows the overall repository structure.
 
-This example is ready to run in Visual Studio Code. Follow these steps to get started:
+![Repository Structure](./documentation/structure.png "Repository Structure")
 
-1. Install **Keil Studio for VS Code** from the Visual Studio Code Marketplace.  
-2. On the repository’s landing page, select **Use this Template**.  
-3. Enter a name for your new repository to identify your project.  
+## Quick Start
 
-Once the repository is created from the template, it will automatically start building the Docker-based CI environment. You can check the status in the Actions tab. This process can take up to an hour. It is not required to finish before you continue the Quick Start, but will be necessary for further customization. 
+1. Create your own repository
+   - On the [GitHub page of the CMSIS-Executorch repository](https://github.com/Arm-Examples/CMSIS-Executorch), click on **Use this Template**.  
+   - Enter a name for your new repository to identify your project.
+   - Note: This starts the [Build Docker Image](./actions/workflows/build_docker.yml) action on your repository.
 
-4. Clone the repository to your desktop. You can use the built-in [Git tools in VS Code](https://code.visualstudio.com/docs/sourcecontrol/intro-to-git) or the more approachable [GitHub Desktop](https://desktop.github.com/download/) if you’re new to Git.  
-5. Open the cloned folder in Visual Studio Code.  
-6. Visual Studio Code automatically downloads the required tools and software packs. You can monitor progress in **View > Output > CMSIS Solution**.  
-7. Open the [CMSIS View](https://mdk-packs.github.io/vscode-cmsis-solution-docs/userinterface.html#2-main-area-of-the-cmsis-view).  
-8. In the CMSIS View, use the [Action buttons](https://github.com/ARM-software/vscode-cmsis-csolution?tab=readme-ov-file#action-buttons) to build, load, and run the example on the preconfigured FastModel simulation.
+2. Compile with **Keil Studio for VS Code** on your desktop computer.
+   - Install **Keil Studio for VS Code** from the Visual Studio Code Marketplace.
+   - **Clone your repository** to a folder on the desktop computer for example using Git in VS Code.
+   - Open the folder in VS Code and the [CMSIS View](https://mdk-packs.github.io/vscode-cmsis-solution-docs/userinterface.html#2-main-area-of-the-cmsis-view).
+   - Use the [Action buttons](https://github.com/ARM-software/vscode-cmsis-csolution?tab=readme-ov-file#action-buttons) to build, load, and run the example on the pre-configured AVH-SSE-300 FastModel simulation.
+
+You may now [Customize the Model](#customize-the-model) for your own application or [Add Board Layer for Target Hardware](#add-board-layer-for-target-hardware) to run the example on an evaluation board.
 
 ## Prerequisites
 
@@ -45,9 +46,9 @@ To get started, you will first need to create your own copy of the template repo
 
 3.  **Explore the Structure**: Familiarize yourself with the repository's structure. The key directories and files are explained in the next section.
 
-## Repository Structure
+## Repository Content
 
-The repository is organized into several directories, each with a specific purpose. Understanding this structure is key to customizing the template for your own project.
+The table below explains the content of this repository.
 
 | Directory / File | Purpose |
 | --- | --- |
@@ -60,7 +61,7 @@ The repository is organized into several directories, each with a specific purpo
 | `executorch_project.cproject.yml` | The CMSIS project file. It defines the project structure and components. |
 | `executorch_project.csolution.yml` | The CMSIS solution file. It ties together the project, board, and build configurations. |
 
-## Customizing the Model
+## Customize the Model
 
 The heart of this template is the ability to deploy your own PyTorch model. The `model/` directory is where you will make your changes.
 
@@ -76,21 +77,21 @@ The template comes with an example model in `model/aot_model.py`. To use your ow
 
 To minimize the footprint of the ExecuTorch runtime, it is crucial to only include the operators that your model actually uses. The `build_stage2_selective.sh` script handles this, and you have two options for configuring it:
 
-*   **Automatic Selection**: If you provide a `.pte` model file to the script, it will automatically analyze the model and determine the required operators. This is the recommended approach for most users.
+- **Automatic Selection**: If you provide a `.pte` model file to the script, it will automatically analyze the model and determine the required operators. This is the recommended approach for most users.
 
-*   **Manual Selection**: For more fine-grained control, you can create a file named `operators_minimal.txt` in the `model/` directory. This file should contain a list of the operators your model needs, one per line. The `local_workflow.sh` and `build_ai_layer.yml` files are already configured to use this file if it exists.
+- **Manual Selection**: For more fine-grained control, you can create a file named `operators_minimal.txt` in the `model/` directory. This file should contain a list of the operators your model needs, one per line. The `local_workflow.sh` and `build_ai_layer.yml` files are already configured to use this file if it exists.
 
 ### 3. The `aot_model.py` Script
 
 This script is responsible for converting your PyTorch model into the ExecuTorch format (`.pte`). It performs the following key steps:
 
-*   **Quantization**: The script uses the Ethos-U quantizer to quantize the model for optimal performance on the NPU.
-*   **Compilation**: It then uses the Ethos-U compiler to generate a compiled model that can be executed by the ExecuTorch runtime.
-*   **Saving the Model**: Finally, it saves the compiled model as a `.pte` file.
+- **Quantization**: The script uses the Ethos-U quantizer to quantize the model for optimal performance on the NPU.
+- **Compilation**: It then uses the Ethos-U compiler to generate a compiled model that can be executed by the ExecuTorch runtime.
+- **Saving the Model**: Finally, it saves the compiled model as a `.pte` file.
 
 You will need to modify this script to match your model's specific layers and quantization requirements.
 
-## Customizing the Board Layer
+## Add Board Layer for Target Hardware
 
 The template is pre-configured for the Arm Corstone-300, but it is designed to be easily adapted to other target boards. The `board/` directory is where you will make these changes.
 
