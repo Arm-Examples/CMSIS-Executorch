@@ -142,10 +142,13 @@ fi
 # Note: We explicitly DO NOT copy unused backends (xnnpack, mps, coreml, qnn, etc.)
 # to minimize header bloat
 
-# Selectively copy only required extension headers (none needed for baremetal)
-echo "[Stage1] Skipping extension headers (not needed for baremetal embedded deployment)"
-# If needed in future, selectively copy: data_loader, module, runner_util, tensor
-# but currently all extensions are disabled for embedded builds
+# Copy extension headers (needed for application integration)
+echo "[Stage1] Copying extension headers..."
+if [[ -d "${EXECUTORCH_SRC}/extension" ]]; then
+  rsync -a --include='*/' --include='*.h' --exclude='*' \
+        --exclude='*/test/' --exclude='*/testing/' --exclude='*/benchmark/' \
+        "${EXECUTORCH_SRC}/extension" "$INC_DIR/executorch/"
+fi
 
 # Log header count
 HDR_COUNT=$(find "$INC_DIR" -type f -name '*.h' | wc -l | tr -d ' ' || true)
