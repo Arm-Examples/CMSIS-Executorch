@@ -77,6 +77,32 @@ cd "${BUILD_DIR}"
 
 echo "[Stage2] Configuring selective portable ops build..."
 
+# CMake Configuration Arguments:
+# ┌──────────────────────────────────────┬────────┬────────────────────────────────────────────────────────────────────────┐
+# │ CMake Argument                       │ Value  │ Explanation                                                            │
+# ├──────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+# │ CMAKE_BUILD_TYPE                     │ Release│ Sets build to Release mode (optimized, no debug symbols)               │
+# │ EXECUTORCH_BUILD_ARM_BAREMETAL       │ ON     │ Enables Ethos-U backend and ARM baremetal target for embedded systems │
+# │ EXECUTORCH_BUILD_PORTABLE_OPS        │ ON     │ Builds portable ops with selective operator registration               │
+# │ EXECUTORCH_BUILD_KERNELS_QUANTIZED   │ OFF    │ Disables quantized ops (use Stage1 libs instead)                       │
+# │ EXECUTORCH_BUILD_CORTEX_M            │ OFF    │ Disables Cortex-M ops (use Stage1 libs instead)                        │
+# │ EXECUTORCH_BUILD_EXECUTOR_RUNNER     │ OFF    │ Disables executor runner utility (not needed for embedded deployment)  │
+# │ EXECUTORCH_BUILD_DEVTOOLS            │ OFF    │ Disables development tools (not needed for production builds)          │
+# │ EXECUTORCH_ENABLE_EVENT_TRACER       │ OFF    │ Disables event tracing to reduce binary size                           │
+# │ EXECUTORCH_ENABLE_LOGGING            │ ON     │ Enables logging for debugging and monitoring                           │
+# │ EXECUTORCH_OPTIMIZE_SIZE            │ ON     │ Optimize for binary size (critical for embedded targets)               │
+# │ EXECUTORCH_ENABLE_PROGRAM_VERIFICATION│ OFF  │ Disables program verification to reduce overhead                       │
+# │ EXECUTORCH_BUILD_EXTENSION_RUNNER_UTIL│ OFF  │ Disables runner utility extension (not needed for embedded)            │
+# │ BUILD_TESTING                       │ OFF    │ Disables building test executables                                     │
+# │ FETCH_ETHOS_U_CONTENT                │ OFF    │ Skips fetching Ethos-U content (assumes already available)             │
+# │ EXECUTORCH_ENABLE_DTYPE_SELECTIVE_BUILD│ ON   │ Only include data types used by model (reduces binary size)            │
+# │ EXECUTORCH_SELECT_OPS_MODEL          │ (model)│ Path to .pte model for automatic operator analysis (if using model)    │
+# │ EXECUTORCH_SELECT_OPS_LIST           │ (list) │ Comma-separated operator list for manual selection (if using list)     │
+# │ CMAKE_TOOLCHAIN_FILE                 │ (arg4) │ Specifies cross-compilation toolchain (e.g., arm-none-eabi-gcc.cmake)  │
+# └──────────────────────────────────────┴────────┴────────────────────────────────────────────────────────────────────────┘
+#
+# Note: Stage2 builds ONLY selective portable_ops_lib. Quantized and Cortex-M kernels from Stage1 are reused.
+
 CMAKE_ARGS=(
   -DCMAKE_BUILD_TYPE=Release
   -DEXECUTORCH_BUILD_ARM_BAREMETAL=ON
@@ -85,9 +111,15 @@ CMAKE_ARGS=(
   -DEXECUTORCH_BUILD_CORTEX_M=OFF              # Disable cortex-m ops
   -DEXECUTORCH_BUILD_EXECUTOR_RUNNER=OFF
   -DEXECUTORCH_BUILD_DEVTOOLS=OFF
+  -DEXECUTORCH_BUILD_EXTENSION_RUNNER_UTIL=OFF
+  -DEXECUTORCH_BUILD_EXTENSION_EVALUE_UTIL=OFF
   -DEXECUTORCH_ENABLE_EVENT_TRACER=OFF
   -DEXECUTORCH_ENABLE_LOGGING=ON
+  -DEXECUTORCH_ENABLE_PROGRAM_VERIFICATION=OFF
+  -DEXECUTORCH_OPTIMIZE_SIZE=ON
+  -DBUILD_TESTING=OFF
   -DFETCH_ETHOS_U_CONTENT=OFF
+  -DEXECUTORCH_ENABLE_DTYPE_SELECTIVE_BUILD=ON # Only build support for dtypes in model
 )
 
 # Add selection strategy to CMake args

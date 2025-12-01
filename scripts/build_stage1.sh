@@ -30,16 +30,44 @@ cd "${BUILD_DIR}"
 
 echo "[Stage1] Configuring generic runtime build..."
 
+# CMake Configuration Arguments:
+# ┌─────────────────────────────────────┬────────┬────────────────────────────────────────────────────────────────────────┐
+# │ CMake Argument                      │ Value  │ Explanation                                                            │
+# ├─────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+# │ CMAKE_BUILD_TYPE                    │ Release│ Sets build to Release mode (optimized, no debug symbols)               │
+# │ EXECUTORCH_BUILD_ARM_BAREMETAL      │ ON     │ Enables Ethos-U backend and ARM baremetal target for embedded systems │
+# │ EXECUTORCH_BUILD_PORTABLE_OPS       │ ON     │ Builds portable (platform-independent) operator implementations        │
+# │ EXECUTORCH_BUILD_KERNELS_QUANTIZED  │ ON     │ Includes quantized kernel implementations for quantized models         │
+# │ EXECUTORCH_BUILD_CORTEX_M           │ ON     │ Enables Cortex-M specific optimizations and implementations            │
+# │ EXECUTORCH_BUILD_EXECUTOR_RUNNER    │ OFF    │ Disables executor runner utility (not needed for embedded deployment)  │
+# │ EXECUTORCH_BUILD_DEVTOOLS           │ OFF    │ Disables development tools (not needed for production builds)          │
+# │ EXECUTORCH_BUILD_EXTENSION_RUNNER_UTIL│ OFF  │ Disables runner utility extension (not needed for embedded)            │
+# │ EXECUTORCH_BUILD_EXTENSION_EVALUE_UTIL│ OFF  │ Disables evalue utility extension (not needed for embedded)            │
+# │ EXECUTORCH_ENABLE_EVENT_TRACER      │ OFF    │ Disables event tracing to reduce binary size                           │
+# │ EXECUTORCH_ENABLE_LOGGING           │ ON     │ Enables logging for debugging and monitoring                           │
+# │ EXECUTORCH_ENABLE_PROGRAM_VERIFICATION│ OFF  │ Disables program verification to reduce overhead                       │
+# │ EXECUTORCH_OPTIMIZE_SIZE            │ ON     │ Optimize for binary size (critical for embedded targets)               │
+# │ BUILD_TESTING                       │ OFF    │ Disables building test executables                                     │
+# │ FETCH_ETHOS_U_CONTENT               │ OFF    │ Skips fetching Ethos-U content (assumes already available)             │
+# │ EXECUTORCH_SELECT_OPS_MODEL         │ (empty)│ Empty = build full schema-based libs without selective pruning         │
+# │ CMAKE_TOOLCHAIN_FILE                │ (arg3) │ Specifies cross-compilation toolchain (e.g., arm-none-eabi-gcc.cmake)  │
+# └─────────────────────────────────────┴────────┴────────────────────────────────────────────────────────────────────────┘
+
 CMAKE_ARGS=(
   -DCMAKE_BUILD_TYPE=Release
-  -DEXECUTORCH_BUILD_ARM_BAREMETAL=ON      # Enable Ethos-U backend
+  -DEXECUTORCH_BUILD_ARM_BAREMETAL=ON
   -DEXECUTORCH_BUILD_PORTABLE_OPS=ON
   -DEXECUTORCH_BUILD_KERNELS_QUANTIZED=ON
   -DEXECUTORCH_BUILD_CORTEX_M=ON
   -DEXECUTORCH_BUILD_EXECUTOR_RUNNER=OFF
   -DEXECUTORCH_BUILD_DEVTOOLS=OFF
+  -DEXECUTORCH_BUILD_EXTENSION_RUNNER_UTIL=OFF
+  -DEXECUTORCH_BUILD_EXTENSION_EVALUE_UTIL=OFF
   -DEXECUTORCH_ENABLE_EVENT_TRACER=OFF
   -DEXECUTORCH_ENABLE_LOGGING=ON
+  -DEXECUTORCH_ENABLE_PROGRAM_VERIFICATION=OFF
+  -DEXECUTORCH_OPTIMIZE_SIZE=ON
+  -DBUILD_TESTING=OFF
   -DFETCH_ETHOS_U_CONTENT=OFF
   -DEXECUTORCH_SELECT_OPS_MODEL=  # empty => full schema based libs
 )
@@ -89,15 +117,35 @@ fi
 
 # Always collect essential source headers for external applications
 echo "[Stage1] Collecting essential source headers from ExecuTorch source tree."
-ESSENTIAL_HDR_DIRS=(runtime kernels backends extension devtools)
+# Only include runtime and kernels - backends and extension are selectively copied below
+ESSENTIAL_HDR_DIRS=(runtime kernels)
 for DIR in "${ESSENTIAL_HDR_DIRS[@]}"; do
   if [[ -d "${EXECUTORCH_SRC}/${DIR}" ]]; then
     echo "[Stage1] Copying source headers from ${DIR}/"
-    rsync -a "${EXECUTORCH_SRC}/${DIR}" "$INC_DIR/executorch/"
+    # Only copy .h files, exclude test directories and implementation details
+    rsync -a --include='*/' --include='*.h' --exclude='*' \
+          --exclude='*/test/' --exclude='*/testing/' --exclude='*/benchmark/' \
+          "${EXECUTORCH_SRC}/${DIR}" "$INC_DIR/executorch/"
   else
     echo "[Stage1] WARN: Source directory ${EXECUTORCH_SRC}/${DIR} not found"
   fi
 done
+
+# Selectively copy only the backends we're using
+echo "[Stage1] Copying ARM baremetal backend headers..."
+if [[ -d "${EXECUTORCH_SRC}/backends/arm" ]]; then
+  rsync -a --include='*/' --include='*.h' --exclude='*' \
+        --exclude='*/test/' --exclude='*/testing/' --exclude='*/benchmark/' \
+        "${EXECUTORCH_SRC}/backends/arm" "$INC_DIR/executorch/backends/"
+fi
+
+# Note: We explicitly DO NOT copy unused backends (xnnpack, mps, coreml, qnn, etc.)
+# to minimize header bloat
+
+# Selectively copy only required extension headers (none needed for baremetal)
+echo "[Stage1] Skipping extension headers (not needed for baremetal embedded deployment)"
+# If needed in future, selectively copy: data_loader, module, runner_util, tensor
+# but currently all extensions are disabled for embedded builds
 
 # Log header count
 HDR_COUNT=$(find "$INC_DIR" -type f -name '*.h' | wc -l | tr -d ' ' || true)
