@@ -78,18 +78,18 @@ jobs:
         export BUILD_TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
         echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
         echo "LOG_DIR=$GITHUB_WORKSPACE/ai_layer/logs" >> $GITHUB_ENV
-        echo "MAIN_LOG=$GITHUB_WORKSPACE/ai_layer/logs/build_${BUILD_TIMESTAMP}.log" >> $GITHUB_ENV
+        echo "MAIN_LOG=$GITHUB_WORKSPACE/ai_layer/logs/build.log" >> $GITHUB_ENV
         
         # Log build start
-        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] ExecuTorch AI Layer Build Started (GitHub Actions)" | tee $GITHUB_WORKSPACE/ai_layer/logs/build_${BUILD_TIMESTAMP}.log
-        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Timestamp: $BUILD_TIMESTAMP" | tee -a $GITHUB_WORKSPACE/ai_layer/logs/build_${BUILD_TIMESTAMP}.log
-        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Workflow: ${{ github.workflow }}" | tee -a $GITHUB_WORKSPACE/ai_layer/logs/build_${BUILD_TIMESTAMP}.log
-        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Run ID: ${{ github.run_id }}" | tee -a $GITHUB_WORKSPACE/ai_layer/logs/build_${BUILD_TIMESTAMP}.log
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] ExecuTorch AI Layer Build Started (GitHub Actions)" | tee $GITHUB_WORKSPACE/ai_layer/logs/build.log
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Timestamp: $BUILD_TIMESTAMP" | tee -a $GITHUB_WORKSPACE/ai_layer/logs/build.log
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Workflow: ${{ github.workflow }}" | tee -a $GITHUB_WORKSPACE/ai_layer/logs/build.log
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Run ID: ${{ github.run_id }}" | tee -a $GITHUB_WORKSPACE/ai_layer/logs/build.log
 
     - name: Convert and build model
       run: |
         echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Starting: Model conversion" | tee -a $MAIN_LOG
-        cd $GITHUB_WORKSPACE/model && python3 aot_model.py 2>&1 | tee $LOG_DIR/model_conversion_$BUILD_TIMESTAMP.log $MAIN_LOG
+        cd $GITHUB_WORKSPACE/model && python3 aot_model.py 2>&1 | tee $LOG_DIR/model_conversion.log $MAIN_LOG
         echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] Completed: Model conversion" | tee -a $MAIN_LOG 
 
     - name: Build ExecuTorch Core Libraries
@@ -97,7 +97,7 @@ jobs:
         echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Starting: Stage1 build" | tee -a $MAIN_LOG
         $GITHUB_WORKSPACE/scripts/build_stage1.sh /workspace/executorch \
                                $GITHUB_WORKSPACE/out/stage1  \
-                               $GITHUB_WORKSPACE/model/arm-none-eabi-gcc.cmake 2>&1 | tee $LOG_DIR/stage1_build_$BUILD_TIMESTAMP.log $MAIN_LOG
+                               $GITHUB_WORKSPACE/model/arm-none-eabi-gcc.cmake 2>&1 | tee $LOG_DIR/stage1_build.log $MAIN_LOG
         echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] Completed: Stage1 build" | tee -a $MAIN_LOG
 
     - name: Build ExecuTorch Selective Kernel Libraries
@@ -108,7 +108,7 @@ jobs:
                                "" \
                                $GITHUB_WORKSPACE/out/stage2 \
                                $GITHUB_WORKSPACE/model/arm-none-eabi-gcc.cmake \
-                               $GITHUB_WORKSPACE/model/operators_minimal.txt 2>&1 | tee $LOG_DIR/stage2_build_$BUILD_TIMESTAMP.log $MAIN_LOG
+                               $GITHUB_WORKSPACE/model/operators_minimal.txt 2>&1 | tee $LOG_DIR/stage2_build.log $MAIN_LOG
         echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] Completed: Stage2 build" | tee -a $MAIN_LOG
 
     - name: Collect artifacts
@@ -118,19 +118,19 @@ jobs:
           "$GITHUB_WORKSPACE/out/stage1/assets" \
           "$GITHUB_WORKSPACE/out/stage2/assets" \
           "$GITHUB_WORKSPACE/model/ethos_u_minimal_example.pte" \
-          "$GITHUB_WORKSPACE/ai_layer/engine" 2>&1 | tee $LOG_DIR/package_artifacts_$BUILD_TIMESTAMP.log $MAIN_LOG
+          "$GITHUB_WORKSPACE/ai_layer/engine" 2>&1 | tee $LOG_DIR/package_artifacts.log $MAIN_LOG
         echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] Completed: Package artifacts" | tee -a $MAIN_LOG
 
     - name: Convert the model to a header file
       run: |
         echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Starting: Model to header conversion" | tee -a $MAIN_LOG
-        cd "$GITHUB_WORKSPACE" && python3 scripts/pte_to_header.py -p model/ethos_u_minimal_example.pte -d ai_layer/model -o model_pte.h 2>&1 | tee $LOG_DIR/model_to_header_$BUILD_TIMESTAMP.log $MAIN_LOG
+        cd "$GITHUB_WORKSPACE" && python3 scripts/pte_to_header.py -p model/ethos_u_minimal_example.pte -d ai_layer/model -o model_pte.h 2>&1 | tee $LOG_DIR/model_to_header.log $MAIN_LOG
         echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] Completed: Model to header conversion" | tee -a $MAIN_LOG
 
     - name: Generate AI layer report
       run: |
         echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Starting: Generate report" | tee -a $MAIN_LOG
-        python3 scripts/generate_ai_layer_report.py 2>&1 | tee $LOG_DIR/generate_report_$BUILD_TIMESTAMP.log $MAIN_LOG || { echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] Report generation failed" | tee -a $MAIN_LOG; exit 1; }
+        python3 scripts/generate_ai_layer_report.py 2>&1 | tee $LOG_DIR/generate_report.log $MAIN_LOG || { echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] Report generation failed" | tee -a $MAIN_LOG; exit 1; }
         echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] Completed: Generate report" | tee -a $MAIN_LOG
 
     - name: Show report summary and finalize logs
@@ -139,7 +139,7 @@ jobs:
         head -n 50 ai_layer/REPORT.md | tee -a $MAIN_LOG || echo "Report could not be displayed" | tee -a $MAIN_LOG
         
         # Create build summary
-        cat > $LOG_DIR/build_summary_$BUILD_TIMESTAMP.txt << EOF
+        cat > $LOG_DIR/build_summary.txt << EOF
         ExecuTorch AI Layer Build Summary (GitHub Actions)
         ==================================================
         Build Timestamp: $BUILD_TIMESTAMP
@@ -150,13 +150,13 @@ jobs:
         Build Status: SUCCESS
         
         Log Files Generated:
-        - Main build log: ai_layer/logs/build_$BUILD_TIMESTAMP.log
-        - Model conversion: ai_layer/logs/model_conversion_$BUILD_TIMESTAMP.log
-        - Stage1 build: ai_layer/logs/stage1_build_$BUILD_TIMESTAMP.log  
-        - Stage2 build: ai_layer/logs/stage2_build_$BUILD_TIMESTAMP.log
-        - Package artifacts: ai_layer/logs/package_artifacts_$BUILD_TIMESTAMP.log
-        - Model to header: ai_layer/logs/model_to_header_$BUILD_TIMESTAMP.log
-        - Generate report: ai_layer/logs/generate_report_$BUILD_TIMESTAMP.log
+        - Main build log: ai_layer/logs/build.log
+        - Model conversion: ai_layer/logs/model_conversion.log
+        - Stage1 build: ai_layer/logs/stage1_build.log  
+        - Stage2 build: ai_layer/logs/stage2_build.log
+        - Package artifacts: ai_layer/logs/package_artifacts.log
+        - Model to header: ai_layer/logs/model_to_header.log
+        - Generate report: ai_layer/logs/generate_report.log
         
         Outputs Generated:
         - AI Layer libraries: ai_layer/engine/lib/
