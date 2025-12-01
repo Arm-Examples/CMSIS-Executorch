@@ -58,7 +58,10 @@ solution:
         - set:
           images:
             - project-context: executorch_project.Debug
-
+          debugger:
+            name: Arm-FVP
+            model: FVP_Corstone_SSE-300_Ethos-U55
+            config-file: board/Corstone-300/fvp_config.txt
 
   projects:
     # Simple model example
