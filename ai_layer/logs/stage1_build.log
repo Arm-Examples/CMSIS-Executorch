@@ -199,7 +199,7 @@ Generated files /__w/CMSIS-Executorch/CMSIS-Executorch/out/stage1/kernels/quanti
 -- EXECUTORCH_XNNPACK_SHARED_WORKSPACE       : ON
 -- PYTHON_EXECUTABLE                         : python3
 -- --------------------------
--- Configuring done (2.6s)
+-- Configuring done (2.2s)
 -- Generating done (0.1s)
 CMake Warning:
   Manually-specified variables were not used by the project:
@@ -342,11 +342,11 @@ Install the project...
 [ 77%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/abort.cpp.obj
 [ 77%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/log.cpp.obj
 [ 77%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/platform.cpp.obj
-[ 88%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/profiler.cpp.obj
 /workspace/executorch/runtime/executor/tensor_parser_exec_aten.cpp: In function 'executorch::runtime::Result<void*> executorch::runtime::deserialization::{anonymous}::getMemPlannedPtr(const executorch_flatbuffer::AllocationDetails*, size_t, executorch::runtime::HierarchicalAllocator*)':
 /workspace/executorch/runtime/executor/tensor_parser_exec_aten.cpp:66:62: warning: left shift count >= width of type [-Wshift-count-overflow]
    66 |     memory_offset |= static_cast<size_t>(memory_offset_high) << 32;
       |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+[ 88%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/profiler.cpp.obj
 [ 88%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/runtime.cpp.obj
 [ 88%] Building CXX object CMakeFiles/executorch_core.dir/schema/extended_header.cpp.obj
 [100%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/default/posix.cpp.obj
@@ -356,9 +356,9 @@ Install the project...
 [ 30%] Built target common_schema
 [ 30%] Built target program_schema
 [ 90%] Built target executorch_core
+[ 90%] Building CXX object CMakeFiles/executorch.dir/kernels/prim_ops/et_copy_index.cpp.obj
+[ 90%] Building CXX object CMakeFiles/executorch.dir/kernels/prim_ops/et_view.cpp.obj
 [100%] Building CXX object CMakeFiles/executorch.dir/kernels/prim_ops/register_prim_ops.cpp.obj
-[100%] Building CXX object CMakeFiles/executorch.dir/kernels/prim_ops/et_copy_index.cpp.obj
-[100%] Building CXX object CMakeFiles/executorch.dir/kernels/prim_ops/et_view.cpp.obj
 [100%] Linking CXX static library libexecutorch.a
 [100%] Built target executorch
 [  3%] Built target flatbuffers_ep
@@ -560,7 +560,7 @@ Install the project...
 [ 93%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/broadcast_util.cpp.obj
 [ 93%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/copy_ops_util.cpp.obj
 [ 93%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/delinearize_index.cpp.obj
-[ 93%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/distance_util.cpp.obj
+[ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/distance_util.cpp.obj
 [ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/dtype_util.cpp.obj
 [ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/index_util.cpp.obj
 [ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/kernel_ops_util.cpp.obj
@@ -591,18 +591,18 @@ Install the project...
 [  6%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/BasicMathFunctions/arm_elementwise_add_s8.c.obj
 [  6%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/BasicMathFunctions/arm_elementwise_mul_s16.c.obj
 [ 10%] Built target common_schema
+[ 10%] Built target program_schema
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/BasicMathFunctions/arm_elementwise_mul_s16_s8.c.obj
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/BasicMathFunctions/arm_elementwise_mul_s8.c.obj
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_w.c.obj
-[ 13%] Built target program_schema
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_y.c.obj
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_x.c.obj
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_z.c.obj
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s8.c.obj
-[ 20%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s8.c.obj
-[ 40%] Built target executorch_core
-[ 40%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s16.c.obj
-[ 43%] Built target executorch
+[ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_x.c.obj
+[ 33%] Built target executorch_core
+[ 36%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_y.c.obj
+[ 36%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_z.c.obj
+[ 36%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s8.c.obj
+[ 40%] Built target executorch
+[ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s8.c.obj
+[ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s16.c.obj
 [ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s16.c.obj
 [ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_1_x_n_s8.c.obj
 [ 46%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_1x1_s8.c.obj
@@ -664,9 +664,9 @@ Install the project...
 [ 96%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/NNSupportFunctions/arm_q7_to_q15_with_offset.c.obj
 [ 96%] Linking C static library libcmsis-nn.a
 [ 96%] Built target cmsis-nn
+[ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_quantized_add.cpp.obj
 [ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_quantize_per_tensor.cpp.obj
 [ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_dequantize_per_tensor.cpp.obj
-[ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_quantized_add.cpp.obj
 [100%] Linking CXX static library libcortex_m_kernels.a
 [100%] Built target cortex_m_kernels
 [  6%] Built target flatbuffers_ep
@@ -724,8 +724,8 @@ Install the project...
 [Stage1] Copying source headers from runtime/
 [Stage1] Copying source headers from kernels/
 [Stage1] Copying ARM baremetal backend headers...
-[Stage1] Skipping extension headers (not needed for baremetal embedded deployment)
-[Stage1] Collected 751 header files.
+[Stage1] Copying extension headers...
+[Stage1] Collected 1380 header files.
 [Stage1] Scanning for additional generated headers (Functions.h, NativeFunctions.h, CustomOpsNativeFunctions.h, Register*).
-[Stage1] Final header count: 759
+[Stage1] Final header count: 1388
 [Stage1] Asset collection complete at: /__w/CMSIS-Executorch/CMSIS-Executorch/out/stage1/assets
