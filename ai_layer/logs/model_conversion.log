@@ -1,0 +1,87 @@
+Skipping import of cpp extensions due to incompatible torch version 2.9.0+cpu for torchao version 0.14.0+cpu             Please see https://github.com/pytorch/ao/issues/2919 for more info
+RCS: Emitting no-op transpose as a memory copy
+RCS: Emitting no-op transpose as a memory copy
+RCS: Emitting no-op transpose as a memory copy
+RCS: Emitting no-op transpose as a memory copy
+RCS: Emitting no-op transpose as a memory copy
+RCS: Emitting no-op transpose as a memory copy
+class GraphModule(torch.nn.Module):
+    def forward(self, x, y):
+        x: "f32[1, 1, 1, 1]"; y: "f32[1, 1, 1, 1]"; 
+    
+        x, y, = fx_pytree.tree_flatten_spec(([x, y], {}), self._in_spec)
+         # File: /__w/CMSIS-Executorch/CMSIS-Executorch/model/aot_model.py:5 in forward, code: return x + y
+        add: "f32[1, 1, 1, 1]" = torch.ops.aten.add.Tensor(x, y);  x = y = None
+        return pytree.tree_unflatten((add,), self._out_spec)
+        
+class GraphModule(torch.nn.Module):
+    def forward(self, x, y):
+        x: "f32[1, 1, 1, 1]"; y: "f32[1, 1, 1, 1]"; 
+    
+        x, y, = fx_pytree.tree_flatten_spec(([x, y], {}), self._in_spec)
+        # No stacktrace found for following nodes
+        quantize_per_tensor_default = torch.ops.quantized_decomposed.quantize_per_tensor.default(x, 0.003921568859368563, -128, -128, 127, torch.int8);  x = None
+        
+         # File: /__w/CMSIS-Executorch/CMSIS-Executorch/model/aot_model.py:5 in forward, code: return x + y
+        dequantize_per_tensor_default = torch.ops.quantized_decomposed.dequantize_per_tensor.default(quantize_per_tensor_default, 0.003921568859368563, -128, -128, 127, torch.int8);  quantize_per_tensor_default = None
+        
+        # No stacktrace found for following nodes
+        quantize_per_tensor_default_1 = torch.ops.quantized_decomposed.quantize_per_tensor.default(y, 0.003921568859368563, -128, -128, 127, torch.int8);  y = None
+        
+         # File: /__w/CMSIS-Executorch/CMSIS-Executorch/model/aot_model.py:5 in forward, code: return x + y
+        dequantize_per_tensor_default_1 = torch.ops.quantized_decomposed.dequantize_per_tensor.default(quantize_per_tensor_default_1, 0.003921568859368563, -128, -128, 127, torch.int8);  quantize_per_tensor_default_1 = None
+        add: "f32[1, 1, 1, 1]" = torch.ops.aten.add.Tensor(dequantize_per_tensor_default, dequantize_per_tensor_default_1);  dequantize_per_tensor_default = dequantize_per_tensor_default_1 = None
+        quantize_per_tensor_default_2 = torch.ops.quantized_decomposed.quantize_per_tensor.default(add, 0.007843137718737125, -128, -128, 127, torch.int8);  add = None
+        
+        # No stacktrace found for following nodes
+        dequantize_per_tensor_default_2 = torch.ops.quantized_decomposed.dequantize_per_tensor.default(quantize_per_tensor_default_2, 0.007843137718737125, -128, -128, 127, torch.int8);  quantize_per_tensor_default_2 = None
+        return pytree.tree_unflatten((dequantize_per_tensor_default_2,), self._out_spec)
+        
+
+Network summary for out
+Accelerator configuration               Ethos_U55_128
+System configuration             Ethos_U55_High_End_Embedded
+Memory mode                               Shared_Sram
+Accelerator clock                                 500 MHz
+Design peak SRAM bandwidth                       3.73 GB/s
+Design peak Off-chip Flash bandwidth             0.47 GB/s
+
+Total SRAM used                                  0.14 KiB
+Total Off-chip Flash used                        0.03 KiB
+
+CPU operators = 0 (0.0%)
+NPU operators = 12 (100.0%)
+
+Average SRAM bandwidth                           0.27 GB/s
+Input   SRAM bandwidth                           0.00 MB/batch
+Weight  SRAM bandwidth                           0.00 MB/batch
+Output  SRAM bandwidth                           0.00 MB/batch
+Total   SRAM bandwidth                           0.00 MB/batch
+Total   SRAM bandwidth            per input      0.00 MB/inference (batch size 1)
+
+Average Off-chip Flash bandwidth                 0.04 GB/s
+Input   Off-chip Flash bandwidth                 0.00 MB/batch
+Weight  Off-chip Flash bandwidth                 0.00 MB/batch
+Output  Off-chip Flash bandwidth                 0.00 MB/batch
+Total   Off-chip Flash bandwidth                 0.00 MB/batch
+Total   Off-chip Flash bandwidth  per input      0.00 MB/inference (batch size 1)
+
+Neural network macs                                 0 MACs/batch
+
+class GraphModule(torch.nn.Module):
+    def forward(self, x, y):
+        x: "f32[1, 1, 1, 1]"; y: "f32[1, 1, 1, 1]"; 
+    
+        x, y, = fx_pytree.tree_flatten_spec(([x, y], {}), self._in_spec)
+        # No stacktrace found for following nodes
+        alloc: "i8[1, 1, 1, 1]" = executorch_exir_memory_alloc(((1, 1, 1, 1), torch.int8))
+        quantized_decomposed_quantize_per_tensor_default: "i8[1, 1, 1, 1]" = torch.ops.quantized_decomposed.quantize_per_tensor.out(x, 0.003921568859368563, -128, -128, 127, torch.int8, out = alloc);  x = alloc = None
+        alloc_1: "i8[1, 1, 1, 1]" = executorch_exir_memory_alloc(((1, 1, 1, 1), torch.int8))
+        quantized_decomposed_quantize_per_tensor_default_1: "i8[1, 1, 1, 1]" = torch.ops.quantized_decomposed.quantize_per_tensor.out(y, 0.003921568859368563, -128, -128, 127, torch.int8, out = alloc_1);  y = alloc_1 = None
+        lowered_module_0 = self.lowered_module_0
+        executorch_call_delegate = torch.ops.higher_order.executorch_call_delegate(lowered_module_0, quantized_decomposed_quantize_per_tensor_default, quantized_decomposed_quantize_per_tensor_default_1);  lowered_module_0 = quantized_decomposed_quantize_per_tensor_default = quantized_decomposed_quantize_per_tensor_default_1 = None
+        getitem: "i8[1, 1, 1, 1]" = executorch_call_delegate[0];  executorch_call_delegate = None
+        alloc_2: "f32[1, 1, 1, 1]" = executorch_exir_memory_alloc(((1, 1, 1, 1), torch.float32))
+        quantized_decomposed_dequantize_per_tensor_default: "f32[1, 1, 1, 1]" = torch.ops.quantized_decomposed.dequantize_per_tensor.out(getitem, 0.007843137718737125, -128, -128, 127, torch.int8, out = alloc_2);  getitem = alloc_2 = None
+        return pytree.tree_unflatten((quantized_decomposed_dequantize_per_tensor_default,), self._out_spec)
+        
