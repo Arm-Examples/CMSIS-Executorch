@@ -6,7 +6,13 @@
 
 #pragma once
 
+#if defined (__RTE__)
+#include "RTE_Components.h"
+#include CMSIS_device_header
+#else
 #include <SSE300MPS3.h>
+#endif // defined (__RTE__)
+
 #include <m-profile/armv8m_pmu.h>
 
 void StartMeasurements();
