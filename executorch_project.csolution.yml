@@ -23,6 +23,8 @@ solution:
   packs:
     - pack: ARM::V2M_MPS3_SSE_300_BSP@1.5.0
     - pack: ARM::CMSIS
+    # Target Hardware
+    - pack: AlifSemiconductor::Ensemble@^2.1.0-0
 
   build-types:
     - type: Debug
@@ -49,7 +51,7 @@ solution:
       board: ARM::V2M-MPS3-SSE-300-FVP
       device: ARM::SSE-300-MPS3
       variables:
-        - Board-Layer: ./board/Corstone-300/Board.clayer.yml
+        - Board-Layer: $SolutionDir()$/board/Corstone-300/Board.clayer.yml
       target-set:
         - set:
           images:
@@ -59,6 +61,34 @@ solution:
             model: FVP_Corstone_SSE-300_Ethos-U55
             config-file: board/Corstone-300/fvp_config.txt
             args: --simlimit 10
+
+    - type: DevKit-E7-HE
+      board: DevKit-E7:Gen 2
+      device: AE722F80F55D5LS
+      variables:
+        - Board-Layer: $SolutionDir()$/board/DevKit-e7/M55_HE/Board_HE.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: executorch_project.Debug
+          debugger:
+            name: ULINKplus@pyOCD
+            port: 3333
+            protocol: swd
+            clock: 10000000
+
+    - type: DevKit-E7-HP
+      board: DevKit-E7:Gen 2
+      device: AE722F80F55D5LS
+      variables:
+        - Board-Layer: $SolutionDir()$/board/DevKit-e7/M55_HP/Board_HP.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: executorch_project.Debug
+          debugger:
+            name: ULINKplus@pyOCD
+            clock: 10000000
 
   projects:
     # Simple model example

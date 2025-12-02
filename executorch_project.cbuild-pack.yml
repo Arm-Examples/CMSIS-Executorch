@@ -3,9 +3,17 @@ cbuild-pack:
     - resolved-pack: ARM::CMSIS@6.2.0
       selected-by-pack:
         - ARM::CMSIS
+        - ARM::CMSIS@^6.2.0
+    - resolved-pack: ARM::CMSIS-Compiler@2.1.0
+      selected-by-pack:
+        - ARM::CMSIS-Compiler@^2.1.0
+    - resolved-pack: ARM::CMSIS-Driver@2.10.0
+      selected-by-pack:
+        - ARM::CMSIS-Driver@^2.8.0
     - resolved-pack: ARM::V2M_MPS3_SSE_300_BSP@1.5.0
       selected-by-pack:
         - ARM::V2M_MPS3_SSE_300_BSP@1.5.0
     - resolved-pack: ARM::ethos-u-core-driver@1.25.2
       selected-by-pack:
         - ARM::ethos-u-core-driver@1.25.2
+        - ARM::ethos-u-core-driver@^1.24.8
