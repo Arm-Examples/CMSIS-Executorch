@@ -15,6 +15,10 @@
  */
 #define CMSIS_device_header "SSE300MPS3.h"
 
+/* ARM::CMSIS:RTOS2:Keil RTX5&Source@5.9.0 */
+#define RTE_CMSIS_RTOS2                 /* CMSIS-RTOS2 */
+#define RTE_CMSIS_RTOS2_RTX5            /* CMSIS-RTOS2 Keil RTX5 */
+#define RTE_CMSIS_RTOS2_RTX5_SOURCE     /* CMSIS-RTOS2 Keil RTX5 Source */
 /* ARM::Device:Native Driver:SysCounter@1.1.0 */
 #define RTE_SYSCOUNTER      1
 /* ARM::Device:Native Driver:Timeout@1.0.0 */

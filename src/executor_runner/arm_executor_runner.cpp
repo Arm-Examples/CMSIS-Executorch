@@ -1154,7 +1154,7 @@ bool run_model(RunnerContext& ctx, const void* model_pte) {
 } // namespace
 
 extern "C" {
-int app_main(int argc, const char* argv[]) {
+int executorch_runner_main(int argc, const char* argv[]) {
 #if defined(USE_SEMIHOSTING)
   ET_LOG(Info, "Running executor with parameter:");
   if (argc < 7) {

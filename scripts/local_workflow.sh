@@ -39,11 +39,11 @@ log_and_tee "model_conversion" "cd /workspace2/model && python3 aot_model.py"
 
 # Step 2: Build ExecuTorch Core Libraries  
 echo "=== Step 2: Build ExecuTorch Core Libraries ==="
-log_and_tee "stage1_build" "/workspace2/scripts/build_stage1.sh /workspace/executorch /workspace2/out/stage1 /workspace/executorch/examples/arm/ethos-u-setup/arm-none-eabi-gcc.cmake"
+log_and_tee "stage1_build" "/workspace2/scripts/build_stage1.sh /workspace/executorch /workspace2/out/stage1 /workspace2/model/arm-none-eabi-gcc.cmake"
 
 # Step 3: Build ExecuTorch Selective Kernel Libraries
 echo "=== Step 3: Build ExecuTorch Selective Kernel Libraries ==="
-log_and_tee "stage2_build" "/workspace2/scripts/build_stage2_selective.sh /workspace/executorch \"\" /workspace2/out/stage2 /workspace/executorch/examples/arm/ethos-u-setup/arm-none-eabi-gcc.cmake /workspace2/model/operators_minimal.txt"
+log_and_tee "stage2_build" "/workspace2/scripts/build_stage2_selective.sh /workspace/executorch \"\" /workspace2/out/stage2 /workspace2/model/arm-none-eabi-gcc.cmake /workspace2/model/operators_minimal.txt"
 
 # Step 4: Collect artifacts
 echo "=== Step 4: Collect artifacts ==="
