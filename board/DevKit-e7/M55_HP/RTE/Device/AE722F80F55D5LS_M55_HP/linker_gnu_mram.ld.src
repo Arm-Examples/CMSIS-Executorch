@@ -167,6 +167,32 @@ SECTIONS
     *(.bss.lcd_frame_buf)                 /* LCD frame Buffer. */
     *(.bss.camera_frame_buf)              /* Camer Frame Buffer */
     *(.bss.camera_frame_bayer_to_rgb_buf) /* (Optional) Camera Frame Buffer for Bayer to RGB Conversion. */
+    
+    /* ExecuTorch-specific sections */
+    . = ALIGN(32);
+    *(.bss.tensor_arena)                  /* ExecuTorch tensor arena for inference scratch */
+    . = ALIGN(16);
+    *(.bss.ethosu_scratch)                /* Ethos-U NPU scratch buffer */
+    . = ALIGN(16);
+    *(output_data_sec)                    /* ExecuTorch output data section */
+    . = ALIGN(16);
+  } > SRAM0
+
+  /* ExecuTorch model and input data sections in SRAM0 */
+  .model_data (NOLOAD) : ALIGN(16)
+  {
+    *(input_data_sec)                     /* ExecuTorch input tensors */
+    . = ALIGN(16);
+    *(network_model_sec)                  /* ExecuTorch model weights and data */
+    . = ALIGN(16);
+    *(expected_output_data_sec)           /* ExecuTorch expected outputs (for testing) */
+    . = ALIGN(16);
+    *(sec_command_stream)                 /* Ethos-U command streams */
+    *(sec_weight_data)                    /* Ethos-U weight data */
+    *(sec_input_data)                     /* Ethos-U input data */
+    *(ethosu_core_in_queue)               /* Ethos-U core input queue */
+    *(ethosu_core_out_queue)              /* Ethos-U core output queue */
+    . = ALIGN(16);
   } > SRAM0
 #endif
 

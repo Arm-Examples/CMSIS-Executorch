@@ -126,15 +126,15 @@
 // <h>RTSS HE
 //   <o0> Stack Size (in Bytes) <0x0-0x400000:8>
 //   <o1> Heap Size (in Bytes) <0x0-0x400000:8>
-#define APP_HE_STACK_SIZE      0x00002000
-#define APP_HE_HEAP_SIZE       0x00018000
+#define APP_HE_STACK_SIZE      0x00008000
+#define APP_HE_HEAP_SIZE       0x00008000
 // </h>
 
 // <h>RTSS HP
 //   <o0> Stack Size (in Bytes) <0x0-0x400000:8>
 //   <o1> Heap Size (in Bytes) <0x0-0x400000:8>
-#define APP_HP_STACK_SIZE      0x00002000
-#define APP_HP_HEAP_SIZE       0x00018000
+#define APP_HP_STACK_SIZE      0x0000800
+#define APP_HP_HEAP_SIZE       0x00008000
 // </h>
 
 // </h>
