@@ -29,8 +29,6 @@ jobs:
 
       - name: Activate Arm tool license
         uses: ARM-software/cmsis-actions/armlm@v1
-        with:
-          product: KEMDK-COM0
 
       - name: Cache packs
         uses: actions/cache@v4
