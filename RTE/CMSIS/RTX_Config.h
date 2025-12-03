@@ -57,7 +57,7 @@
 //   <e>Round-Robin Thread switching
 //   <i> Enables Round-Robin Thread switching.
 #ifndef OS_ROBIN_ENABLE
-#define OS_ROBIN_ENABLE             1
+#define OS_ROBIN_ENABLE             0
 #endif
  
 //     <o>Round-Robin Timeout <1-1000>
@@ -148,7 +148,7 @@
 //   <e>Object specific Memory allocation
 //   <i> Enables object specific memory allocation.
 #ifndef OS_THREAD_OBJ_MEM
-#define OS_THREAD_OBJ_MEM           0
+#define OS_THREAD_OBJ_MEM           1
 #endif
  
 //     <o>Number of user Threads <1-1000>
@@ -170,7 +170,7 @@
 //     <i> Applies to user threads with user-provided stack size and system provided memory for stack.
 //     <i> Default: 0
 #ifndef OS_THREAD_USER_STACK_SIZE
-#define OS_THREAD_USER_STACK_SIZE   0
+#define OS_THREAD_USER_STACK_SIZE   4096
 #endif
  
 //   </e>
@@ -179,7 +179,7 @@
 //   <i> Defines stack size for threads with zero stack size specified.
 //   <i> Default: 3072
 #ifndef OS_STACK_SIZE
-#define OS_STACK_SIZE               8192
+#define OS_STACK_SIZE               3072
 #endif
  
 //   <o>Idle Thread Stack size [bytes] <72-1073741824:8>
@@ -230,7 +230,7 @@
 //     <1=> Privileged mode
 //   <i> Default: Unprivileged mode
 #ifndef OS_PRIVILEGE_MODE
-#define OS_PRIVILEGE_MODE           0
+#define OS_PRIVILEGE_MODE           1
 #endif
  
 // </h>
