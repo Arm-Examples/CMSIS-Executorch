@@ -55,6 +55,21 @@ solution:
             config-file: board/Corstone-300/fvp_config.txt
             args: --simlimit 10
 
+    - type: AVH-SSE-320
+      board: ARM::SSE-320
+      device: ARM::SSE-320-FVP
+      variables:
+        - Board-Layer: $SolutionDir()$/board/Corstone-320/Board.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: executorch_project.Debug
+          debugger:
+            name: Arm-FVP
+            model: FVP_Corstone_SSE-320
+            config-file: board/Corstone-320/fvp_config.txt
+            args: --simlimit 10
+
     - type: DevKit-E7-HE
       board: DevKit-E7:Gen 2
       device: AE722F80F55D5LS
