@@ -18,9 +18,8 @@ cbuild-pack:
         - ARM::V2M_MPS3_SSE_300_BSP@1.5.0
     - resolved-pack: ARM::ethos-u-core-driver@1.25.2
       selected-by-pack:
-        - ARM::ethos-u-core-driver@1.25.2
-        - ARM::ethos-u-core-driver@^1.24.8
-    - resolved-pack: AlifSemiconductor::Ensemble@2.1.0-rc0
+        - ARM::ethos-u-core-driver@^1.25.2
+    - resolved-pack: AlifSemiconductor::Ensemble@2.0.4
       selected-by-pack:
         - AlifSemiconductor::Ensemble@^2.0.4
         - AlifSemiconductor::Ensemble@^2.0.4-0
