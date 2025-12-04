@@ -24,7 +24,7 @@ from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
 # Some args are used by the Arm Vela graph compiler later in the example. Refer to Arm Vela documentation for an
 # explanation of its flags: https://gitlab.arm.com/artificial-intelligence/ethos-u/ethos-u-vela/-/blob/main/OPTIONS.md
 compile_spec = EthosUCompileSpec(
-            target="ethos-u55-128",
+            target="ethos-u85-256",
             system_config="Ethos_U55_High_End_Embedded",
             memory_mode="Shared_Sram",
             extra_flags=["--output-format=raw", "--debug-force-regor"]

@@ -20,7 +20,7 @@
 # modified to align better with cs300 platform
 
 set(TARGET_CPU
-    "cortex-m55"
+    "cortex-m85"
     CACHE STRING "Target CPU"
 )
 string(TOLOWER ${TARGET_CPU} CMAKE_SYSTEM_PROCESSOR)
@@ -60,7 +60,8 @@ string(REPLACE "cortex-m85" "cortex-m55" GCC_CPU ${GCC_CPU})
 add_compile_options(
   -mcpu=${GCC_CPU} -mthumb "$<$<CONFIG:DEBUG>:-gdwarf-3>"
   "$<$<COMPILE_LANGUAGE:CXX>:-fno-unwind-tables;-fno-rtti;-fno-exceptions>"
-  -fdata-sections -ffunction-sections
+  -fdata-sections -ffunction-sections 
+  -Oz
 )
 
 # Compile defines
