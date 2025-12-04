@@ -24,7 +24,7 @@ solution:
     - pack: ARM::V2M_MPS3_SSE_300_BSP@1.5.0
     - pack: ARM::CMSIS
     # Target Hardware
-    - pack: AlifSemiconductor::Ensemble@^2.1.0-0
+    - pack: AlifSemiconductor::Ensemble@^2.0.4-0
 
   build-types:
     - type: Debug
@@ -48,10 +48,10 @@ solution:
 
     # Arm Corstone targets
     - type: AVH-SSE-300
-      board: ARM::V2M-MPS3-SSE-300-FVP
-      device: ARM::SSE-300-MPS3
+      board: V2M-MPS3-SSE-300-FVP
+      device: SSE-300-MPS3
       variables:
-        - Board-Layer: $SolutionDir()$/board/Corstone-300/Board.clayer.yml
+        - Board-Layer: $SolutionDir()$/board/Corstone-300/Board-U55.clayer.yml
       target-set:
         - set:
           images:
