@@ -14,17 +14,7 @@
  * https://developer.arm.com/Processors/Corstone-300
  */
 
-#ifndef ETHOSU_MODEL
-  /* default value - '1', for DRAM */
-  #define ETHOSU_MODEL  1
-#endif
-
-#ifndef ETHOSU_ARENA
-  /* default value - '1', for DRAM */
-  #define ETHOSU_ARENA  1
-#endif
-
-__STACK_SIZE = 0x00000800;
+__STACK_SIZE = 0x00008000;
 __HEAP_SIZE  = 0x00008000;
 
 MEMORY
@@ -34,14 +24,7 @@ MEMORY
   DTCM  (rw)  : ORIGIN = 0x30000000, LENGTH = 0x00080000
   SRAM  (rw)  : ORIGIN = 0x31000000, LENGTH = 0x00200000
   QSPI  (rw)  : ORIGIN = 0x38000000, LENGTH = 0x00800000
-  DDR   (rwx) : ORIGIN = 0x70000000, LENGTH = 0x60000000
-}
-
-PHDRS
-{
-    rom_exec PT_LOAD;
-    rom_dram PT_LOAD;
-    null     PT_NULL;
+  DDR   (rwx) : ORIGIN = 0x70000000, LENGTH = 0x40000000
 }
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -74,19 +57,15 @@ PHDRS
  *   __StackTop
  *   __stack
  */
-
 ENTRY(Reset_Handler)
 
 SECTIONS
 {
   .text :
   {
-    _vectors = .;
     KEEP(*(.vectors))
-    *(EXCLUDE_FILE(
-                  *op_*.cpp.obj
-                   )
-    .text*)
+    *(.text*)
+
     KEEP(*(.init))
     KEEP(*(.fini))
 
@@ -104,8 +83,10 @@ SECTIONS
     *(SORT(.dtors.*))
     *(.dtors)
 
+    *(.rodata*)
+
     KEEP(*(.eh_frame*))
-  } > ITCM :rom_exec
+  } > ITCM
 
   /*
    * SG veneers:
@@ -117,57 +98,45 @@ SECTIONS
   .gnu.sgstubs :
   {
     . = ALIGN(32);
-  } > ITCM :rom_exec
+  } > ITCM
 */
   .ARM.extab :
   {
     *(.ARM.extab* .gnu.linkonce.armextab.*)
-  } > ITCM :rom_exec
+  } > ITCM
 
   .ARM.exidx :
   {
   __exidx_start = .;
     *(.ARM.exidx* .gnu.linkonce.armexidx.*)
   __exidx_end = .;
-  } > ITCM :rom_exec
+  } > ITCM
 
   .copy.table :
   {
     . = ALIGN(4);
     __copy_table_start__ = .;
-    LONG (__etext)
-    LONG (__data_start__)
-    LONG ((__data_end__ - __data_start__) / 4)
 
-    LONG (__eddr_data)
-    LONG (__sram_data_start__)
-    LONG ((__sram_data_end__ - __sram_data_start__) / 4)
-
-    LONG (__eddr_data + (__sram_data_end__ - __sram_data_start__))
-    LONG (__rodata_start__)
-    LONG ((__rodata_end__ - __rodata_start__) / 4)
+    LONG (LOADADDR(.data))
+    LONG (ADDR(.data))
+    LONG (SIZEOF(.data) / 4)
 
     __copy_table_end__ = .;
-  } > ITCM :rom_exec
+  } > ITCM
 
   .zero.table :
   {
     . = ALIGN(4);
     __zero_table_start__ = .;
-    LONG (__bss_start__)
-    LONG ((__bss_end__ - __bss_start__) / 4)
+
+    LONG (ADDR(.bss))
+    LONG (SIZEOF(.bss) / 4)
+
     __zero_table_end__ = .;
 
-  /**
-   * Location counter can end up 2byte aligned with narrow Thumb code but
-   * __etext is assumed by startup code to be the LMA of a section in DTCM
-   * which must be 4byte aligned
-   */
-  __etext = ALIGN (4);
+  } > ITCM
 
-  } > ITCM :rom_exec
-
-  .data : AT(__etext)
+  .data : ALIGN(4)
   {
     __data_start__ = .;
     *(vtable)
@@ -198,66 +167,27 @@ SECTIONS
     . = ALIGN(4);
     /* All data end */
     __data_end__ = .;
-  } > DTCM :rom_exec
+  } > DTCM AT > ITCM
 
-  .sram.bss :
+  .sram.bss (NOLOAD) :
   {
-    . = ALIGN(16);
-
-#if (ETHOSU_ARENA == 0)
     . = ALIGN(32);
     *(.bss.tensor_arena)
-#endif
-    . = ALIGN(16);
-    *(.bss.ethosu_scratch);
-    *.(output_data_sec)
-  } > SRAM :null
+  } > SRAM
 
   .ddr :
   {
-#if (ETHOSU_ARENA == 1)
-    . = ALIGN(32);
-    *(.bss.tensor_arena)
-#endif
-
-    . = ALIGN(4);
-    *(input_data_sec)
     . = ALIGN(16);
-
     *(network_model_sec)
-
-    * (expected_output_data_sec)
-    . = ALIGN(16);
-    * (sec_command_stream, sec_weight_data, sec_input_data)
     * (.got*)
-    * (ethosu_core_in_queue)
-    * (ethosu_core_out_queue)
-    . = ALIGN(4);
-  } > DDR :rom_dram
+
+  } > DDR
+
   .ddr_noload (NOLOAD) :
   {
     . = ALIGN(16);
     *(input_data_sec)
-    . = ALIGN(16);
-  } > DDR :null
-  __eddr_data = ALIGN(4);
-  .sram.data :
-  {
-    __sram_data_start__ = .;
-    *(.sram.data)
-    . = ALIGN(4);
-    *op_*.cpp.obj (*.text*)
-    __sram_data_end__ = .;
-  } > BRAM AT >DDR :rom_dram
-
-  .rodata :
-  {
-    __rodata_start__ = .;
-    *(.rodata)
-    *(.rodata.*)
-    . = ALIGN(4);
-    __rodata_end__ = .;
-  } > DTCM AT >DDR :rom_dram
+  } > DDR
 
   .bss :
   {
@@ -268,9 +198,9 @@ SECTIONS
     *(COMMON)
     . = ALIGN(4);
     __bss_end__ = .;
-  } > DTCM :null
+  } > DTCM AT > DDR
 
-  .heap (COPY) :
+  .heap (NOLOAD) :
   {
     . = ALIGN(8);
     __end__ = .;
@@ -278,19 +208,17 @@ SECTIONS
     . = . + __HEAP_SIZE;
     . = ALIGN(8);
     __HeapLimit = .;
-  } > DTCM :null
+  } > DTCM AT > DDR
 
-  .stack (ORIGIN(DTCM) + LENGTH(DTCM) - __STACK_SIZE) (COPY) :
+  .stack (ORIGIN(DTCM) + LENGTH(DTCM) - __STACK_SIZE) (NOLOAD) :
   {
     . = ALIGN(8);
     __StackLimit = .;
     . = . + __STACK_SIZE;
     . = ALIGN(8);
     __StackTop = .;
-  } > DTCM :null
+  } > DTCM AT > DDR
   PROVIDE(__stack = __StackTop);
-
-  __RAM_segment_used_end__ = .;
 
   /* Check if data + heap + stack exceeds DTCM limit */
   ASSERT(__StackLimit >= __HeapLimit, "region DTCM overflowed with stack")
