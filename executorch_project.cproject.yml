@@ -17,15 +17,14 @@
 project:
   packs:
     - pack: ARM::CMSIS
-    # - pack: ARM::CMSIS-DSP@1.16.0
-    # - pack: ARM::CMSIS-NN@7.0.0
     - pack: ARM::CMSIS-RTX@5.9.0
-    - pack: ARM::ethos-u-core-driver@1.25.2
 
   output:
     type:
       - elf
       - bin
+      - hex
+      - map
 
   connections:
     - connect: Board Layer with Audio interface
@@ -36,19 +35,8 @@ project:
 
   misc:
     - CPP:
-        - -std=c++17
-        - -fdiagnostics-color=always
-        - -fpermissive
         - -Wno-deprecated-declarations
-        - -ffunction-sections
-        - -fdata-sections
-        - -Os
-    - C:
-        - -ffunction-sections
-        - -fdata-sections
-        - -Os
     - Link:
-        - -Wl,--gc-sections
         - -Wl,-u,_printf_float
         - -Wl,--whole-archive
         - $SolutionDir()$/ai_layer/engine/lib/libexecutorch_delegate_ethos_u.a
@@ -77,7 +65,7 @@ project:
     - ETHOSU55
     - ETHOSU_ARCH: u55
     - __RTE__
-    
+
   add-path:
     - src/executor_runner/
 
@@ -92,8 +80,6 @@ project:
   components:
     - component: CMSIS:OS Tick:SysTick
     - component: CMSIS:RTOS2:Keil RTX5&Source
-    - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
-      for-context: \+AVH*
 
   layers:
     - layer: $Board-Layer$
