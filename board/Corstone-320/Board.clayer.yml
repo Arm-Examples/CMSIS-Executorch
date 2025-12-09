@@ -7,50 +7,45 @@ layer:
   connections:
     - connect: Corstone-320
       provides:
-        - AVH_VIDEO
-
+        - CMSIS_USART
+        - STDOUT
+        - STDERR
+        - Heap: 786432
 
   define:
-    - CORSTONE320_FVP
+    - CMSIS_target_header: \"Corstone-320.h\"
     - ARM_MODEL_USE_PMU_COUNTERS
-    - ETHOSU
-    - ETHOSU85
-    - ETHOSU_ARCH: u85
 
   packs:
+    - pack: ARM::CMSIS
+    - pack: ARM::CMSIS-Compiler@^2.1.0
     - pack: ARM::SSE_320_BSP@1.0.0
-    - pack: ARM::ethos-u-core-driver@1.25.2
 
   components:
-    - component: ARM::CMSIS:CORE
+    - component: CMSIS:CORE
 
-    - component: ARM::Device:Definition
-    - component: ARM::Device:Startup&C Startup
+    - component: CMSIS Driver:USART
 
-    - component: ARM::Device:Native Driver:Timeout
-    - component: ARM::Device:Native Driver:SysCounter
-    - component: ARM::Device:Native Driver:SysTimer
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDERR:Custom
+    - component: CMSIS-Compiler:STDIN:Custom
+    - component: CMSIS-Compiler:STDOUT:Custom
 
-    - component: ARM::Machine Learning:NPU Support:Ethos-U Driver&Generic U85
+    - component: Device:Definition
+    - component: Device:Startup&C Startup
 
+    - component: Device:Native Driver:SysCounter
+    - component: Device:Native Driver:SysTimer
+    - component: Device:Native Driver:Timeout
+    - component: Device:Native Driver:UART
 
   groups:
     - group: Board
       files:
         - file: ./main.c
         - file: ./main.h
-        - file: ./uart_cmsdk_apb.c
-        - file: ./uart_stdout.h
-        - file: ./uart_config.h
-        - file: ./retarget.c
-
-    - group: Streaming Interface
-      files:
-        - file: ./vsi/include/arm_vsi.h
-        - file: ./vsi/audio/driver/audio_drv.c
-        - file: ./vsi/audio/include/audio_drv.h
-        - file: ./vsi/video/source/video_drv.c
-        - file: ./vsi/video/include/video_drv.h
+        - file: ./retarget_stdio.c
 
   linker:
-    - script: ./mps4-sse-320.ld
+    - script: ./Corstone-320.ld
+    # - regions: ./regions_SSE-320.h

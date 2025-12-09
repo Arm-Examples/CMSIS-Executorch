@@ -59,7 +59,7 @@ solution:
       board: ARM::SSE-320
       device: ARM::SSE-320-FVP
       variables:
-        - Board-Layer: $SolutionDir()$/board/Corstone-320/Board.clayer.yml
+        - Board-Layer: $SolutionDir()$/board/Corstone-320/Board-U85.clayer.yml
       target-set:
         - set:
           images:

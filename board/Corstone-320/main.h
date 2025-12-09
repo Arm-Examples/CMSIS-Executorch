@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------
- * Copyright (c) 2020-2021 Arm Limited (or its affiliates).
+ * Copyright (c) 2020-2025 Arm Limited (or its affiliates).
  * All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,11 +24,15 @@ extern "C" {
 #endif
 
 /* Prototypes */
-extern int app_main(void);
+extern int app_main (void);
+extern int stdio_init (void);
+
+#if defined(ETHOSU_ARCH)
+extern void ethos_setup (void);
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-  
