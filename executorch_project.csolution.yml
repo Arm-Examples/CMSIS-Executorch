@@ -83,6 +83,21 @@ solution:
             name: ULINKplus@pyOCD
             clock: 10000000
 
+    - type: DevKit-E8-HP-U85
+      board: DevKit-E8:Gen 1
+      device: AE822FA0E5597LS0
+      variables:
+        - Board-Layer: $SolutionDir()$/board/DevKit-e8/M55_HP/Board_HP-U85.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: executorch_project.Debug
+          debugger:
+            name: CMSIS-DAP@pyOCD
+            port: 3333
+            protocol: swd
+            clock: 10000000
+
   # List related projects.
   projects:
     # Simple model example
