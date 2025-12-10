@@ -1,44 +1,27 @@
 /*
- * Copyright 2025 Arm Limited and/or its affiliates.
+ * Copyright (c) 2025 Arm Limited. All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
- /*
- * This is a simplified linkerscript for the Corstone-300 memory system.
- * This example has been modified to place certain sections in specific memory.
- * Please refer to the Corstone SSE-300 Technical Reference Manual for
- * further information.
+ * SPDX-License-Identifier: Apache-2.0
  *
- * https://developer.arm.com/Processors/Corstone-320
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-/* default value - '1', for DRAM */
-#ifndef ETHOSU_MODEL
-#define ETHOSU_MODEL  1
-#endif
-
-/* default value - '1', for DRAM */
-#ifndef ETHOSU_ARENA
-#define ETHOSU_ARENA  1
-#endif
-
-/*
-#ifndef STACK_SIZE
-#define STACK_SIZE 0x8000
-#endif
-*/
-
-/*
-#ifndef HEAP_SIZE
-#define HEAP_SIZE 0x10000
-#endif
-*/
 
 __STACK_SIZE = 0x8000;
 __HEAP_SIZE  = 0x10000;
 
+/* ----------------------------------------------------------------------------
+  Memory definition
+ *----------------------------------------------------------------------------*/
 MEMORY
 {
   ITCM  (rwx) : ORIGIN = 0x10000000, LENGTH = 0x00008000
@@ -50,16 +33,8 @@ MEMORY
   DDR   (rw)  : ORIGIN = 0x70000000, LENGTH = 0x10000000
 }
 
-PHDRS
-{
-    rom_boot PT_LOAD;
-    rom_exec PT_LOAD;
-    rom_dram PT_LOAD;
-    null     PT_NULL;
-}
-
 /* Linker script to place sections and symbol values. Should be used together
- * with other linker script that defines memory regions ITCM and RAM.
+ * with other linker script that defines memory regions ROM and RAM.
  * It references following symbols, which must be defined in code:
  *   Reset_Handler : Entry of reset handler
  *
@@ -70,7 +45,7 @@ PHDRS
  *   __copy_table_end__
  *   __zero_table_start__
  *   __zero_table_end__
- *   __etext
+ *   __etext          (deprecated)
  *   __data_start__
  *   __preinit_array_start
  *   __preinit_array_end
@@ -81,6 +56,8 @@ PHDRS
  *   __data_end__
  *   __bss_start__
  *   __bss_end__
+ *   __noinit_start
+ *   __noinit_end
  *   __end__
  *   end
  *   __HeapLimit
@@ -88,7 +65,6 @@ PHDRS
  *   __StackTop
  *   __stack
  */
-
 ENTRY(Reset_Handler)
 
 SECTIONS
@@ -96,25 +72,11 @@ SECTIONS
   .text.vectors :
   {
     KEEP(*(.vectors))
-  } > BROM :rom_boot
-
-  /*
-  /* Vector table relocation to read write memory
-   * Alignment requirement from up to 496 interrupts, rounded to the closest
-   * power of two equals 512 (words), thus 2048 bytes.
-   */
-  .data.vtable_rw (COPY):
-  {
-    . = ALIGN(0x800);
-    KEEP(*(.vtable_rw))
-  } > ITCM :null
+  } > BROM
 
   .text :
   {
-    *crt* (.text*)
-    *startup_ARMCM85.c.obj (.text*)
-    *system_ARMCM85.c.obj (.text*)
-    *target.cpp.obj (.text*)
+    *(.text*)
 
     KEEP(*(.init))
     KEEP(*(.fini))
@@ -133,48 +95,42 @@ SECTIONS
     *(SORT(.dtors.*))
     *(.dtors)
 
-    *(.text*)
-
-    KEEP(*(.eh_frame*))
-  } > BRAM :rom_exec
-
-  .data :
-  {
-    . = ALIGN(4);
-    __data_start__ = .;
-
-    *(vtable)
-    *(.data)
-    *(.data.*)
     *(.rodata*)
 
-    . = ALIGN(4);
-    __data_end__ = .;
-  } > BRAM :rom_exec
+    KEEP(*(.eh_frame*))
+  } > BRAM
+
+#if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+  .gnu.sgstubs :
+  {
+    . = ALIGN(32);
+  } > BRAM
+#endif
 
   .ARM.extab :
   {
     *(.ARM.extab* .gnu.linkonce.armextab.*)
-  } > BRAM :rom_exec
+  } > BRAM
 
+  __exidx_start = .;
   .ARM.exidx :
   {
-  __exidx_start = .;
     *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+
+  } > BRAM
   __exidx_end = .;
-  } > BRAM :rom_exec
 
   .copy.table :
   {
     . = ALIGN(4);
     __copy_table_start__ = .;
 
-    LONG (LOADADDR(.sram))
-    LONG (ADDR(.sram))
-    LONG (SIZEOF(.sram) / 4)
+    LONG (LOADADDR(.data))
+    LONG (ADDR(.data))
+    LONG (SIZEOF(.data) / 4)
 
     __copy_table_end__ = .;
-  } > BRAM :rom_exec
+  } > BRAM
 
   .zero.table :
   {
@@ -184,21 +140,22 @@ SECTIONS
     LONG (ADDR(.bss))
     LONG (SIZEOF(.bss) / 4)
 
-    LONG (ADDR(.sram.bss))
-    LONG (SIZEOF(.sram.bss) / 4)
-
     __zero_table_end__ = .;
-  } > BRAM :rom_exec
 
-  .sram : AT(__etext)
+  } > BRAM
+
+  /*
+   * This __etext variable is kept for backward compatibility with older,
+   * ASM based startup files.
+   */
+  PROVIDE(__etext = LOADADDR(.data));
+
+  .data : ALIGN(4)
   {
-#if (ETHOSU_MODEL == 0)
-    . = ALIGN(16);
-    *(network_model_sec)
-#endif
-
-    . = ALIGN(16);
-    *(.sram.data)
+    __data_start__ = .;
+    *(vtable)
+    *(.data)
+    *(.data.*)
 
     . = ALIGN(4);
     /* preinit data */
@@ -221,67 +178,55 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
 
     KEEP(*(.jcr*))
-  } > SRAM :rom_dram
-
-  .sram.bss :
-  {
-#if (ETHOSU_ARENA == 0)
-    . = ALIGN(32);
-    *(.bss.tensor_arena)
-#endif
-
-    . = ALIGN(16);
-    *(.bss.ethosu_scratch);
-  } > SRAM :null
-
-  .ddr :
-  {
-#if (ETHOSU_ARENA == 1)
-    . = ALIGN(32);
-    *(.bss.tensor_arena)
-#endif
-
-#if (ETHOSU_MODEL == 1)
-    . = ALIGN(16);
-    *(network_model_sec)
-#endif
-
     . = ALIGN(4);
-    *(input_data_sec)
-    *(expected_output_data_sec)
-    *(output_data_sec)
+    /* All data end */
+    __data_end__ = .;
+  } > SRAM AT > BRAM
 
-    *(ethosu_core_in_queue ethosu_core_out_queue)
-
-    /* Place data for scatter loading here */
-    __etext = .;
-  } > DDR :rom_dram
-  .asan_shadow (NOLOAD) :
-  {
-    . = ALIGN(16);
-    __asan_shadow_start = .;
-    KEEP(*(.asan_shadow))
-    __asan_shadow_end = .;
-  } > DDR :null
-  .ddr_noload (NOLOAD) :
-  {
-    . = ALIGN(16);
-    *(input_data_sec)
-  } > DDR :null
   .bss :
   {
     . = ALIGN(4);
     __bss_start__ = .;
-
     *(.bss)
     *(.bss.*)
     *(COMMON)
-
     . = ALIGN(4);
     __bss_end__ = .;
-  } > BRAM :null
+  } > SRAM AT > BRAM
 
-  .heap (ORIGIN(BRAM) + LENGTH(BRAM) - __HEAP_SIZE) (COPY) :
+  .sram.bss (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.bss.tensor_arena)
+  } > SRAM AT > BRAM
+
+  /* This section contains data that is not initialized during load,
+     or during the application's initialization sequence. */
+  .noinit (NOLOAD) :
+  {
+    . = ALIGN(4);
+    __noinit_start = .;
+    *(.noinit)
+    *(.noinit.*)
+    . = ALIGN(4);
+    __noinit_end = .;
+  } > SRAM
+
+  .ddr :
+  {
+    . = ALIGN(16);
+    *(network_model_sec)
+    * (.got*)
+
+  } > DDR
+
+  .ddr_noload (NOLOAD) :
+  {
+    . = ALIGN(16);
+    *(input_data_sec)
+  } > DDR
+
+  .heap (NOLOAD) :
   {
     . = ALIGN(8);
     __end__ = .;
@@ -289,18 +234,19 @@ SECTIONS
     . = . + __HEAP_SIZE;
     . = ALIGN(8);
     __HeapLimit = .;
-  } > BRAM :null
+  } > SRAM
 
-  .stack (ORIGIN(DTCM) + LENGTH(DTCM) - __STACK_SIZE) (COPY) :
+  .stack (ORIGIN(SRAM) + LENGTH(SRAM) - __STACK_SIZE) (NOLOAD) :
   {
     . = ALIGN(8);
     __StackLimit = .;
     . = . + __STACK_SIZE;
     . = ALIGN(8);
     __StackTop = .;
-  } > DTCM :null
+  } > SRAM
+
   PROVIDE(__stack = __StackTop);
 
-  /* Check if stack exceeds DTCM limit */
-  ASSERT(LENGTH(DTCM) >= __STACK_SIZE, "region DTCM overflowed with stack")
+  /* Check if data + heap + stack exceeds RAM limit */
+  ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 }
