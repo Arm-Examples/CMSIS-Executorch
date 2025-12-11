@@ -260,7 +260,7 @@ CMake Warning:
 [ 57%] Building CXX object CMakeFiles/flatc.dir/src/file_name_saving_file_manager.cpp.o
 [ 60%] Building CXX object CMakeFiles/flatc.dir/src/file_binary_writer.cpp.o
 [ 63%] Building CXX object CMakeFiles/flatc.dir/src/file_writer.cpp.o
-[ 65%] Building CXX object CMakeFiles/flatc.dir/src/flatc.cpp.o
+[ 68%] Building CXX object CMakeFiles/flatc.dir/src/flatc.cpp.o
 [ 68%] Building CXX object CMakeFiles/flatc.dir/src/flatc_main.cpp.o
 [ 71%] Building CXX object CMakeFiles/flatc.dir/src/binary_annotator.cpp.o
 [ 73%] Building CXX object CMakeFiles/flatc.dir/src/annotated_binary_text_gen.cpp.o
@@ -342,11 +342,11 @@ Install the project...
 [ 77%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/abort.cpp.obj
 [ 77%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/log.cpp.obj
 [ 77%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/platform.cpp.obj
+[ 88%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/profiler.cpp.obj
 /workspace/executorch/runtime/executor/tensor_parser_exec_aten.cpp: In function 'executorch::runtime::Result<void*> executorch::runtime::deserialization::{anonymous}::getMemPlannedPtr(const executorch_flatbuffer::AllocationDetails*, size_t, executorch::runtime::HierarchicalAllocator*)':
 /workspace/executorch/runtime/executor/tensor_parser_exec_aten.cpp:66:62: warning: left shift count >= width of type [-Wshift-count-overflow]
    66 |     memory_offset |= static_cast<size_t>(memory_offset_high) << 32;
       |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
-[ 88%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/profiler.cpp.obj
 [ 88%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/runtime.cpp.obj
 [ 88%] Building CXX object CMakeFiles/executorch_core.dir/schema/extended_header.cpp.obj
 [100%] Building CXX object CMakeFiles/executorch_core.dir/runtime/platform/default/posix.cpp.obj
@@ -386,8 +386,8 @@ Install the project...
 [ 21%] Linking CXX static library libkernels_util_all_deps.a
 [ 21%] Built target kernels_util_all_deps
 [ 22%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op__clone_dim_order.cpp.obj
-[ 22%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op__to_dim_order_copy.cpp.obj
 [ 22%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op__empty_dim_order.cpp.obj
+[ 22%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op__to_dim_order_copy.cpp.obj
 [ 22%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op_abs.cpp.obj
 [ 24%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op_acos.cpp.obj
 [ 24%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/op_acosh.cpp.obj
@@ -564,8 +564,8 @@ Install the project...
 [ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/dtype_util.cpp.obj
 [ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/index_util.cpp.obj
 [ 95%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/kernel_ops_util.cpp.obj
-[ 96%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/matmul_ops_util.cpp.obj
 [ 96%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/normalization_ops_util.cpp.obj
+[ 96%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/matmul_ops_util.cpp.obj
 [ 96%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/padding_util.cpp.obj
 [ 96%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/reduce_util.cpp.obj
 [ 98%] Building CXX object kernels/portable/CMakeFiles/portable_kernels.dir/cpu/util/repeat_util.cpp.obj
@@ -596,13 +596,13 @@ Install the project...
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_w.c.obj
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_x.c.obj
 [ 13%] Built target program_schema
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_y.c.obj
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_z.c.obj
-[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s8.c.obj
-[ 20%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s8.c.obj
-[ 40%] Built target executorch_core
-[ 40%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s16.c.obj
-[ 43%] Built target executorch
+[ 33%] Built target executorch_core
+[ 36%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_y.c.obj
+[ 36%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_z.c.obj
+[ 36%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s8.c.obj
+[ 40%] Built target executorch
+[ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s8.c.obj
+[ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s16.c.obj
 [ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s16.c.obj
 [ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_1_x_n_s8.c.obj
 [ 46%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_1x1_s8.c.obj
@@ -688,8 +688,8 @@ Install the project...
 [ 82%] Built target kernels_util_all_deps
 [ 88%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/embeddingxb.cpp.obj
 [ 88%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_add.cpp.obj
-[ 88%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_choose_qparams.cpp.obj
 [ 88%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_dequantize.cpp.obj
+[ 88%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_choose_qparams.cpp.obj
 [ 94%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_embedding.cpp.obj
 [ 94%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_embedding2b.cpp.obj
 [ 94%] Building CXX object kernels/quantized/CMakeFiles/quantized_kernels.dir/cpu/op_embedding4b.cpp.obj

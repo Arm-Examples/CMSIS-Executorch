@@ -3,14 +3,14 @@
 Generating comprehensive AI layer build report...
 ✅ Comprehensive report written to /__w/CMSIS-Executorch/CMSIS-Executorch/ai_layer/REPORT.md
 📊 Found 9 libraries and 1 model assets
-2025-12-09 21:14:42 [SUCCESS] Completed: Generate report
-2025-12-09 21:14:42 [INFO] Build summary:
+2025-12-11 09:37:59 [SUCCESS] Completed: Generate report
+2025-12-11 09:37:59 [INFO] Build summary:
 # ExecuTorch AI Layer Build Report
 
-**Generated:** 2025-12-09T21:14:42Z
-**Git Commit:** b02cf9d0b1c7 on Corstone320
+**Generated:** 2025-12-11T09:37:59Z
+**Git Commit:** 59675aef405c on Corstone320
 **Repository Status:** 🔄 Modified
-**Last Commit:** 2025-12-09 22:08:44 +0100
+**Last Commit:** 2025-12-11 10:29:48 +0100
 
 ## 📊 Build Summary
 
@@ -25,21 +25,21 @@ Generating comprehensive AI layer build report...
 
 | Library | Size | Percentage | Modified | Hash |
 |---------|------|------------|----------|------|
-| libcortex_m_kernels.a | 20.0 KiB | 0.2% | 2025-12-09 21:14:39 | `3207ba6c643c8c7b` |
-| libcortex_m_ops_lib.a | 12.7 KiB | 0.1% | 2025-12-09 21:14:39 | `3af2fc332d5ec312` |
-| libexecutorch.a | 51.9 KiB | 0.5% | 2025-12-09 21:14:39 | `ff4e9db0bbc044aa` |
-| libexecutorch_core.a | 216.5 KiB | 2.1% | 2025-12-09 21:14:39 | `1b2300c194aab53c` |
-| libexecutorch_delegate_ethos_u.a | 18.6 KiB | 0.2% | 2025-12-09 21:14:39 | `eb745b64bdf58854` |
-| libportable_kernels.a | 9.1 MiB | 92.3% | 2025-12-09 21:14:39 | `c621f30bb1eca573` |
-| libportable_ops_lib.a | 199.2 KiB | 2.0% | 2025-12-09 21:14:39 | `e4e7cc1438d917ed` |
-| libquantized_kernels.a | 238.6 KiB | 2.4% | 2025-12-09 21:14:39 | `6dc4dbea811e6d6f` |
-| libquantized_ops_lib.a | 28.7 KiB | 0.3% | 2025-12-09 21:14:39 | `dd97cd4da39fa681` |
+| libcortex_m_kernels.a | 20.0 KiB | 0.2% | 2025-12-11 09:37:56 | `02239d100efc7d7f` |
+| libcortex_m_ops_lib.a | 12.7 KiB | 0.1% | 2025-12-11 09:37:56 | `9f5d620661a9b863` |
+| libexecutorch.a | 51.9 KiB | 0.5% | 2025-12-11 09:37:56 | `88f037a8a77ad8a0` |
+| libexecutorch_core.a | 216.5 KiB | 2.1% | 2025-12-11 09:37:56 | `45099ffe4f326670` |
+| libexecutorch_delegate_ethos_u.a | 18.6 KiB | 0.2% | 2025-12-11 09:37:56 | `3856b59e4162c61b` |
+| libportable_kernels.a | 9.1 MiB | 92.3% | 2025-12-11 09:37:56 | `7c3f7d293deac02b` |
+| libportable_ops_lib.a | 199.2 KiB | 2.0% | 2025-12-11 09:37:56 | `fa6c54a2f4cb8a19` |
+| libquantized_kernels.a | 238.6 KiB | 2.4% | 2025-12-11 09:37:56 | `1539fbf7e9109f7b` |
+| libquantized_ops_lib.a | 28.7 KiB | 0.3% | 2025-12-11 09:37:56 | `429c978dc4ab86d5` |
 
 ## 🤖 Model Assets
 
 | Asset | Type | Size | Modified | Hash |
 |-------|------|------|----------|------|
-| ethos_u_minimal_example.pte | Model | 3.3 KiB | 2025-12-09 21:14:42 | `59477eacddbfab3a` |
+| ethos_u_minimal_example.pte | Model | 3.3 KiB | 2025-12-11 09:37:59 | `59477eacddbfab3a` |
 
 ## ⚙️ Build Configuration
 
@@ -55,5 +55,5 @@ Generating comprehensive AI layer build report...
 
 **Count:** 9 operators
 
-2025-12-09 21:14:42 [SUCCESS] Build completed successfully!
+2025-12-11 09:37:59 [SUCCESS] Build completed successfully!
 📋 Build logs saved to: ai_layer/logs/
