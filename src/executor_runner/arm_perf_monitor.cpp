@@ -9,7 +9,10 @@
 
 #include "arm_perf_monitor.h"
 
-#ifdef ETHOSU
+#include "RTE_Components.h"
+#include CMSIS_device_header
+
+#ifdef ETHOSU_ARCH
 #include <ethosu_driver.h>
 #include <executorch/runtime/platform/log.h>
 #include <pmu_ethosu.h>

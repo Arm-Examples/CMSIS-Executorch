@@ -12,7 +12,7 @@ cbuild-pack:
         - ARM::CMSIS-Driver@^2.8.0
     - resolved-pack: ARM::CMSIS-RTX@5.9.0
       selected-by-pack:
-        - ARM::CMSIS-RTX@5.9.0
+        - ARM::CMSIS-RTX@^5.9.0
     - resolved-pack: ARM::V2M_MPS3_SSE_300_BSP@1.5.0
       selected-by-pack:
         - ARM::V2M_MPS3_SSE_300_BSP@1.5.0

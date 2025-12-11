@@ -98,6 +98,9 @@
 #include <vector>
 
 // CMSIS includes for ARM PMU and DCB functionality
+#include "RTE_Components.h"
+#include CMSIS_device_header
+
 #include "arm_memory_allocator.h"
 #include "arm_perf_monitor.h"
 
