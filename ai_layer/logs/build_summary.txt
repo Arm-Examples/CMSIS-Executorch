@@ -1,10 +1,10 @@
 ExecuTorch AI Layer Build Summary (GitHub Actions)
 ==================================================
-Build Timestamp: 20251201_142107
+Build Timestamp: 20251211_112902
 Workflow: Build AI Layer
-Run ID: 19825768795
-Commit: 112f18a6883ebe6d9e5d1a468c04a80bbe9fa2f6
-Branch: refs/heads/main
+Run ID: 20131509658
+Commit: 4bdc39937dfcbcbd04f4acaee7b549bb86d1290c
+Branch: refs/heads/DevKit-E8-HP-U85
 Build Status: SUCCESS
 
 Log Files Generated:

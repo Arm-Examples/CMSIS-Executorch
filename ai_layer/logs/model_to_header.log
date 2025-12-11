@@ -1,1 +1,1 @@
-Input: model/ethos_u_minimal_example.pte with 3824 bytes. Output: ai_layer/model/model_pte.h with 23146 bytes. Section: network_model_sec.
+Input: model/ethos_u_minimal_example.pte with 3392 bytes. Output: ai_layer/model/model_pte.h with 20540 bytes. Section: network_model_sec.
