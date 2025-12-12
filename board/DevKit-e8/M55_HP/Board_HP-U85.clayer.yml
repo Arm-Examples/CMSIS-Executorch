@@ -36,14 +36,6 @@ layer:
   define:
     - CMSIS_target_header: \"DevKit-E8.h\"
     - ETHOSU85
-    - NPU_QCONFIG: 1
-    - NPU_REGIONCFG_0: 1
-    - NPU_REGIONCFG_1: 0
-    - NPU_REGIONCFG_2: 1
-    - AXI_LIMIT0_MEM_TYPE: 3
-    - AXI_LIMIT1_MEM_TYPE: 3
-    - AXI_LIMIT2_MEM_TYPE: 3
-    - AXI_LIMIT3_MEM_TYPE: 3
 
   # List the packs used in the layer.
   packs:

@@ -25,9 +25,14 @@
 #include "main.h"
 
 #if defined(ETHOSU85)
+/* Define Ethos-U NPU base address and interrupt handler */
+#define ETHOSU_BASE_ADDR            NPU_HG_BASE
+#define ETHOSU_IRQ_HANDLER          IRQ366_Handler /* NPU_HG_IRQHandler */
+#define ETHOSU_IRQ_IRQn             366            /* NPU_HG_IRQn       */
+
 /* Define Ethos-U NPU cache buffer size */
 #ifndef ETHOS_CACHE_BUF_SIZE
-#define ETHOS_CACHE_BUF_SIZE        393216
+#define ETHOS_CACHE_BUF_SIZE        0
 #endif
 
 /* Define Ethos-U cache buffer alignment */
@@ -40,16 +45,11 @@
 #define ETHOS_CACHE_BUF_ATTRIBUTES  __attribute__((section("ethos_cache_buf"), aligned(ETHOS_CACHE_BUF_ALIGNMENT)))
 #endif
 
-/* Define Ethos-U NPU base address and interrupt handler */
-#define ETHOSU_BASE_ADDR           NPU_HG_BASE
-#define ETHOSU_IRQ_HANDLER         IRQ366_Handler /* NPU_HG_IRQHandler */
-#define ETHOSU_IRQ_IRQn            366            /* NPU_HG_IRQn */
-
 #else /* Ethos-U55 */
 /* Define Ethos-U NPU base address and interrupt handler */
-#define ETHOSU_BASE_ADDR           NPU_HP_BASE
-#define ETHOSU_IRQ_HANDLER         NPU_HP_IRQHandler
-#define ETHOSU_IRQ_IRQn            NPU_HP_IRQ_IRQn
+#define ETHOSU_BASE_ADDR            NPU_HP_BASE
+#define ETHOSU_IRQ_HANDLER          NPU_HP_IRQHandler
+#define ETHOSU_IRQ_IRQn             NPU_HP_IRQ_IRQn
 #endif /* ETHOSU85 */
 
 /* Define Ethos-U NPU security mode */
@@ -89,7 +89,7 @@ void ethos_setup (void) {
     /*  Initialize Ethos-U NPU driver. */
     rval = ethosu_init(&EthosDriver,           /* Ethos-U device driver */
                       ethos_base_addr,         /* Ethos-U base address  */
-                      #if defined(ETHOSU85)
+                      #if (ETHOS_CACHE_BUF_SIZE > 0)
                       ethos_cache,             /* Cache memory pointer  */
                       sizeof(ethos_cache),     /* Cache memory size     */
                       #else
