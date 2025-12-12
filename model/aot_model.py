@@ -25,7 +25,7 @@ from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
 # explanation of its flags: https://gitlab.arm.com/artificial-intelligence/ethos-u/ethos-u-vela/-/blob/main/OPTIONS.md
 compile_spec = EthosUCompileSpec(
             target="ethos-u85-256",
-            system_config="Ethos_U85_SYS_DRAM_Low",
+            system_config="Ethos_U55_High_End_Embedded",
             memory_mode="Shared_Sram",
             extra_flags=["--output-format=raw", "--debug-force-regor"]
         )
