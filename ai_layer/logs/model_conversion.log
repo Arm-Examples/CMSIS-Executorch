@@ -34,7 +34,7 @@ class GraphModule(torch.nn.Module):
 
 Network summary for out
 Accelerator configuration               Ethos_U85_256
-System configuration             Ethos_U85_SYS_DRAM_Low
+System configuration             Ethos_U55_High_End_Embedded
 Memory mode                               Shared_Sram
 Accelerator clock                                 500 MHz
 Design peak SRAM bandwidth                      14.90 GB/s
@@ -44,7 +44,7 @@ Total SRAM used                                  0.05 KiB
 CPU operators = 0 (0.0%)
 NPU operators = 4 (100.0%)
 
-Average SRAM bandwidth                           0.59 GB/s
+Average SRAM bandwidth                           0.27 GB/s
 Input   SRAM bandwidth                           0.00 MB/batch
 Weight  SRAM bandwidth                           0.00 MB/batch
 Output  SRAM bandwidth                           0.00 MB/batch
