@@ -1,1 +1,2 @@
-Input: model/ethos_u_minimal_example.pte with 3824 bytes. Output: ai_layer/model/model_pte.h with 23146 bytes. Section: network_model_sec.
+usage: pte_to_header.py [-h] -p PTE [-d OUTDIR] [-o OUTFILE] [-s SECTION]
+pte_to_header.py: error: argument -p/--pte: input filepath:model/ethos_u_minimal_example.pte does not exist
