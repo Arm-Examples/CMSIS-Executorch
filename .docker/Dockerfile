@@ -76,9 +76,10 @@ ENV PATH="/workspace/executorch/examples/arm/ethos-u-scratch/arm-gnu-toolchain-1
 # Use ExecuTorch's official installation script but avoid ATen bridge conflicts
 RUN pip install --extra-index-url https://download.pytorch.org/whl/test/cpu --break-system-packages \
                 executorch==1.0.0 \
-                ethos-u-vela torch==2.9.0 \
+                ethos-u-vela==4.4.1 \
+                torch==2.9.0 \
                 torchvision==0.24.0 \
-                torchao  \
+                torchao==0.14.0+cpu  \
                 torchaudio==2.9.0 
                 
 # Setup ARM environment using official script
