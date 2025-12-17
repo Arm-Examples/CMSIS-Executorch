@@ -199,7 +199,7 @@ Generated files /__w/CMSIS-Executorch/CMSIS-Executorch/out/stage1/kernels/quanti
 -- EXECUTORCH_XNNPACK_SHARED_WORKSPACE       : ON
 -- PYTHON_EXECUTABLE                         : python3
 -- --------------------------
--- Configuring done (2.6s)
+-- Configuring done (2.7s)
 -- Generating done (0.1s)
 CMake Warning:
   Manually-specified variables were not used by the project:
@@ -236,7 +236,7 @@ CMake Warning:
 -- Generating done (0.0s)
 -- Build files have been written to: /__w/CMSIS-Executorch/CMSIS-Executorch/out/stage1/third-party/flatc_ep/src/build
 [ 22%] Performing build step for 'flatbuffers_ep'
-[  5%] Building CXX object CMakeFiles/flatc.dir/src/idl_parser.cpp.o
+[  2%] Building CXX object CMakeFiles/flatc.dir/src/idl_parser.cpp.o
 [  5%] Building CXX object CMakeFiles/flatc.dir/src/idl_gen_text.cpp.o
 [  7%] Building CXX object CMakeFiles/flatc.dir/src/reflection.cpp.o
 [ 10%] Building CXX object CMakeFiles/flatc.dir/src/util.cpp.o
@@ -327,8 +327,8 @@ Install the project...
 [ 33%] Built target program_schema
 [ 33%] Building CXX object CMakeFiles/executorch_core.dir/runtime/backend/interface.cpp.obj
 [ 33%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/evalue.cpp.obj
-[ 33%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/exec_aten/util/tensor_util_portable.cpp.obj
 [ 44%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/exec_aten/util/tensor_shape_to_c_string.cpp.obj
+[ 44%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/exec_aten/util/tensor_util_portable.cpp.obj
 [ 44%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/portable_type/tensor_impl.cpp.obj
 [ 44%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/tag.cpp.obj
 [ 55%] Building CXX object CMakeFiles/executorch_core.dir/runtime/core/tensor_layout.cpp.obj
@@ -365,9 +365,9 @@ Install the project...
 [  4%] Built target common_schema
 [  4%] Built target program_schema
 [ 13%] Built target executorch_core
-[ 13%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/activation_ops_util.cpp.obj
-[ 15%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/advanced_index_util.cpp.obj
+[ 15%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/activation_ops_util.cpp.obj
 [ 15%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/arange_util.cpp.obj
+[ 15%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/advanced_index_util.cpp.obj
 [ 15%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/broadcast_util.cpp.obj
 [ 15%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/copy_ops_util.cpp.obj
 [ 16%] Building CXX object kernels/portable/cpu/util/CMakeFiles/kernels_util_all_deps.dir/delinearize_index.cpp.obj
@@ -596,13 +596,13 @@ Install the project...
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_w.c.obj
 [ 13%] Built target program_schema
 [ 13%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_x.c.obj
-[ 33%] Built target executorch_core
-[ 36%] Built target executorch
-[ 40%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_y.c.obj
-[ 40%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_z.c.obj
-[ 40%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s8.c.obj
-[ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s8.c.obj
-[ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s16.c.obj
+[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_y.c.obj
+[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConcatenationFunctions/arm_concatenation_s8_z.c.obj
+[ 16%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s8.c.obj
+[ 20%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s8.c.obj
+[ 40%] Built target executorch_core
+[ 40%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_get_buffer_sizes_s16.c.obj
+[ 43%] Built target executorch
 [ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/FullyConnectedFunctions/arm_fully_connected_s16.c.obj
 [ 43%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_1_x_n_s8.c.obj
 [ 46%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_1x1_s8.c.obj
@@ -622,7 +622,7 @@ Install the project...
 [ 56%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_get_buffer_sizes_s16.c.obj
 [ 60%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_s16.c.obj
 [ 60%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_convolve_wrapper_s16.c.obj
-[ 63%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_depthwise_conv_fast_s16.c.obj
+[ 60%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_depthwise_conv_fast_s16.c.obj
 [ 63%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_depthwise_conv_get_buffer_sizes_s16.c.obj
 [ 63%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_depthwise_conv_s16.c.obj
 [ 63%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/ConvolutionFunctions/arm_depthwise_conv_wrapper_s16.c.obj
@@ -664,8 +664,8 @@ Install the project...
 [ 96%] Building C object _deps/cmsis_nn-build/CMakeFiles/cmsis-nn.dir/Source/NNSupportFunctions/arm_q7_to_q15_with_offset.c.obj
 [ 96%] Linking C static library libcmsis-nn.a
 [ 96%] Built target cmsis-nn
-[ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_quantize_per_tensor.cpp.obj
 [ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_quantized_add.cpp.obj
+[ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_quantize_per_tensor.cpp.obj
 [ 96%] Building CXX object backends/cortex_m/CMakeFiles/cortex_m_kernels.dir/ops/op_dequantize_per_tensor.cpp.obj
 [100%] Linking CXX static library libcortex_m_kernels.a
 [100%] Built target cortex_m_kernels
