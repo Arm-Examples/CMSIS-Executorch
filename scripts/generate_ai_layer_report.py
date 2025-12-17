@@ -206,15 +206,40 @@ def get_model_conversion_log() -> str:
         try:
             content = model_script.read_text()
             
-            # Extract key configuration from the script
+            # Extract key configuration from the script with better parsing
             compile_spec_match = re.search(r'EthosUCompileSpec\((.*?)\)', content, re.DOTALL)
             if compile_spec_match:
                 log_info.append("**Ethos-U Compile Specification:**")
                 spec_content = compile_spec_match.group(1)
-                for line in spec_content.split(','):
-                    line = line.strip()
-                    if '=' in line:
-                        log_info.append(f"  - {line}")
+                
+                # Parse each parameter more carefully
+                # Handle target="..."
+                target_match = re.search(r'target\s*=\s*["\']([^"\']+)["\']', spec_content)
+                if target_match:
+                    log_info.append(f"  - target: {target_match.group(1)}")
+                
+                # Handle system_config="..."
+                system_match = re.search(r'system_config\s*=\s*["\']([^"\']+)["\']', spec_content)
+                if system_match:
+                    log_info.append(f"  - system_config: {system_match.group(1)}")
+                
+                # Handle memory_mode="..."
+                memory_match = re.search(r'memory_mode\s*=\s*["\']([^"\']+)["\']', spec_content)
+                if memory_match:
+                    log_info.append(f"  - memory_mode: {memory_match.group(1)}")
+                
+                # Handle config_ini="..." (optional)
+                config_ini_match = re.search(r'config_ini\s*=\s*["\']([^"\']+)["\']', spec_content)
+                if config_ini_match:
+                    log_info.append(f"  - config_ini: {config_ini_match.group(1)}")
+                
+                # Handle extra_flags=[...]
+                extra_flags_match = re.search(r'extra_flags\s*=\s*\[(.*?)\]', spec_content, re.DOTALL)
+                if extra_flags_match:
+                    flags_content = extra_flags_match.group(1)
+                    flags = re.findall(r'["\']([^"\']+)["\']', flags_content)
+                    if flags:
+                        log_info.append(f"  - extra_flags: {', '.join(flags)}")
             
             # Extract quantization config
             if 'quantizer' in content:
@@ -235,8 +260,33 @@ def get_model_conversion_log() -> str:
                     forward_content = forward_match.group(1).strip()
                     log_info.append(f"  - Forward method: {forward_content.splitlines()[0].strip()}")
         
-        except Exception:
-            log_info.append("Error reading model conversion script")
+        except Exception as e:
+            log_info.append(f"Error reading model conversion script: {e}")
+    
+    # Also try to extract Vela network summary from the log file
+    logs_dir = AI_LAYER / "logs"
+    if logs_dir.exists():
+        # Find the latest model_conversion log
+        log_files = sorted(logs_dir.glob("model_conversion_*.log"), reverse=True)
+        if log_files:
+            try:
+                log_content = log_files[0].read_text()
+                
+                # Extract Network summary section
+                summary_match = re.search(
+                    r'Network summary for out\n(.*?)(?=\n\nclass GraphModule|\Z)',
+                    log_content,
+                    re.DOTALL
+                )
+                if summary_match:
+                    log_info.append("\n**Vela Compilation Summary:**")
+                    summary_lines = summary_match.group(1).strip().split('\n')
+                    for line in summary_lines:
+                        line = line.strip()
+                        if line and not line.startswith('Network summary'):
+                            log_info.append(f"  - {line}")
+            except Exception:
+                pass
     
     return "\n".join(log_info) if log_info else "No model conversion information available"
 
