@@ -32,12 +32,25 @@ static const osThreadAttr_t executorch_thread_attr = {
 };
 
 /*-----------------------------------------------------------------------------
+  Toolchain identification
+ *----------------------------------------------------------------------------*/
+#if defined(__clang__)
+  #define TOOLCHAIN_NAME "Clang/LLVM"
+#elif defined(__GNUC__)
+  #define TOOLCHAIN_NAME "GCC"
+#elif defined(__ARMCC_VERSION)
+  #define TOOLCHAIN_NAME "Arm Compiler"
+#else
+  #define TOOLCHAIN_NAME "Unknown"
+#endif
+
+/*-----------------------------------------------------------------------------
   Application Main Thread 'app_main_thread': Run ExecuTorch inference
  *----------------------------------------------------------------------------*/
 __NO_RETURN void app_main_thread (void *argument) {
   (void)argument;
 
-  printf("ExecuTorch Cortex-M Runner\n");
+  printf("ExecuTorch Cortex-M Runner [%s]\n", TOOLCHAIN_NAME);
 
   // Call the ExecuTorch runner with no arguments (model embedded)
   const char* argv[] = {"executorch_runner"};

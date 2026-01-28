@@ -1,0 +1,79 @@
+build_features: []
+custom_classes: []
+et_kernel_metadata:
+  aten::add.out:
+  - default
+  aten::conv2d.out:
+  - default
+  aten::linear.out:
+  - default
+  aten::mul.out:
+  - default
+  aten::permute_copy.out:
+  - default
+  aten::relu.out:
+  - default
+  aten::sigmoid.out:
+  - default
+  aten::softmax.out:
+  - default
+  aten::view_copy.out:
+  - default
+include_all_non_op_selectives: false
+include_all_operators: false
+kernel_metadata: {}
+operators:
+  aten::add.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::conv2d.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::linear.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::mul.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::permute_copy.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::relu.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::sigmoid.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::softmax.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true
+  aten::view_copy.out:
+    debug_info:
+    - None
+    include_all_overloads: false
+    is_root_operator: true
+    is_used_for_training: true

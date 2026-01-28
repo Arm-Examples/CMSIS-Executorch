@@ -23,7 +23,7 @@ class ArmMemoryAllocator : public executorch::runtime::MemoryAllocator {
 
   // Returns the free size of the allocator's memory buffer.
   size_t free_size() const;
-  void reset();
+  void reset() override;
 
  private:
   size_t used_;

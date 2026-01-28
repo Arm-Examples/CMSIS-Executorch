@@ -166,7 +166,7 @@
 #endif // ifndef
 
 // Define size_t and ssize_t.
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__ARMCC_VERSION)
 #include <sys/types.h>
 #else
 #include <stddef.h>

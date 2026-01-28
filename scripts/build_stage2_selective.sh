@@ -105,6 +105,7 @@ echo "[Stage2] Configuring selective portable ops build..."
 
 CMAKE_ARGS=(
   -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   -DEXECUTORCH_BUILD_ARM_BAREMETAL=ON
   -DEXECUTORCH_BUILD_PORTABLE_OPS=ON           # Build portable ops with selection
   -DEXECUTORCH_BUILD_KERNELS_QUANTIZED=OFF     # Disable quantized ops  
@@ -119,8 +120,36 @@ CMAKE_ARGS=(
   -DEXECUTORCH_OPTIMIZE_SIZE=ON
   -DBUILD_TESTING=OFF
   -DFETCH_ETHOS_U_CONTENT=OFF
-  -DEXECUTORCH_ENABLE_DTYPE_SELECTIVE_BUILD=ON # Only build support for dtypes in model
+  -DEXECUTORCH_ENABLE_DTYPE_SELECTIVE_BUILD=OFF # Only build support for dtypes in model
 )
+
+# Detect if quantized operators are needed
+NEEDS_QUANTIZED=false
+if [[ "${SELECTION_STRATEGY}" == "model" ]]; then
+  # Check if model contains quantized_decomposed operators
+  if python3 -c "
+import sys
+sys.path.insert(0, '${EXECUTORCH_SRC}')
+from executorch.exir._serialize._program import deserialize_pte_binary
+with open('${SELECTION_VALUE}', 'rb') as f:
+    program = deserialize_pte_binary(f.read())
+for plan in program.execution_plan:
+    for op in plan.operators:
+        if hasattr(op, 'name') and 'quantized' in op.name:
+            print('found')
+            exit(0)
+exit(1)
+" 2>/dev/null; then
+    NEEDS_QUANTIZED=true
+    echo "[Stage2] Detected quantized operators in model, enabling quantized kernels"
+  fi
+elif [[ "${SELECTION_STRATEGY}" == "list" ]]; then
+  # Check if operator list contains quantized operators
+  if echo "${SELECTION_VALUE}" | grep -qi "quantized"; then
+    NEEDS_QUANTIZED=true
+    echo "[Stage2] Detected quantized operators in list, enabling quantized kernels"
+  fi
+fi
 
 # Add selection strategy to CMake args
 if [[ "${SELECTION_STRATEGY}" == "model" ]]; then
@@ -129,6 +158,12 @@ if [[ "${SELECTION_STRATEGY}" == "model" ]]; then
 elif [[ "${SELECTION_STRATEGY}" == "list" ]]; then
   CMAKE_ARGS+=("-DEXECUTORCH_SELECT_OPS_LIST=${SELECTION_VALUE}")
   echo "[Stage2] Strategy: Manual operator list"
+fi
+
+# Enable quantized kernels if needed
+if [[ "${NEEDS_QUANTIZED}" == "true" ]]; then
+  # Override the default OFF setting
+  CMAKE_ARGS+=("-DEXECUTORCH_BUILD_KERNELS_QUANTIZED=ON")
 fi
 
 if [[ -n "${TOOLCHAIN_FILE}" ]]; then
@@ -144,27 +179,112 @@ fi
 cmake "${EXECUTORCH_SRC}" "${CMAKE_ARGS[@]}" -B .
 
 echo "[Stage2] Building selective operator library..."
-# Build portable_ops_lib with selective operator list
-cmake --build . -j"$(nproc)" --target portable_ops_lib
+# Build executorch_selected_kernels which uses the selective operator list
+# Note: portable_ops_lib includes ALL operators regardless of EXECUTORCH_SELECT_OPS_*
+BUILD_TARGETS="executorch_selected_kernels"
+
+# If quantized operators are needed, also build quantized_ops_lib
+if [[ "${NEEDS_QUANTIZED}" == "true" ]]; then
+  BUILD_TARGETS="${BUILD_TARGETS} quantized_ops_lib quantized_kernels"
+  echo "[Stage2] Including quantized_ops_lib in build targets"
+fi
+
+# Build may fail on executorch_selected_kernels if model has ONLY quantized ops
+# In that case, just build quantized_ops_lib
+if ! cmake --build . -j"$(nproc)" --target ${BUILD_TARGETS} 2>&1; then
+  echo "[Stage2][WARN] Mixed build failed, trying quantized-only build..."
+  if [[ "${NEEDS_QUANTIZED}" == "true" ]]; then
+    cmake --build . -j"$(nproc)" --target quantized_ops_lib quantized_kernels
+  else
+    echo "[Stage2][ERROR] Build failed and no fallback available" >&2
+    exit 1
+  fi
+fi
 
 echo "[Stage2] Copying artifacts..."
 ASSETS_DIR="${BUILD_DIR}/assets"
 mkdir -p "${ASSETS_DIR}/lib" "${ASSETS_DIR}/meta" "${ASSETS_DIR}/include"
 
-# Look for the selective portable_ops_lib.a
-FOUND_LIB=$(find . -maxdepth 4 -name "libportable_ops_lib.a" | head -n1 || true)
+# Look for the SELECTIVE library (executorch_selected_kernels.a)
+# Note: portable_ops_lib.a includes ALL operators, which is NOT what we want!
+FOUND_LIB=$(find . -maxdepth 4 -name "libexecutorch_selected_kernels.a" | head -n1 || true)
 if [[ -n "$FOUND_LIB" ]]; then
-  cp "$FOUND_LIB" "${ASSETS_DIR}/lib/"
-  echo "[Stage2] Copied libportable_ops_lib.a from $FOUND_LIB -> ${ASSETS_DIR}/lib/"
+  # Copy as libportable_ops_lib.a for compatibility with existing CMSIS layer
+  cp "$FOUND_LIB" "${ASSETS_DIR}/lib/libportable_ops_lib.a"
+  echo "[Stage2] Copied libexecutorch_selected_kernels.a from $FOUND_LIB -> ${ASSETS_DIR}/lib/libportable_ops_lib.a"
 else
-  echo "[Stage2][ERROR] No selective library libportable_ops_lib.a found." >&2
-  exit 2
+  # No portable selective lib - this is OK if we only have quantized operators
+  if [[ "${NEEDS_QUANTIZED}" == "true" ]]; then
+    echo "[Stage2][INFO] No portable_ops_lib needed (model uses only quantized operators)"
+    # Create an empty placeholder lib so CMSIS build doesn't fail
+    touch "${ASSETS_DIR}/lib/libportable_ops_lib.placeholder"
+  else
+    echo "[Stage2][WARN] libexecutorch_selected_kernels.a not found, falling back to portable_ops_lib.a" >&2
+    FOUND_LIB=$(find . -maxdepth 4 -name "libportable_ops_lib.a" | head -n1 || true)
+    if [[ -n "$FOUND_LIB" ]]; then
+      cp "$FOUND_LIB" "${ASSETS_DIR}/lib/"
+      echo "[Stage2] Copied libportable_ops_lib.a from $FOUND_LIB -> ${ASSETS_DIR}/lib/"
+    else
+      echo "[Stage2][ERROR] No operator library found." >&2
+      exit 2
+    fi
+  fi
 fi
 
-SELECTED_YAML=$(find . -name selected_operators.yaml | head -n1 || true)
+# If quantized operators were built, also copy those libraries
+if [[ "${NEEDS_QUANTIZED}" == "true" ]]; then
+  QUANT_OPS_LIB=$(find . -maxdepth 4 -name "libquantized_ops_lib.a" | head -n1 || true)
+  QUANT_KERNELS_LIB=$(find . -maxdepth 4 -name "libquantized_kernels.a" | head -n1 || true)
+  if [[ -n "$QUANT_OPS_LIB" ]]; then
+    cp "$QUANT_OPS_LIB" "${ASSETS_DIR}/lib/"
+    echo "[Stage2] Copied libquantized_ops_lib.a from $QUANT_OPS_LIB"
+  fi
+  if [[ -n "$QUANT_KERNELS_LIB" ]]; then
+    cp "$QUANT_KERNELS_LIB" "${ASSETS_DIR}/lib/"
+    echo "[Stage2] Copied libquantized_kernels.a from $QUANT_KERNELS_LIB"
+  fi
+fi
+
+# Copy the SELECTIVE selected_operators.yaml (from executorch_selected_kernels, not portable_ops_lib)
+SELECTED_YAML=$(find . -path "*/executorch_selected_kernels/selected_operators.yaml" | head -n1 || true)
+if [[ -z "${SELECTED_YAML}" ]]; then
+  SELECTED_YAML=$(find . -name selected_operators.yaml | head -n1 || true)
+fi
 if [[ -f "${SELECTED_YAML}" ]]; then
   cp "${SELECTED_YAML}" "${ASSETS_DIR}/meta/selected_operators.yaml"
+  OP_COUNT=$(grep -c "aten::" "${SELECTED_YAML}" 2>/dev/null || echo "unknown")
+  echo "[Stage2] Copied selected_operators.yaml with $OP_COUNT operators"
 fi
+
+# Write operator selection metadata for reporting
+OPERATOR_META_FILE="${ASSETS_DIR}/meta/operator_selection.json"
+if [[ "${SELECTION_STRATEGY}" == "model" ]]; then
+  SELECTION_SOURCE_FILE=$(basename "${SELECTION_VALUE}")
+  SELECTION_SOURCE_TYPE="pte_model"
+  SELECTION_SOURCE_DESC="Extracted from model: ${SELECTION_SOURCE_FILE}"
+elif [[ -n "${EXECUTORCH_SELECT_OPS:-}" ]]; then
+  SELECTION_SOURCE_FILE=""
+  SELECTION_SOURCE_TYPE="environment"
+  SELECTION_SOURCE_DESC="Environment variable: EXECUTORCH_SELECT_OPS"
+elif [[ -n "${OPS_LIST_FILE}" ]]; then
+  SELECTION_SOURCE_FILE=$(basename "${OPS_LIST_FILE}")
+  SELECTION_SOURCE_TYPE="operators_file"
+  SELECTION_SOURCE_DESC="Operators list file: ${SELECTION_SOURCE_FILE}"
+else
+  SELECTION_SOURCE_FILE=""
+  SELECTION_SOURCE_TYPE="unknown"
+  SELECTION_SOURCE_DESC="Unknown source"
+fi
+
+cat > "${OPERATOR_META_FILE}" << EOF
+{
+  "source_type": "${SELECTION_SOURCE_TYPE}",
+  "source_file": "${SELECTION_SOURCE_FILE}",
+  "source_description": "${SELECTION_SOURCE_DESC}",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOF
+echo "[Stage2] Wrote operator selection metadata to ${OPERATOR_META_FILE}"
 
 # Collect generated selective registration headers (they may live under arm_portable_ops_lib or executorch_selected_kernels dirs)
 echo "[Stage2] Collecting generated selective headers."

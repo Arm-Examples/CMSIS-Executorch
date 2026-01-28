@@ -1,0 +1,162 @@
+#! armclang -E --target=arm-arm-none-eabi -mcpu=cortex-m55 -xc
+; command above MUST be in first line (no comment above!)
+;
+;  SPDX-FileCopyrightText: Copyright 2025 Arm Limited and/or its affiliates
+;  SPDX-License-Identifier: Apache-2.0
+;
+;  Scatter file for Corstone-300 with Ethos-U55
+;  Memory layout matches Corstone-300_unified.ld
+;
+;  Memory Map:
+;    ITCM  : 0x10000000 - 0x1007FFFF (512KB) - Vectors, copy/zero tables
+;    BRAM  : 0x11000000 - 0x110FFFFF (1MB)   - Not used in this config
+;    DTCM  : 0x30000000 - 0x3007FFFF (512KB) - Data, BSS, heap, stack
+;    SRAM  : 0x31000000 - 0x312FFFFF (2MB)   - Tensor arena
+;    QSPI  : 0x38000000 - 0x387FFFFF (8MB)   - Not used
+;    DDR   : 0x70000000 - 0xAFFFFFFF (1GB)   - Code, RO data, model
+
+#define ITCM_BASE       0x10000000
+#define ITCM_SIZE       0x00080000
+
+#define BRAM_BASE       0x11000000
+#define BRAM_SIZE       0x00100000
+
+#define DTCM_BASE       0x30000000
+#define DTCM_SIZE       0x00080000
+
+#define SRAM_BASE       0x31000000
+#define SRAM_SIZE       0x00200000
+
+#define DDR_BASE        0x70000000
+#define DDR_SIZE        0x40000000
+
+#define STACK_SIZE      0x00008000
+#define HEAP_SIZE       0x00008000
+
+; Calculate DTCM regions
+#define DTCM_RW_SIZE    (DTCM_SIZE - STACK_SIZE - HEAP_SIZE)
+#define STACK_BASE      (DTCM_BASE + DTCM_SIZE - STACK_SIZE)
+#define HEAP_BASE_CALC  (DTCM_BASE + DTCM_RW_SIZE)
+
+;---------------------------------------------------------
+; Load Region: ITCM - Vector table and initialization data
+;---------------------------------------------------------
+LR_ITCM ITCM_BASE ITCM_SIZE
+{
+    ;-----------------------------------------------------
+    ; Vector table - must be first and in ITCM for fast interrupt response
+    ;-----------------------------------------------------
+    ER_VECTORS ITCM_BASE ALIGN 2048
+    {
+        *startup*.o (RESET, +First)
+        *(RESET)
+    }
+
+    ;-----------------------------------------------------
+    ; Copy table for .data initialization
+    ; Note: AC6 handles this automatically with __copy_table
+    ;-----------------------------------------------------
+
+    ;-----------------------------------------------------
+    ; Data section - lives in DTCM, loaded from ITCM
+    ; This is placed in ITCM load region but executes from DTCM
+    ;-----------------------------------------------------
+    ER_DATA DTCM_BASE DTCM_RW_SIZE
+    {
+        *(vtable)
+        *(.data)
+        *(.data.*)
+        .ANY (+RW)
+    }
+
+    ;-----------------------------------------------------
+    ; BSS section - zero-initialized data in DTCM
+    ;-----------------------------------------------------
+    ER_BSS +0 UNINIT
+    {
+        *(.bss)
+        *(.bss.*)
+        *(COMMON)
+        .ANY (+ZI)
+    }
+
+    ;-----------------------------------------------------
+    ; Heap - in DTCM after BSS
+    ;-----------------------------------------------------
+    ARM_LIB_HEAP +0 ALIGN 8 EMPTY HEAP_SIZE
+    { }
+
+    ;-----------------------------------------------------
+    ; Stack - at end of DTCM
+    ;-----------------------------------------------------
+    ARM_LIB_STACK STACK_BASE ALIGN 8 EMPTY STACK_SIZE
+    { }
+
+    ;-----------------------------------------------------
+    ; Tensor arena in SRAM (2MB) - for ML activation buffers
+    ;-----------------------------------------------------
+    ER_SRAM_BSS SRAM_BASE UNINIT ALIGN 32 SRAM_SIZE
+    {
+        *(.bss.tensor_arena)
+        *.o (.bss.NoInit.activation_buf_sram)
+    }
+}
+
+;---------------------------------------------------------
+; Load Region: DDR - Code and read-only data
+; Note: Code is too large for ITCM, placed in DDR
+;---------------------------------------------------------
+LR_DDR DDR_BASE DDR_SIZE
+{
+    ;-----------------------------------------------------
+    ; Code section in DDR
+    ;-----------------------------------------------------
+    ER_CODE DDR_BASE
+    {
+        .ANY (+RO-CODE)
+        .ANY (+XO)
+    }
+
+    ;-----------------------------------------------------
+    ; Read-only data in DDR (after code)
+    ;-----------------------------------------------------
+    ER_RODATA +0 ALIGN 16
+    {
+        .ANY (+RO-DATA)
+    }
+
+    ;-----------------------------------------------------
+    ; ARM exception tables in DDR
+    ;-----------------------------------------------------
+    ER_EXTAB +0
+    {
+        *(.ARM.extab*)
+        *(.gnu.linkonce.armextab.*)
+    }
+
+    ER_EXIDX +0
+    {
+        *(.ARM.exidx*)
+        *(.gnu.linkonce.armexidx.*)
+    }
+
+    ;-----------------------------------------------------
+    ; Model data section in DDR
+    ;-----------------------------------------------------
+    ER_DDR_DATA +0 ALIGN 16
+    {
+        *(network_model_sec)
+        *.o (nn_model)
+        *(.got*)
+    }
+
+    ;-----------------------------------------------------
+    ; Uninitialized DDR section (input data, etc)
+    ;-----------------------------------------------------
+    ER_DDR_NOLOAD +0 UNINIT ALIGN 16
+    {
+        *(input_data_sec)
+        *.o (ifm)
+        *.o (ofm)
+    }
+}

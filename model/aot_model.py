@@ -27,7 +27,7 @@ compile_spec = EthosUCompileSpec(
             target="ethos-u55-128",
             system_config="Ethos_U55_High_End_Embedded",
             memory_mode="Shared_Sram",
-            extra_flags=["--output-format=raw", "--debug-force-regor"]
+            extra_flags=["--output-format=raw", "--debug-force-regor", "--verbose-all"],
         )
 
 # Create and configure quantizer to use a symmetric quantization config globally on all nodes

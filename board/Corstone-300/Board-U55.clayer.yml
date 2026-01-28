@@ -44,6 +44,12 @@ layer:
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
 
+  # AC6-specific linker flags
+  misc:
+    - for-compiler: AC6
+      Link:
+        - --diag_suppress=6312,6314,6329,6848
+
   groups:
     - group: Board
       files:
@@ -52,5 +58,26 @@ layer:
         - file: ./ethos_setup.c
         - file: ./retarget_stdio.c
 
+    # Clang runtime stubs (std::chrono, std::random workarounds)
+    - group: Clang Runtime Support
+      for-compiler: CLANG
+      add-path:
+        - ../../src/include
+      files:
+        - file: ../../src/cxx_stubs.cpp
+
+    # AC6 runtime stubs
+    - group: AC6 Runtime Support
+      for-compiler: AC6
+      add-path:
+        - ../../src/include
+      files:
+        - file: ../../src/cxx_stubs.cpp
+
   linker:
-    - script: ./Corstone-300.ld
+    - for-compiler: GCC
+      script: ./Corstone-300_unified.ld
+    - for-compiler: CLANG
+      script: ./Corstone-300_unified.ld
+    - for-compiler: AC6
+      script: ./Corstone-300.sct

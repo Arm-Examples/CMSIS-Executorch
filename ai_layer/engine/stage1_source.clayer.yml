@@ -1,0 +1,97 @@
+layer:
+  type: ExecuTorch Stage1 Sources
+  description: Generated from compile_commands.json (327 files)
+  groups:
+  - group: Runtime
+    files:
+    - file: runtime/backend/interface.cpp
+    - file: runtime/core/evalue.cpp
+    - file: runtime/core/exec_aten/util/tensor_shape_to_c_string.cpp
+    - file: runtime/core/exec_aten/util/tensor_util_portable.cpp
+    - file: runtime/core/portable_type/tensor_impl.cpp
+    - file: runtime/core/tag.cpp
+    - file: runtime/core/tensor_layout.cpp
+    - file: runtime/executor/method.cpp
+    - file: runtime/executor/method_meta.cpp
+    - file: runtime/executor/program.cpp
+    - file: runtime/executor/pte_data_map.cpp
+    - file: runtime/executor/tensor_parser_exec_aten.cpp
+    - file: runtime/executor/tensor_parser_portable.cpp
+    - file: runtime/kernel/operator_registry.cpp
+    - file: runtime/platform/abort.cpp
+    - file: runtime/platform/log.cpp
+    - file: runtime/platform/platform.cpp
+    - file: runtime/platform/profiler.cpp
+    - file: runtime/platform/runtime.cpp
+    add-path:
+    - engine/include
+    define:
+    - C10_USING_CUSTOM_GENERATED_MACROS
+    - FLATBUFFERS_MAX_ALIGNMENT: '1024'
+    misc:
+    - C-CPP:
+      - -Os
+      - -Wno-deprecated-declarations
+      - -fno-exceptions
+      - -fno-rtti
+      - -fno-unwind-tables
+  - group: Schema
+    files:
+    - file: schema/extended_header.cpp
+    add-path:
+    - engine/include
+    define:
+    - C10_USING_CUSTOM_GENERATED_MACROS
+    - FLATBUFFERS_MAX_ALIGNMENT: '1024'
+    misc:
+    - C-CPP:
+      - -Os
+      - -Wno-deprecated-declarations
+      - -fno-exceptions
+      - -fno-rtti
+      - -fno-unwind-tables
+  - group: Kernels/quantized
+    files:
+    - file: kernels/quantized/cpu/embeddingxb.cpp
+    - file: kernels/quantized/cpu/op_add.cpp
+    - file: kernels/quantized/cpu/op_choose_qparams.cpp
+    - file: kernels/quantized/cpu/op_dequantize.cpp
+    - file: kernels/quantized/cpu/op_embedding.cpp
+    - file: kernels/quantized/cpu/op_embedding2b.cpp
+    - file: kernels/quantized/cpu/op_embedding4b.cpp
+    - file: kernels/quantized/cpu/op_mixed_linear.cpp
+    - file: kernels/quantized/cpu/op_mixed_mm.cpp
+    - file: kernels/quantized/cpu/op_quantize.cpp
+    - file: kernels/quantized/quantized_ops_lib/RegisterCodegenUnboxedKernelsEverything.cpp
+    add-path:
+    - engine/include
+    define:
+    - C10_USING_CUSTOM_GENERATED_MACROS
+    misc:
+    - C-CPP:
+      - -Os
+      - -Wno-deprecated-declarations
+      - -fno-exceptions
+      - -fno-rtti
+      - -fno-unwind-tables
+      - -std=gnu++17
+  - group: Backends
+    files:
+    - file: backends/arm/runtime/EthosUBackend.cpp
+    - file: backends/arm/runtime/VelaBinStream.cpp
+    - file: backends/cortex_m/cortex_m_ops_lib/RegisterCodegenUnboxedKernelsEverything.cpp
+    - file: backends/cortex_m/ops/op_dequantize_per_tensor.cpp
+    - file: backends/cortex_m/ops/op_quantize_per_tensor.cpp
+    - file: backends/cortex_m/ops/op_quantized_add.cpp
+    add-path:
+    - engine/include
+    define:
+    - C10_USING_CUSTOM_GENERATED_MACROS
+    misc:
+    - C-CPP:
+      - -Os
+      - -Wno-deprecated-declarations
+      - -fno-exceptions
+      - -fno-rtti
+      - -fno-unwind-tables
+      - -std=gnu++17

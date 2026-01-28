@@ -93,7 +93,17 @@
 #include <executorch/runtime/platform/platform.h>
 #include <executorch/runtime/platform/runtime.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>  // For exit()
+
+// AC6 (armclang) doesn't have unistd.h in bare-metal mode
+// Use stdlib exit() instead of _exit() for AC6
+#if defined(__ARMCC_VERSION)
+  // AC6 bare-metal: use exit() from stdlib.h
+  #define _exit(code) exit(code)
+#else
+  #include <unistd.h>
+#endif
+
 #include <memory>
 #include <vector>
 
