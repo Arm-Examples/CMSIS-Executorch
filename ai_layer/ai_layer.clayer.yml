@@ -2,6 +2,9 @@ layer:
   type: AI / Executorch
   description: AI layer for ExecuTorch ARM runtime
   
+  packs:
+    - pack: ARM::CMSIS-NN@7.0.0
+
   add-path:
     # Core ExecuTorch includes
     - ./engine/include
@@ -27,6 +30,7 @@ layer:
     - ./engine/include/executorch/kernels/portable
     - ./engine/include/executorch/backends
     - ./engine/include/executorch/backends/xnnpack
+    - ./engine/include/executorch/backends/cortex_m/ops
     
     # Third party includes
     - ./engine/include/third-party
@@ -35,31 +39,70 @@ layer:
 
     # Generated model includes
     - ./model
-    
+
+  components:
+    - component: CMSIS:NN Lib
+
+
   groups:
+
+    # Libraries with kernel registrations need whole-archive to preserve constructors
     - group: ExecuTorch Libraries
+      not-for-context: .Debug-Source
       files:
-        # Core runtime libraries (actually present in ai_layer/engine/lib)
-        - file: ./engine/lib/libexecutorch.a
+        # Core runtime libraries
         - file: ./engine/lib/libexecutorch_core.a
         - file: ./engine/lib/libportable_kernels.a
-        - file: ./engine/lib/libportable_ops_lib.a
         
-        # ARM Cortex-M optimized libraries
+        # ARM Cortex-M optimized kernels
         - file: ./engine/lib/libcortex_m_kernels.a
-        - file: ./engine/lib/libcortex_m_ops_lib.a
         
-        # Quantized operation libraries  
+        # Quantized kernels  
         - file: ./engine/lib/libquantized_kernels.a
+
+        # Libraries requiring whole-archive to preserve constructors/registrations
+        - file: ./engine/lib/libexecutorch.a
+          link: whole-archive
+        - file: ./engine/lib/libportable_ops_lib.a
+          link: whole-archive
+        - file: ./engine/lib/libcortex_m_ops_lib.a
+          link: whole-archive
         - file: ./engine/lib/libquantized_ops_lib.a
-        
-        # Ethos-U backend library
+          link: whole-archive
         - file: ./engine/lib/libexecutorch_delegate_ethos_u.a
+          link: whole-archive
 
     - group: Reports
       files:
         - file: ./REPORT.md
 
-    - group: Model Files
+    # CLANG-specific: Stubs for missing libc++ features (posix_stub only, cxx_stubs is in board layer)
+    - group: Clang Platform Stubs
+      for-context: .Debug-Source
+      for-compiler:
+        - CLANG
       files:
-        - file: ../model/aot_model.py
+        - file: ./stubs/posix_stub.cpp
+        - file: ./stubs/random_ops_stubs.cpp
+
+    # GCC Debug-Source: Random op stubs (excluded from source build for consistency with Clang)
+    - group: GCC Random Op Stubs
+      for-context: .Debug-Source
+      for-compiler:
+        - GCC
+      files:
+        - file: ./stubs/random_ops_stubs.cpp
+
+    # AC6 Debug-Source: Stubs for missing runtime features
+    - group: AC6 Platform Stubs
+      for-context: .Debug-Source
+      for-compiler:
+        - AC6
+      files:
+        - file: ./stubs/posix_stub.cpp
+        - file: ./stubs/random_ops_stubs.cpp
+
+    # Note: GCC could include actual random op sources, but we use stubs for consistency
+    # The random ops (op_rand.cpp, op_randn.cpp, op_native_dropout.cpp) are excluded from 
+    # stage2 generation because they require std::random_device (not available in Clang)
+

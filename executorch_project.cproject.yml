@@ -15,6 +15,9 @@
 #  limitations under the License.
 
 # A project translates into one executable or library.
+# This project supports both GCC and ARM Clang compilers.
+# To switch compilers, edit the "compiler:" setting in executorch_project.csolution.yml
+# The for-compiler attributes below automatically select the appropriate libraries.
 project:
   # List the packs used in the project.
   packs:
@@ -25,13 +28,23 @@ project:
   misc:
     - CPP:
         - -Wno-deprecated-declarations
-    - Link:
+    
+    # GCC linker settings 
+    - for-compiler: GCC
+      Link:
         - -Wl,-u,_printf_float
-        - -Wl,--whole-archive
-        - $SolutionDir()$/ai_layer/engine/lib/libexecutorch_delegate_ethos_u.a
-        - $SolutionDir()$/ai_layer/engine/lib/libquantized_ops_lib.a
-        - -idirafter $SolutionDir()$/ai_layer/engine/include/executorch/runtime/platform
-        - -Wl,--no-whole-archive
+    
+    # CLANG-specific settings
+    - for-compiler: CLANG
+      Link:
+        - -Wl,-u,_printf_float
+        - -lstdc++
+
+    # AC6-specific settings
+    - for-compiler: AC6
+      Link:
+        - --entry=Reset_Handler
+        - --diag_suppress=6312,6314,6329,6848
 
   # List of #define statements passed via the command line to the build tool.
   define:
@@ -60,6 +73,8 @@ project:
         - file: src/executor_runner/arm_perf_monitor.cpp
         - file: src/app_main.c
 
+
+
   # List components to use for your application.
   # A software component is a re-usable unit that may be configurable.
   components:
@@ -72,6 +87,10 @@ project:
       type: Board
 
     - layer: $SolutionDir()$/ai_layer/ai_layer.clayer.yml
+    - layer: $SolutionDir()$/ai_layer/engine/stage1_source.clayer.yml
+      for-context: .Debug-Source
+    - layer: $SolutionDir()$/ai_layer/engine/stage2_source.clayer.yml
+      for-context: .Debug-Source
 
   # List executable file formats to be generated.
   output:

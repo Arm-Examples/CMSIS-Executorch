@@ -15,11 +15,17 @@
 #  limitations under the License.
 
 # A solution is a collection of related projects that share same base configuration.
+# This solution supports both GCC and ARM Clang compilers.
+# To switch: change "compiler: CLANG" to "compiler: GCC" (or vice versa) below.
+# The for-compiler attributes automatically select board layers and libraries.
 solution:
   created-for: CMSIS-Toolbox@2.12.0
   cdefault: # use CMSIS-Toolbox default Compiler options
-
-  compiler: GCC
+  select-compiler:
+    # list tested compilers that can be selected
+    - compiler: GCC # GCC is supported
+    - compiler: CLANG # ATfE is supported
+    - compiler: AC6 # Arm Compiler 6 is supported
 
   # List the packs that define the device and/or board.
   packs:
@@ -33,13 +39,22 @@ solution:
     - type: Debug
       debug: on
       optimize: debug
+      compiler: GCC
 
     - type: Release
       debug: off
       optimize: speed
+      compiler: GCC
+
+    - type: Debug-Source
+      debug: on
+      optimize: debug
 
   # List different hardware targets that are used to deploy the solution.
+  # The Board-Layer uses for-compiler conditionals internally to handle
+  # GCC, CLANG, and AC6 compiler differences (linker scripts, runtime stubs).
   target-types:
+    # AVH Corstone-300 with Ethos-U55 (supports GCC, CLANG, AC6)
     - type: AVH-SSE-300
       board: V2M-MPS3-SSE-300-FVP
       device: SSE-300-MPS3
@@ -47,13 +62,13 @@ solution:
         - Board-Layer: $SolutionDir()$/board/Corstone-300/Board-U55.clayer.yml
       target-set:
         - set:
-          images:
-            - project-context: executorch_project.Debug
           debugger:
             name: Arm-FVP
             model: FVP_Corstone_SSE-300_Ethos-U55
             config-file: board/Corstone-300/fvp_config.txt
             args: --simlimit 10
+          images:
+            - project-context: executorch_project.Debug-Source
 
     - type: DevKit-E7-HE
       board: DevKit-E7:Gen 2
@@ -87,3 +102,5 @@ solution:
   projects:
     # Simple model example
     - project: ./executorch_project.cproject.yml
+  compiler: AC6
+  # compiler: Use --toolchain option to select GCC, CLANG, or AC6
