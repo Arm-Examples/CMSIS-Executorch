@@ -34,12 +34,12 @@ static const osThreadAttr_t executorch_thread_attr = {
 /*-----------------------------------------------------------------------------
   Toolchain identification
  *----------------------------------------------------------------------------*/
-#if defined(__clang__)
+#if defined(__ARMCC_VERSION)
+  #define TOOLCHAIN_NAME "Arm Compiler"
+#elif defined(__clang__)
   #define TOOLCHAIN_NAME "Clang/LLVM"
 #elif defined(__GNUC__)
   #define TOOLCHAIN_NAME "GCC"
-#elif defined(__ARMCC_VERSION)
-  #define TOOLCHAIN_NAME "Arm Compiler"
 #else
   #define TOOLCHAIN_NAME "Unknown"
 #endif
