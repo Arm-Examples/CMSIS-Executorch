@@ -47,8 +47,9 @@ layer:
   groups:
 
     # Libraries with kernel registrations need whole-archive to preserve constructors
-    - group: ExecuTorch Libraries
+    - group: ExecuTorch Libraries 
       not-for-context: .Debug-Source
+      for-compiler: GCC
       files:
         # Core runtime libraries
         - file: ./engine/lib/libexecutorch_core.a

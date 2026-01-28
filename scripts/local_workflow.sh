@@ -57,7 +57,7 @@ log_and_tee "stage1_build" "/workspace2/scripts/build_stage1.sh /workspace/execu
 # Registration files (RegisterCodegenUnboxedKernelsEverything.cpp) are NOT included here - they come from stage2 (selective build)
 # Flags -fPIC and -s are removed for AC6 compatibility (causes compiler crash in AC6 6.24.0)
 echo -e "\033[1;35m=== Step 2a: Generate source layer ===\033[0m"
-log_and_tee "generate_source_layer" "cd /workspace2/out/stage1 && python3 /workspace2/scripts/ccdb2clayer.py -c compile_commands.json -v --copy-sources -A /workspace/executorch -A /workspace2/out/stage1 -L . -o /workspace2/ai_layer/engine/stage1_source.clayer.yml -n 'ExecuTorch Stage1 Sources' -g runtime -g extension -g schema -g 'kernels/quantized' -g backends --exclude '*/posix.cpp' --remove-flags=-fPIC --remove-flags=-s"
+log_and_tee "generate_source_layer" "cd /workspace2/out/stage1 && python3 /workspace2/scripts/ccdb2clayer.py -c compile_commands.json -v --copy-sources -A /workspace/executorch -A /workspace2/out/stage1 -L . -o /workspace2/ai_layer/engine/stage1_source.clayer.yml -n 'ExecuTorch Core Sources' -g runtime -g extension -g schema -g 'kernels/quantized' -g backends --exclude '*/posix.cpp' --remove-flags=-fPIC --remove-flags=-s"
 
 # Step 2b: Copy NativeFunctions.h to stage1 source directories
 # Registration files use #include "NativeFunctions.h" expecting the header in the same directory
@@ -98,7 +98,7 @@ log_and_tee "stage2_build" "/workspace2/scripts/build_stage2_selective.sh /works
 # Two strip paths are needed: one for ExecuTorch source, one for generated files in build dir
 # Flags -fPIC and -s are removed for AC6 compatibility (causes compiler crash in AC6 6.24.0)
 echo -e "\033[1;35m=== Step 3a: Generate stage2 source layer ===\033[0m"
-log_and_tee "generate_source_layer_stage2" "cd /workspace2/out/stage2 && python3 /workspace2/scripts/ccdb2clayer.py -c compile_commands.json -v --copy-sources -A /workspace/executorch -A /workspace2/out/stage2 -L . -o /workspace2/ai_layer/engine/stage2_source.clayer.yml -n 'ExecuTorch Stage2 Selective Ops' -g kernels --exclude '*/op_rand.cpp' --exclude '*/op_randn.cpp' --exclude '*/op_native_dropout.cpp' --exclude 'kernels/quantized/*' --remove-flags=-fPIC --remove-flags=-s"
+log_and_tee "generate_source_layer_stage2" "cd /workspace2/out/stage2 && python3 /workspace2/scripts/ccdb2clayer.py -c compile_commands.json -v --copy-sources -A /workspace/executorch -A /workspace2/out/stage2 -L . -o /workspace2/ai_layer/engine/stage2_source.clayer.yml -n 'Executorch Selective Sources' -g kernels --exclude '*/op_rand.cpp' --exclude '*/op_randn.cpp' --exclude '*/op_native_dropout.cpp' --exclude 'kernels/quantized/*' --remove-flags=-fPIC --remove-flags=-s"
 
 # Step 3a.1: Fix stage2 layer to use selective kernels (executorch_selected_kernels instead of portable_ops_lib)
 echo -e "\033[1;35m=== Step 3a.1: Fix stage2 layer for selective kernels ===\033[0m"
