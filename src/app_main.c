@@ -17,8 +17,8 @@ extern int executorch_runner_main(int argc, const char* argv[]);
 
 #include "cmsis_os2.h"
 
-// Custom stack size for ExecuTorch thread (32KB)
-#define EXECUTORCH_THREAD_STACK_SIZE (4 * 1024)
+// Custom stack size for ExecuTorch thread (64KB)
+#define EXECUTORCH_THREAD_STACK_SIZE (8 * 1024)
 
 // Stack memory for the ExecuTorch thread
 static uint64_t executorch_thread_stack[EXECUTORCH_THREAD_STACK_SIZE / sizeof(uint64_t)] __attribute__((aligned(8)));
