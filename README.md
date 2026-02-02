@@ -33,6 +33,22 @@ The following tools are used by this template project. The user should have a ba
 | [GitHub Actions](https://github.com/features/actions) | Workflow automation for building the AI layer in Cloud. |
 | [Git](https://git-scm.com/) | Version control and repository management (Optional). |
 
+## Build Configurations
+
+
+Build targets are CMSIS “contexts” formed by combining a build type (Debug, Debug-Source, Release) with a target (AVH-SSE-300, DevKit-E7-HE, DevKit-E7-HP). Each context selects the board layer and device for that target and applies the build-type flags.
+
+Compiler selection is controlled by the csolution toolchain selection. The solution lists supported compilers and defaults to GCC in executorch_project.csolution.yml. Change the *compiler:* setting in this file to select a different compiler toolchain. 
+
+### Supported combinations of build types and compiler toolchains
+
+| Build Type | GCC | CLANG | AC6 | Comments
+| --- | --- | --- | --- | --- |
+| Debug | ✅ |   |   | Optimization low - pre-build libraries in ai_layer             |
+| Debug-Source | ✅ | ✅ | ✅ | Optimization settings customizable - ai_layer full source |  
+| Release | ✅ |   |   | Optimization size - pre-build libraries in ai_layer          |
+
+
 ## Repository Content
 
 The table below explains the content of this repository.

@@ -1,5 +1,5 @@
 layer:
-  type: ExecuTorch Stage2 Selective Ops
+  type: Executorch Selective Sources
   description: Generated from compile_commands.json (240 files)
   groups:
   - group: Kernels

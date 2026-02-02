@@ -1,5 +1,5 @@
 layer:
-  type: ExecuTorch Stage1 Sources
+  type: ExecuTorch Core Sources
   description: Generated from compile_commands.json (327 files)
   groups:
   - group: Runtime
