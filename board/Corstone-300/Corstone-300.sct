@@ -72,7 +72,7 @@ LR_ITCM ITCM_BASE ITCM_SIZE
     ;-----------------------------------------------------
     ; BSS section - zero-initialized data in DTCM
     ;-----------------------------------------------------
-    ER_BSS +0 UNINIT
+    ER_BSS +0
     {
         *(.bss)
         *(.bss.*)
