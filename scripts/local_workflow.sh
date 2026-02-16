@@ -57,7 +57,7 @@ log_and_tee "stage1_build" "/workspace2/scripts/build_stage1.sh /workspace/execu
 # Registration files (RegisterCodegenUnboxedKernelsEverything.cpp) are NOT included here - they come from stage2 (selective build)
 # Flags -fPIC and -s are removed for AC6 compatibility (causes compiler crash in AC6 6.24.0)
 echo -e "\033[1;35m=== Step 2a: Generate source layer ===\033[0m"
-log_and_tee "generate_source_layer" "cd /workspace2/out/stage1 && python3 /workspace2/scripts/ccdb2clayer.py -c compile_commands.json -v --copy-sources -A /workspace/executorch -A /workspace2/out/stage1 -L . -o /workspace2/ai_layer/engine/stage1_source.clayer.yml -n 'ExecuTorch Core Sources' -g runtime -g extension -g schema -g 'kernels/quantized' -g backends --exclude '*/posix.cpp' --remove-flags=-fPIC --remove-flags=-s"
+log_and_tee "generate_source_layer" "cd /workspace2/out/stage1 && python3 /workspace2/scripts/ccdb2clayer.py -c compile_commands.json -v --copy-sources -A /workspace/executorch -A /workspace2/out/stage1 -L . -o /workspace2/ai_layer/engine/stage1_source.clayer.yml -n 'ExecuTorch Core Sources' -g runtime -g extension -g schema -g 'kernels/quantized' -g backends --exclude '*/posix.cpp' --exclude 'extension/flat_tensor/*' --remove-flags=-fPIC --remove-flags=-s"
 
 # Step 2b: Copy NativeFunctions.h to stage1 source directories
 # Registration files use #include "NativeFunctions.h" expecting the header in the same directory

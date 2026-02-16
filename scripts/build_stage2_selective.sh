@@ -108,8 +108,8 @@ CMAKE_ARGS=(
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   -DEXECUTORCH_BUILD_ARM_BAREMETAL=ON
   -DEXECUTORCH_BUILD_PORTABLE_OPS=ON           # Build portable ops with selection
-  -DEXECUTORCH_BUILD_KERNELS_QUANTIZED=OFF     # Disable quantized ops  
-  -DEXECUTORCH_BUILD_CORTEX_M=OFF              # Disable cortex-m ops
+  -DEXECUTORCH_BUILD_KERNELS_QUANTIZED=ON      # Enable quantized ops (needed for header generation)
+  -DEXECUTORCH_BUILD_CORTEX_M=ON               # Enable cortex-m ops (needed for header generation)
   -DEXECUTORCH_BUILD_EXECUTOR_RUNNER=OFF
   -DEXECUTORCH_BUILD_DEVTOOLS=OFF
   -DEXECUTORCH_BUILD_EXTENSION_RUNNER_UTIL=OFF
@@ -119,27 +119,14 @@ CMAKE_ARGS=(
   -DEXECUTORCH_ENABLE_PROGRAM_VERIFICATION=OFF
   -DEXECUTORCH_OPTIMIZE_SIZE=ON
   -DBUILD_TESTING=OFF
-  -DFETCH_ETHOS_U_CONTENT=OFF
   -DEXECUTORCH_ENABLE_DTYPE_SELECTIVE_BUILD=OFF # Only build support for dtypes in model
 )
 
 # Detect if quantized operators are needed
 NEEDS_QUANTIZED=false
 if [[ "${SELECTION_STRATEGY}" == "model" ]]; then
-  # Check if model contains quantized_decomposed operators
-  if python3 -c "
-import sys
-sys.path.insert(0, '${EXECUTORCH_SRC}')
-from executorch.exir._serialize._program import deserialize_pte_binary
-with open('${SELECTION_VALUE}', 'rb') as f:
-    program = deserialize_pte_binary(f.read())
-for plan in program.execution_plan:
-    for op in plan.operators:
-        if hasattr(op, 'name') and 'quantized' in op.name:
-            print('found')
-            exit(0)
-exit(1)
-" 2>/dev/null; then
+  # Check if the PTE binary contains quantized operator references
+  if strings "${SELECTION_VALUE}" 2>/dev/null | grep -qi "quantize\|dequantize"; then
     NEEDS_QUANTIZED=true
     echo "[Stage2] Detected quantized operators in model, enabling quantized kernels"
   fi
@@ -176,6 +163,36 @@ if [[ -n "${EXECUTORCH_EXTRA_CMAKE_ARGS:-}" ]]; then
   CMAKE_ARGS+=("${EXTRA_SPLIT[@]}")
 fi
 
+# Run configure once to let FetchContent download CMSIS-NN
+echo "[Stage2] Initial configure (downloading dependencies)..."
+cmake "${EXECUTORCH_SRC}" "${CMAKE_ARGS[@]}" -B . 2>&1 | tee cmake_initial.log || {
+  # Expected to fail on first run due to CMSIS-NN include path issue
+  echo "[Stage2] Initial configure failed (expected). Checking for CMSIS-NN..."
+}
+
+# Patch CMSIS-NN if it was downloaded
+CMSIS_NN_CMAKE="${BUILD_DIR}/_deps/cmsis_nn-src/CMakeLists.txt"
+if [[ -f "${CMSIS_NN_CMAKE}" ]]; then
+  # Check if it needs patching (either original or Dockerfile-modified version)
+  if grep -q 'target_include_directories(cmsis-nn PUBLIC "Include")' "${CMSIS_NN_CMAKE}"; then
+    echo "[Stage2] Patching CMSIS-NN CMakeLists.txt for CMake 4.x (original version)..."
+    sed -i.bak 's|target_include_directories(cmsis-nn PUBLIC "Include")|target_include_directories(cmsis-nn PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>")|' "${CMSIS_NN_CMAKE}"
+    echo "[Stage2] CMSIS-NN patched successfully."
+  elif grep -q 'target_include_directories(cmsis-nn PUBLIC "\${CMAKE_CURRENT_SOURCE_DIR}/Include")' "${CMSIS_NN_CMAKE}"; then
+    echo "[Stage2] Patching CMSIS-NN CMakeLists.txt for CMake 4.x (Dockerfile-modified version)..."
+    sed -i.bak 's|target_include_directories(cmsis-nn PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Include")|target_include_directories(cmsis-nn PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>")|' "${CMSIS_NN_CMAKE}"
+    echo "[Stage2] CMSIS-NN patched successfully."
+  else
+    echo "[Stage2] CMSIS-NN already has BUILD_INTERFACE or unknown version."
+  fi
+else
+  echo "[Stage2] WARNING: CMSIS-NN not found at ${CMSIS_NN_CMAKE}"
+  echo "[Stage2] Build may fail if CMSIS-NN is required."
+fi
+
+# Clean CMake cache and re-configure with patched CMSIS-NN
+echo "[Stage2] Re-configuring with patched dependencies..."
+rm -f CMakeCache.txt
 cmake "${EXECUTORCH_SRC}" "${CMAKE_ARGS[@]}" -B .
 
 echo "[Stage2] Building selective operator library..."

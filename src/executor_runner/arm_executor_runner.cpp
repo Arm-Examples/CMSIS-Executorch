@@ -92,6 +92,7 @@
 #include <executorch/runtime/platform/log.h>
 #include <executorch/runtime/platform/platform.h>
 #include <executorch/runtime/platform/runtime.h>
+#include <executorch/schema/program_generated.h>
 #include <stdio.h>
 #include <stdlib.h>  // For exit()
 
@@ -621,6 +622,13 @@ void runner_init(
         "Program loading failed @ 0x%p: 0x%" PRIx32,
         program_data,
         program.error());
+  }
+
+  // Get program version from the FlatBuffer schema
+  const auto* program_ptr = executorch_flatbuffer::GetProgram(program_data);
+  if (program_ptr != nullptr) {
+    uint32_t pte_version = program_ptr->version();
+    ET_LOG(Info, "ExecuTorch Program Schema Version: %u", pte_version);
   }
 
   ET_LOG(Info, "Model buffer loaded, has %u methods", program->num_methods());

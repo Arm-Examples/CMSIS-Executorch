@@ -69,7 +69,6 @@ CMAKE_ARGS=(
   -DEXECUTORCH_ENABLE_PROGRAM_VERIFICATION=OFF
   -DEXECUTORCH_OPTIMIZE_SIZE=ON
   -DBUILD_TESTING=OFF
-  -DFETCH_ETHOS_U_CONTENT=OFF
   -DEXECUTORCH_SELECT_OPS_MODEL=  # empty => full schema based libs
 )
 
@@ -83,6 +82,36 @@ if [[ -n "${EXECUTORCH_EXTRA_CMAKE_ARGS:-}" ]]; then
   CMAKE_ARGS+=("${EXTRA_SPLIT[@]}")
 fi
 
+# Run configure once to let FetchContent download CMSIS-NN
+echo "[Stage1] Initial configure (downloading dependencies)..."
+cmake "${EXECUTORCH_SRC}" "${CMAKE_ARGS[@]}" -B . 2>&1 | tee cmake_initial.log || {
+  # Expected to fail on first run due to CMSIS-NN include path issue
+  echo "[Stage1] Initial configure failed (expected). Checking for CMSIS-NN..." 
+}
+
+# Patch CMSIS-NN if it was downloaded
+CMSIS_NN_CMAKE="${BUILD_DIR}/_deps/cmsis_nn-src/CMakeLists.txt"
+if [[ -f "${CMSIS_NN_CMAKE}" ]]; then
+  # Check if it needs patching (either original or Dockerfile-modified version)
+  if grep -q 'target_include_directories(cmsis-nn PUBLIC "Include")' "${CMSIS_NN_CMAKE}"; then
+    echo "[Stage1] Patching CMSIS-NN CMakeLists.txt for CMake 4.x (original version)..."
+    sed -i.bak 's|target_include_directories(cmsis-nn PUBLIC "Include")|target_include_directories(cmsis-nn PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>")|' "${CMSIS_NN_CMAKE}"
+    echo "[Stage1] CMSIS-NN patched successfully."
+  elif grep -q 'target_include_directories(cmsis-nn PUBLIC "\${CMAKE_CURRENT_SOURCE_DIR}/Include")' "${CMSIS_NN_CMAKE}"; then
+    echo "[Stage1] Patching CMSIS-NN CMakeLists.txt for CMake 4.x (Dockerfile-modified version)..."
+    sed -i.bak 's|target_include_directories(cmsis-nn PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Include")|target_include_directories(cmsis-nn PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>")|' "${CMSIS_NN_CMAKE}"
+    echo "[Stage1] CMSIS-NN patched successfully."
+  else
+    echo "[Stage1] CMSIS-NN already has BUILD_INTERFACE or unknown version."
+  fi
+else
+  echo "[Stage1] WARNING: CMSIS-NN not found at ${CMSIS_NN_CMAKE}"
+  echo "[Stage1] Build may fail if CMSIS-NN is required."
+fi
+
+# Clean CMake cache and re-configure with patched CMSIS-NN
+echo "[Stage1] Re-configuring with patched dependencies..."
+rm -f CMakeCache.txt
 cmake "${EXECUTORCH_SRC}" "${CMAKE_ARGS[@]}" -B .
 
 echo "[Stage1] Building core & kernel libraries (no install step)..."
@@ -154,6 +183,18 @@ fi
 # Log header count
 HDR_COUNT=$(find "$INC_DIR" -type f -name '*.h' | wc -l | tr -d ' ' || true)
 echo "[Stage1] Collected $HDR_COUNT header files."
+
+# Collect FlatBuffers generated headers from extension builds
+echo "[Stage1] Collecting FlatBuffers generated headers..."
+FLATBUFFER_HEADERS=$(find . -type f -name '*_generated.h' 2>/dev/null | grep -v 'program_generated\|scalar_type_generated' || true)
+for FB_HDR in $FLATBUFFER_HEADERS; do
+  # Extract path relative to build dir
+  REL_PATH=$(echo "$FB_HDR" | sed 's|^\./||' | sed 's|^extension/||')
+  TARGET_DIR="$INC_DIR/executorch/extension/$(dirname "$REL_PATH")"
+  mkdir -p "$TARGET_DIR"
+  cp "$FB_HDR" "$TARGET_DIR/"
+  echo "[Stage1] Copied FlatBuffer header: $(basename "$FB_HDR")"
+done
 
 # Supplement: explicitly gather codegen headers that might live outside include/ tree
 echo "[Stage1] Scanning for additional generated headers (Functions.h, NativeFunctions.h, CustomOpsNativeFunctions.h, Register*)."
