@@ -118,6 +118,10 @@ RUN sed -i '/model-explorer/d' \
     /workspace/executorch/backends/arm/requirements-arm-tosa.txt \
     /workspace/executorch/backends/arm/requirements-arm-ethos-u.txt
 
+# Pin pybind11 to version compatible with TOSA serialization library
+# (pybind11 v2.13+ has breaking changes that break def_property_readonly with keep_alive)
+RUN pip install --break-system-packages "pybind11<2.13"
+
 # Setup ARM environment using official script
 WORKDIR /workspace/executorch
 RUN ./examples/arm/setup.sh --i-agree-to-the-contained-eula
