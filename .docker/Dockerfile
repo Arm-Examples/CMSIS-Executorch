@@ -122,6 +122,18 @@ RUN sed -i '/model-explorer/d' \
 # (pybind11 v2.13+ has breaking changes that break def_property_readonly with keep_alive)
 RUN pip install --break-system-packages "pybind11<2.13"
 
+# Pre-install tosa-tools from PyPI (avoids ~3min C++ source build in setup.sh)
+# tosa-tools 0.4.0 bundles both the reference model and tosa_serialization_lib
+RUN pip install --break-system-packages tosa-tools==0.4.0
+
+# Neutralize the tosa-tools source-build pip-install lines in setup.sh
+# (the env-var prefixes become harmless assignments passed to `true`;
+#  the git clone still runs so the directory-existence checks pass)
+RUN sed -i \
+    -e 's|pip install --no-dependencies ./reference_model|true  # tosa-tools pre-installed from PyPI|' \
+    -e 's|pip install --no-dependencies ./serialization|true  # tosa-serialization-lib pre-installed from PyPI|' \
+    /workspace/executorch/examples/arm/setup.sh
+
 # Setup ARM environment using official script
 WORKDIR /workspace/executorch
 RUN ./examples/arm/setup.sh --i-agree-to-the-contained-eula
