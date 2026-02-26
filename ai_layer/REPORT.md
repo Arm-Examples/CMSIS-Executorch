@@ -1,44 +1,44 @@
 # ExecuTorch AI Layer Build Report
 
-**Generated:** 2026-01-27T15:55:53Z
-**Git Commit:** f58e85dc74eb on main
+**Generated:** 2026-02-26T16:48:09Z
+**Git Commit:** e313cbba50d5 on main
 **Repository Status:** 🔄 Modified
-**Last Commit:** 2026-01-27 16:47:30 +0100
+**Last Commit:** 2026-01-28 13:39:17 +0100
 
 ## 📊 Build Summary
 
 - **Libraries:** 9 static libraries
 - **Models:** 1 model assets
-- **Operators:** 2 selected operators
+- **Operators:** 9 selected operators
 - **Build Type:** Release
 
 ## 📚 Library Assets
 
-**Total Size:** 9.9 MiB
+**Total Size:** 9.7 MiB
 
 | Library | Size | Percentage | Modified | Hash |
 |---------|------|------------|----------|------|
-| libcortex_m_kernels.a | 20.0 KiB | 0.2% | 2026-01-27 15:55:25 | `86ef9627fa72a103` |
-| libcortex_m_ops_lib.a | 12.6 KiB | 0.1% | 2026-01-27 15:55:26 | `f4a47ddf1b21f081` |
-| libexecutorch.a | 51.9 KiB | 0.5% | 2026-01-27 15:55:25 | `4f930898f0b42cb2` |
-| libexecutorch_core.a | 216.5 KiB | 2.1% | 2026-01-27 15:55:25 | `236f25130fc02703` |
-| libexecutorch_delegate_ethos_u.a | 18.6 KiB | 0.2% | 2026-01-27 15:55:26 | `7018288463b78ba6` |
-| libportable_kernels.a | 9.1 MiB | 92.3% | 2026-01-27 15:55:25 | `7e65742bade39aa2` |
-| libportable_ops_lib.a | 199.1 KiB | 2.0% | 2026-01-27 15:55:25 | `c4073b752a26f3fe` |
-| libquantized_kernels.a | 238.6 KiB | 2.4% | 2026-01-27 15:55:26 | `95ab0f70d52a7c81` |
-| libquantized_ops_lib.a | 28.7 KiB | 0.3% | 2026-01-27 15:55:26 | `6a439a0e67d94665` |
+| libcortex_m_kernels.a | 20.0 KiB | 0.2% | 2026-02-26 16:46:10 | `0f0d4153cee555cc` |
+| libcortex_m_ops_lib.a | 12.7 KiB | 0.1% | 2026-02-26 16:46:10 | `48544da99226a894` |
+| libexecutorch.a | 51.9 KiB | 0.5% | 2026-02-26 16:46:10 | `5322395c951790a3` |
+| libexecutorch_core.a | 216.5 KiB | 2.2% | 2026-02-26 16:46:10 | `8f7469e33e108fb6` |
+| libexecutorch_delegate_ethos_u.a | 18.6 KiB | 0.2% | 2026-02-26 16:46:10 | `e93e92a1a5e75e9f` |
+| libportable_kernels.a | 9.1 MiB | 94.0% | 2026-02-26 16:46:10 | `c1c58c9a19838ae6` |
+| libportable_ops_lib.a | 11.6 KiB | 0.1% | 2026-02-26 16:48:08 | `290fcc85b2f1293c` |
+| libquantized_kernels.a | 238.6 KiB | 2.4% | 2026-02-26 16:46:10 | `105eb92cd0bdc77f` |
+| libquantized_ops_lib.a | 28.7 KiB | 0.3% | 2026-02-26 16:46:10 | `9bb5169c6ef3624a` |
 
 ## 🤖 Model Assets
 
 | Asset | Type | Size | Modified | Hash |
 |-------|------|------|----------|------|
-| ethos_u_minimal_example.pte | Model | 3.8 KiB | 2026-01-27 15:55:53 | `bd7a211160a18572` |
+| ethos_u_minimal_example.pte | Model | 3.8 KiB | 2026-02-26 16:48:08 | `bd7a211160a18572` |
 
 ## ⚙️ Build Configuration
 
 ### CMake Configuration
 - **Build Type:** `Release`
-- **Toolchain File:** `/workspace2/model/arm-none-eabi-gcc.cmake`
+- **Toolchain File:** `/__w/CMSIS-Executorch/CMSIS-Executorch/model/arm-none-eabi-gcc.cmake`
 - **ARM Baremetal:** `ON`
 - **Cortex-M Support:** `ON`
 - **Portable Ops:** `ON`
@@ -48,11 +48,18 @@
 
 **Source:** Model file: ethos_u_minimal_example.pte (inferred)
 
-**Count:** 2 operators
+**Count:** 9 operators
 
 ```
-quantized_decomposed::dequantize_per_tensor.out
-quantized_decomposed::quantize_per_tensor.out
+aten::add.out
+aten::conv2d.out
+aten::linear.out
+aten::mul.out
+aten::permute_copy.out
+aten::relu.out
+aten::sigmoid.out
+aten::softmax.out
+aten::view_copy.out
 ```
 
 ## 🔄 Model Conversion Details
@@ -69,43 +76,6 @@ quantized_decomposed::quantize_per_tensor.out
 
 **Model Architecture:**
   - Model class: Add
-
-**Vela Compilation Summary:**
-  - Accelerator configuration               Ethos_U55_128
-  - System configuration             Ethos_U55_High_End_Embedded
-  - Memory mode                               Shared_Sram
-  - Accelerator clock                                 500 MHz
-  - Design peak SRAM bandwidth                       3.73 GB/s
-  - Design peak Off-chip Flash bandwidth             0.47 GB/s
-  - Total SRAM used                                  0.14 KiB
-  - Total Off-chip Flash used                        0.03 KiB
-  - CPU operators = 0 (0.0%)
-  - NPU operators = 12 (100.0%)
-  - Average SRAM bandwidth                           0.27 GB/s
-  - Input   SRAM bandwidth                           0.00 MB/batch
-  - Weight  SRAM bandwidth                           0.00 MB/batch
-  - Output  SRAM bandwidth                           0.00 MB/batch
-  - Total   SRAM bandwidth                           0.00 MB/batch
-  - Total   SRAM bandwidth            per input      0.00 MB/inference (batch size 1)
-  - Average Off-chip Flash bandwidth                 0.04 GB/s
-  - Input   Off-chip Flash bandwidth                 0.00 MB/batch
-  - Weight  Off-chip Flash bandwidth                 0.00 MB/batch
-  - Output  Off-chip Flash bandwidth                 0.00 MB/batch
-  - Total   Off-chip Flash bandwidth                 0.00 MB/batch
-  - Total   Off-chip Flash bandwidth  per input      0.00 MB/inference (batch size 1)
-  - Original Weights Size                            0.00 KiB
-  - NPU Encoded Weights Size                         0.00 KiB
-  - Neural network macs                                 0 MACs/batch
-  - Info: The numbers below are internal compiler estimates.
-  - For performance numbers the compiled network should be run on an FVP Model or FPGA.
-  - Network Tops/s                                   0.00 Tops/s
-  - NPU cycles                                        349 cycles/batch
-  - SRAM Access cycles                                 24 cycles/batch
-  - DRAM Access cycles                                  0 cycles/batch
-  - On-chip Flash Access cycles                         0 cycles/batch
-  - Off-chip Flash Access cycles                       32 cycles/batch
-  - Total cycles                                      349 cycles/batch
-  - Batch Inference time                 0.00 ms, 1432664.76 inferences/s (batch size 1)
 
 ## 📦 Source Layer Export
 
@@ -132,9 +102,9 @@ quantized_decomposed::quantize_per_tensor.out
 
 ## 🛠️ Build Environment
 
-- **Platform:** `Linux f16f207ed567 6.12.54-linuxkit #1 SMP Fri Nov 21 10:33:45 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux`
+- **Platform:** `Linux 904960cb5fff 6.14.0-1017-azure #17~24.04.1-Ubuntu SMP Mon Dec  1 20:10:50 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux`
 - **Python:** `Python 3.12.3`
-- **CMake:** `cmake version 4.2.0`
+- **CMake:** `cmake version 4.2.3`
 - **ARM GCC:** `arm-none-eabi-gcc (Arm GNU Toolchain 13.3.Rel1 (Build arm-13.24)) 13.3.1 20240614`
 
 ## 📁 Asset Locations
@@ -149,4 +119,4 @@ ai_layer/
 ```
 
 ---
-*Report generated by ExecuTorch AI Layer build system at 2026-01-27T15:55:53Z*
+*Report generated by ExecuTorch AI Layer build system at 2026-02-26T16:48:09Z*

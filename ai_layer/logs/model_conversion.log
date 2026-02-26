@@ -1,10 +1,569 @@
 Skipping import of cpp extensions due to incompatible torch version 2.9.0+cpu for torchao version 0.14.0+cpu             Please see https://github.com/pytorch/ao/issues/2919 for more info
+
+[ Before Graph Optimisation ]
+0     Const                aten_add_tensor_output_zp     
+1     Const                aten_add_tensor_input_zp      
+2     Const                aten_add_tensor_shifts        
+3     Const                aten_add_tensor_multipliers   
+4     Const                layer-2_output_zp             
+5     Const                layer-2_input_zp              
+6     Const                layer-2_shifts                
+7     Const                layer-2_multipliers           
+8     Transpose            tosa_transpose_default_1      
+9     Rescale              layer-2                       
+10    Const                layer-1_output_zp             
+11    Const                layer-1_input_zp              
+12    Const                layer-1_shifts                
+13    Const                layer-1_multipliers           
+14    Transpose            tosa_transpose_default        
+15    Rescale              layer-1                       
+16    Add                  layer-3                       
+17    Rescale              aten_add_tensor               
+18    Transpose            tosa_transpose_default_2      
+
+
+[ After Graph Optimization ]
+0     Const                aten_add_tensor_output_zp     
+1     Const                aten_add_tensor_input_zp      
+2     Const                aten_add_tensor_shifts        
+3     Const                aten_add_tensor_multipliers   
+4     Const                layer-2_output_zp             
+5     Const                layer-2_input_zp              
+6     Const                layer-2_shifts                
+7     Const                layer-2_multipliers           
+8     Transpose            tosa_transpose_default_1      
+9     Rescale              layer-2                       
+10    Const                layer-1_output_zp             
+11    Const                layer-1_input_zp              
+12    Const                layer-1_shifts                
+13    Const                layer-1_multipliers           
+14    Transpose            tosa_transpose_default        
+15    Rescale              layer-1                       
+16    Add                  layer-3                       
+17    Rescale              aten_add_tensor               
+18    Transpose            tosa_transpose_default_2      
+
+
+[ Graph With Tensor Quantization ]
+0 Const aten_add_tensor_output_zp
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_output_zp
+1 Const aten_add_tensor_input_zp
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_input_zp
+2 Const aten_add_tensor_shifts
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_shifts
+3 Const aten_add_tensor_multipliers
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_multipliers
+4 Const layer-2_output_zp
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_output_zp
+5 Const layer-2_input_zp
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_input_zp
+6 Const layer-2_shifts
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_shifts
+7 Const layer-2_multipliers
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_multipliers
+8 Transpose tosa_transpose_default_1
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 quantized_decomposed_quantize_per_tensor_default_1
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_1
+9 Rescale layer-2
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [-128], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_1
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_multipliers
+    Input 02 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_shifts
+    Input 03 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_input_zp
+    Input 04 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2_output_zp
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2
+10 Const layer-1_output_zp
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_output_zp
+11 Const layer-1_input_zp
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_input_zp
+12 Const layer-1_shifts
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_shifts
+13 Const layer-1_multipliers
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_multipliers
+14 Transpose tosa_transpose_default
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 quantized_decomposed_quantize_per_tensor_default
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default
+15 Rescale layer-1
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [-128], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_multipliers
+    Input 02 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_shifts
+    Input 03 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_input_zp
+    Input 04 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1_output_zp
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1
+16 Add layer-3
+    Input 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-3
+17 Rescale aten_add_tensor
+    Input 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-3
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_multipliers
+    Input 02 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_shifts
+    Input 03 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_input_zp
+    Input 04 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor_output_zp
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [-128], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor
+18 Transpose tosa_transpose_default_2
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_2
+
+
+[ Before Graph Optimisation ]
+0     Const                aten_add_tensor_output_zp     
+1     Const                aten_add_tensor_input_zp      
+2     Const                aten_add_tensor_shifts        
+3     Const                aten_add_tensor_multipliers   
+4     Const                layer-2_output_zp             
+5     Const                layer-2_input_zp              
+6     Const                layer-2_shifts                
+7     Const                layer-2_multipliers           
+8     Transpose            tosa_transpose_default_1      
+9     Rescale              layer-2                       
+10    Const                layer-1_output_zp             
+11    Const                layer-1_input_zp              
+12    Const                layer-1_shifts                
+13    Const                layer-1_multipliers           
+14    Transpose            tosa_transpose_default        
+15    Rescale              layer-1                       
+16    Add                  layer-3                       
+17    Rescale              aten_add_tensor               
+18    Transpose            tosa_transpose_default_2      
+
+
+[ After Graph Optimization ]
+0     Transpose            tosa_transpose_default_1      
+1     Add                  tosa_transpose_default_1      
+2     Mul                  layer-2                       
+3     Transpose            tosa_transpose_default        
+4     Add                  tosa_transpose_default        
+5     Mul                  layer-1                       
+6     Add                  layer-3                       
+7     Mul                  aten_add_tensor               
+8     Transpose            tosa_transpose_default_2      
+
+
+[ Graph With Tensor Quantization ]
+0 Transpose tosa_transpose_default_1
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 quantized_decomposed_quantize_per_tensor_default_1
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_1
+1 Add tosa_transpose_default_1
+    Input 00 Int8 scale: [], zero_point: [-128], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_1
+    Input 01 Int8 scale: [], zero_point: [], quantMin: [], quantMax: [], dimension: 0 const_zero
+    Output 00 Int32 scale: [], zero_point: [], quantMin: [-9223372036854775808], quantMax: [9223372036854775807], dimension: 0 tosa_transpose_default_1
+2 Mul layer-2
+    Input 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 multipliers_0_0
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_1
+    Output 00 Int32 scale: [(scale:1, shift:11)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2
+3 Transpose tosa_transpose_default
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 quantized_decomposed_quantize_per_tensor_default
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default
+4 Add tosa_transpose_default
+    Input 00 Int8 scale: [], zero_point: [-128], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default
+    Input 01 Int8 scale: [], zero_point: [], quantMin: [], quantMax: [], dimension: 0 const_zero
+    Output 00 Int32 scale: [], zero_point: [], quantMin: [-9223372036854775808], quantMax: [9223372036854775807], dimension: 0 tosa_transpose_default
+5 Mul layer-1
+    Input 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 multipliers_0_0
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default
+    Output 00 Int32 scale: [(scale:1, shift:11)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1
+6 Add layer-3
+    Input 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-1
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-2
+    Output 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-3
+7 Mul aten_add_tensor
+    Input 00 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 multipliers_0_0
+    Input 01 Int32 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 layer-3
+    Output 00 Int8 scale: [(scale:1, shift:50)], zero_point: [-128], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor
+8 Transpose tosa_transpose_default_2
+    Input 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 aten_add_tensor
+    Output 00 Int8 scale: [(scale:1, shift:0)], zero_point: [0], quantMin: [], quantMax: [], dimension: 0 tosa_transpose_default_2
+
+Schedule: 'graph_MAX_BUFFERED'
+	0: Operation Transpose  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 0
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = []
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=32
+		Memory Used: 48 bytes
+	1: Operation Transpose  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 2
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = []
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=32
+		Memory Used: 48 bytes
+	2: Operation Add  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 4
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = [1, 1, 1, 1]
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=34
+		Memory Used: 96 bytes
+	3: Operation Mul  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 6
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = [1, 1, 1, 1]
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=33
+		Memory Used: 80 bytes
+	4: Operation Transpose  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 8
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = []
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=32
+		Memory Used: 96 bytes
+	5: Operation Transpose  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 10
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = []
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=32
+		Memory Used: 96 bytes
+	6: Operation Add  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 12
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = [1, 1, 1, 1]
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=34
+		Memory Used: 144 bytes
+	7: Operation Mul  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 14
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = [1, 1, 1, 1]
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=33
+		Memory Used: 128 bytes
+	8: Operation Add  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 16
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = [1, 1, 1, 1]
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=21
+		Memory Used: 128 bytes
+	9: Operation Mul  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 18
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = [1, 1, 1, 1]
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=2
+		Memory Used: 80 bytes
+	10: Operation Transpose  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 20
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = []
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=32
+		Memory Used: 32 bytes
+	11: Operation Transpose  - OFM 1, 1, 1, 1
+		Kernel: size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0]
+		Time index = 22
+		Operator Config = OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+		IFM Stripe   = [1, 1, 1, 1]
+		IFM2 Stripe  = []
+		OFM Stripe   = [1, 1, 1, 1]
+		Assigned Cascade = 0
+		sub-operations: -
+		Estimated Perf: Macs=0 Cycles=32
+		Memory Used: 32 bytes
+	Cascades:
+################################################################################
+Allocation, memory Sram, usage mask: FeatureMap|Staging
+Start Time - End Time  : Start Addr -   End Addr: Tensor Size: Memory Usage : Name
+         0 -          1:       0x10 -       0x20:          16:           48 : quantized_decomposed_quantize_per_tensor_default_1
+         0 -          3:        0x0 -       0x10:          16:           48 : ? (uid 83)
+         0 -          9:       0x40 -       0x50:          16:           96 : quantized_decomposed_quantize_per_tensor_default
+         2 -          5:       0x50 -       0x60:          16:           96 : tosa_transpose_default_1
+         4 -         17:        0x0 -       0x40:          64:          144 : layer-2
+         4 -         17:        0x0 -       0x40:          64:          144 : tosa_transpose_default_1
+         8 -         11:       0x50 -       0x60:          16:           96 : ? (uid 98)
+        10 -         13:       0x80 -       0x90:          16:          144 : tosa_transpose_default
+        12 -         19:       0x40 -       0x80:          64:          144 : layer-3
+        12 -         19:       0x40 -       0x80:          64:          144 : layer-1
+        12 -         19:       0x40 -       0x80:          64:          144 : tosa_transpose_default
+        18 -         21:        0x0 -       0x10:          16:           80 : aten_add_tensor
+        20 -         23:       0x10 -       0x20:          16:           32 : ? (uid 117)
+        22 -         25:        0x0 -       0x10:          16:           32 : tosa_transpose_default_2
+Allocation Peak Tensor Size: 144 bytes == 0.140625 KiB
+################################################################################
+Tensor Allocation for read-only NPU tensors:
+Start Time - End Time  : Start Addr -   End Addr: Tensor Size: Memory Usage : Name
+         4 -         13:        0x0 -       0x10:          16:           32 : const_zero
+         4 -         13:        0x0 -       0x10:          16:           32 : const_zero
+         6 -         19:       0x10 -       0x20:          16:           32 : multipliers_0_0
+         6 -         19:       0x10 -       0x20:          16:           32 : multipliers_0_0
+         6 -         19:       0x10 -       0x20:          16:           32 : multipliers_0_0
+Allocation Peak Tensor Size: 32 bytes == 0.03125 KiB
+High level NPU operations:
+0 Transpose , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: quantized_decomposed_quantize_per_tensor_default_1, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x10
+  OFM: ? (uid 83), [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x0
+1 Transpose , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: ? (uid 83), [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x0
+  OFM: tosa_transpose_default_1, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x50
+2 Add , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: tosa_transpose_default_1, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x50
+  IFM2: const_zero, [1, 1, 1, 1], format: 1, OffChipFlash:ReadOnly, address: 0x0
+  OFM: tosa_transpose_default_1, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x0
+3 Mul , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: tosa_transpose_default_1, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x0
+  IFM2: multipliers_0_0, [1, 1, 1, 1], format: 1, OffChipFlash:ReadOnly, address: 0x10
+  OFM: layer-2, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x0
+4 Transpose , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: quantized_decomposed_quantize_per_tensor_default, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x40
+  OFM: ? (uid 98), [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x50
+5 Transpose , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: ? (uid 98), [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x50
+  OFM: tosa_transpose_default, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x80
+6 Add , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: tosa_transpose_default, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x80
+  IFM2: const_zero, [1, 1, 1, 1], format: 1, OffChipFlash:ReadOnly, address: 0x0
+  OFM: tosa_transpose_default, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x40
+7 Mul , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: tosa_transpose_default, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x40
+  IFM2: multipliers_0_0, [1, 1, 1, 1], format: 1, OffChipFlash:ReadOnly, address: 0x10
+  OFM: layer-1, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x40
+8 Add , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: layer-1, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x40
+  IFM2: layer-2, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x0
+  OFM: layer-3, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x40
+9 Mul , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: layer-3, [1, 1, 1, 1], format: 2, Sram:FeatureMap|Staging, address: 0x40
+  IFM2: multipliers_0_0, [1, 1, 1, 1], format: 1, OffChipFlash:ReadOnly, address: 0x10
+  OFM: aten_add_tensor, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x0
+10 Transpose , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: aten_add_tensor, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x0
+  OFM: ? (uid 117), [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x10
+11 Transpose , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+  IFM: ? (uid 117), [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x10
+  OFM: tosa_transpose_default_2, [1, 1, 1, 1], format: 1, Sram:FeatureMap|Staging, address: 0x0
+High level command stream:
+0 Transpose OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1]
+1 Transpose OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1]
+2 Add OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1], IFM2 [0, 0, 0, 0 - 1, 1, 1, 1]
+3 Mul OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1], IFM2 [0, 0, 0, 0 - 1, 1, 1, 1]
+4 Transpose OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1]
+5 Transpose OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1]
+6 Add OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1], IFM2 [0, 0, 0, 0 - 1, 1, 1, 1]
+7 Mul OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1], IFM2 [0, 0, 0, 0 - 1, 1, 1, 1]
+8 Add OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1], IFM2 [0, 0, 0, 0 - 1, 1, 1, 1]
+9 Mul OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1], IFM2 [0, 0, 0, 0 - 1, 1, 1, 1]
+10 Transpose OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1]
+11 Transpose OFM area [0, 0, 0, 0 - 1, 1, 1, 1], IFM [0, 0, 0, 0 - 1, 1, 1, 1]
 RCS: Emitting no-op transpose as a memory copy
 RCS: Emitting no-op transpose as a memory copy
 RCS: Emitting no-op transpose as a memory copy
 RCS: Emitting no-op transpose as a memory copy
 RCS: Emitting no-op transpose as a memory copy
 RCS: Emitting no-op transpose as a memory copy
+Register command stream: 219 words
+  Offset: Payload Param Code - Command                        Param, Fields
+// DMA src: Sram:FeatureMap|Staging, address: 0x10, dest: Sram:FeatureMap|Staging, address: 0x0, sizes: (N/A), length: 1
+0x000000:          0001 0130 - NPU_SET_DMA0_SRC_REGION            1, region = 1, region_mode = DMA_REGION_MODE_EXTERNAL, stride_mode = DMA_STRIDE_MODE_D1
+0x000004: 00000010 0000 4030 - NPU_SET_DMA0_SRC                   0, addr = 0x10
+0x00000c:          0001 0131 - NPU_SET_DMA0_DST_REGION            1, region = 1, region_mode = DMA_REGION_MODE_EXTERNAL, stride_mode = DMA_STRIDE_MODE_D1
+0x000010: 00000000 0000 4031 - NPU_SET_DMA0_DST                   0, addr = 0x0
+0x000018: 00000001 0000 4032 - NPU_SET_DMA0_LEN                   0, addr = 0x1
+0x000020:          0000 0010 - NPU_OP_DMA_START                   0
+// DMA src: Sram:FeatureMap|Staging, address: 0x0, dest: Sram:FeatureMap|Staging, address: 0x50, sizes: (N/A), length: 1
+0x000024: 00000000 0000 4030 - NPU_SET_DMA0_SRC                   0, addr = 0x0
+0x00002c: 00000050 0000 4031 - NPU_SET_DMA0_DST                   0, addr = 0x50
+0x000034:          0000 0011 - NPU_OP_DMA_WAIT                    0, k = 0
+0x000038:          0000 0010 - NPU_OP_DMA_START                   0
+// Add , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+0x00003c: 00000001 0000 4025 - NPU_SET_OPA_SCALE                  0, shift = 0, scale = 1
+0x000044: 00000001 0000 4026 - NPU_SET_OPB_SCALE                  0, scale = 1
+0x00004c: 00000001 0000 4024 - NPU_SET_OFM_SCALE                  0, shift = 0, scale = 1
+0x000054:          0001 010f - NPU_SET_IFM_REGION                 1, region = 1
+0x000058: 00000050 0000 4000 - NPU_SET_IFM_BASE0                  0, addr = 0x50
+0x000060: 00000000 0000 4001 - NPU_SET_IFM_BASE1                  0, addr = 0x0
+0x000068: 00000000 0000 4002 - NPU_SET_IFM_BASE2                  0, addr = 0x0
+0x000070: 00000000 0000 4003 - NPU_SET_IFM_BASE3                  0, addr = 0x0
+0x000078:          0000 010b - NPU_SET_IFM_HEIGHT0_M1             0, height_m1 = 0
+0x00007c:          0000 010c - NPU_SET_IFM_HEIGHT1_M1             0, height_m1 = 0
+0x000080:          0000 010a - NPU_SET_IFM_WIDTH0_M1              0, width_m1 = 0
+0x000084:          0000 0104 - NPU_SET_IFM_DEPTH_M1               0, depth_m1 = 0
+0x000088: 00000001 0000 4005 - NPU_SET_IFM_STRIDE_Y               0, addr = 0x1
+0x000090: 00000001 0000 4004 - NPU_SET_IFM_STRIDE_X               0, addr = 0x1
+0x000098: 00000001 0000 4006 - NPU_SET_IFM_STRIDE_C               0, addr = 0x1
+0x0000a0:          ff80 0109 - NPU_SET_IFM_ZERO_POINT         65408, zero_point = 65408
+0x0000a4:          0001 0105 - NPU_SET_IFM_PRECISION              1, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B8, activation_format = ACTIVATION_FORMAT_NHWC, scale_mode = IFM_SCALE_MODE_OPA_OPB_16, round_mode = ROUND_MODE_DBL
+0x0000a8:          0000 0107 - NPU_SET_IFM_UPSCALE                0, mode = IFM_UPSCALE_MODE_NONE
+0x0000ac:          0001 011f - NPU_SET_OFM_REGION                 1, region = 1
+0x0000b0: 00000000 0000 4010 - NPU_SET_OFM_BASE0                  0, addr = 0x0
+0x0000b8: 00000000 0000 4011 - NPU_SET_OFM_BASE1                  0, addr = 0x0
+0x0000c0: 00000000 0000 4012 - NPU_SET_OFM_BASE2                  0, addr = 0x0
+0x0000c8: 00000000 0000 4013 - NPU_SET_OFM_BASE3                  0, addr = 0x0
+0x0000d0:          0000 0112 - NPU_SET_OFM_HEIGHT_M1              0, height_m1 = 0
+0x0000d4:          0000 0111 - NPU_SET_OFM_WIDTH_M1               0, width_m1 = 0
+0x0000d8:          0000 011b - NPU_SET_OFM_HEIGHT0_M1             0, height_m1 = 0
+0x0000dc:          0000 011c - NPU_SET_OFM_HEIGHT1_M1             0, height_m1 = 0
+0x0000e0:          0000 011a - NPU_SET_OFM_WIDTH0_M1              0, width_m1 = 0
+0x0000e4:          0000 0113 - NPU_SET_OFM_DEPTH_M1               0, depth_m1 = 0
+0x0000e8: 00000040 0000 4015 - NPU_SET_OFM_STRIDE_Y               0, addr = 0x40
+0x0000f0: 00000040 0000 4014 - NPU_SET_OFM_STRIDE_X               0, addr = 0x40
+0x0000f8: 00000040 0000 4016 - NPU_SET_OFM_STRIDE_C               0, addr = 0x40
+0x000100:          0000 0118 - NPU_SET_OFM_ZERO_POINT             0, zero_point = 0
+0x000104:          0145 0114 - NPU_SET_OFM_PRECISION            325, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = OFM_SCALE_MODE_GLOBAL, round_mode = ROUND_MODE_DBL
+0x000108:          0000 0125 - NPU_SET_ACTIVATION                 0, activation_function = ACTIVATION_FUNCTION_RELU, activation_clip_range = ACTIVATION_CLIP_RANGE_OFM_PRECISION
+0x00010c:          8000 0126 - NPU_SET_ACTIVATION_MIN         32768, clip_boundary = 32768
+0x000110:          7fff 0127 - NPU_SET_ACTIVATION_MAX         32767, clip_boundary = 32767
+0x000114:          0000 0181 - NPU_SET_IFM2_SCALAR                0, scalar = 0
+0x000118:          0000 0189 - NPU_SET_IFM2_ZERO_POINT            0, zero_point = 0
+0x00011c:          0001 0185 - NPU_SET_IFM2_PRECISION             1, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B8, activation_format = ACTIVATION_FORMAT_NHWC
+0x000120:          0080 0180 - NPU_SET_IFM2_BROADCAST           128, broadcast_h = BROADCAST_MODE_DISABLE, broadcast_w = BROADCAST_MODE_DISABLE, broadcast_c = BROADCAST_MODE_DISABLE, operand_order = IFM2_OPERAND_ORDER_ORDER_B, broadcast_constant = BROADCAST_MODE_ENABLE
+0x000124:          0000 0116 - NPU_SET_OFM_BLK_HEIGHT_M1          0, height_m1 = 0
+0x000128:          0001 0115 - NPU_SET_OFM_BLK_WIDTH_M1           1, width_m1 = 1
+0x00012c:          0007 0117 - NPU_SET_OFM_BLK_DEPTH_M1           7, depth_m1 = 7
+0x000130:          0016 010d - NPU_SET_IFM_IB_END                22, ib_end = 22
+0x000134:          0016 012d - NPU_SET_AB_START                  22, ab_start = 22
+0x000138:          0006 018d - NPU_SET_IFM2_IB_START              6, ib_start = 6
+0x00013c:          0000 0124 - NPU_SET_ACC_FORMAT                 0, acc_format = ACC_FORMAT_I32
+0x000140:          0000 012f - NPU_SET_BLOCKDEP                   0, blockdep = 0
+0x000144:          0000 0011 - NPU_OP_DMA_WAIT                    0, k = 0
+0x000148:          0001 0006 - NPU_OP_ELEMENTWISE                 1, elementwise_mode = ELEMENTWISE_MODE_ADD
+// Mul , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+0x00014c: 00000001 000b 4024 - NPU_SET_OFM_SCALE                 11, shift = 11, scale = 1
+0x000154: 00000000 0000 4000 - NPU_SET_IFM_BASE0                  0, addr = 0x0
+0x00015c: 00000040 0000 4005 - NPU_SET_IFM_STRIDE_Y               0, addr = 0x40
+0x000164: 00000040 0000 4004 - NPU_SET_IFM_STRIDE_X               0, addr = 0x40
+0x00016c: 00000040 0000 4006 - NPU_SET_IFM_STRIDE_C               0, addr = 0x40
+0x000174:          0000 0109 - NPU_SET_IFM_ZERO_POINT             0, zero_point = 0
+0x000178:          0049 0105 - NPU_SET_IFM_PRECISION             73, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = IFM_SCALE_MODE_OPA_OPB_16, round_mode = ROUND_MODE_DBL
+0x00017c:          8145 0114 - NPU_SET_OFM_PRECISION          33093, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = OFM_SCALE_MODE_GLOBAL, round_mode = ROUND_MODE_NATURAL
+0x000180:          0000 018f - NPU_SET_IFM2_REGION                0, region = 0
+0x000184: 00000010 0000 4080 - NPU_SET_IFM2_BASE0                 0, addr = 0x10
+0x00018c: 00000000 0000 4081 - NPU_SET_IFM2_BASE1                 0, addr = 0x0
+0x000194: 00000000 0000 4082 - NPU_SET_IFM2_BASE2                 0, addr = 0x0
+0x00019c: 00000000 0000 4083 - NPU_SET_IFM2_BASE3                 0, addr = 0x0
+0x0001a4:          0000 018b - NPU_SET_IFM2_HEIGHT0_M1            0, height_m1 = 0
+0x0001a8:          0000 018c - NPU_SET_IFM2_HEIGHT1_M1            0, height_m1 = 0
+0x0001ac:          0000 018a - NPU_SET_IFM2_WIDTH0_M1             0, width_m1 = 0
+0x0001b0: 00000004 0000 4085 - NPU_SET_IFM2_STRIDE_Y              0, addr = 0x4
+0x0001b8: 00000004 0000 4084 - NPU_SET_IFM2_STRIDE_X              0, addr = 0x4
+0x0001c0: 00000004 0000 4086 - NPU_SET_IFM2_STRIDE_C              0, addr = 0x4
+0x0001c8:          0009 0185 - NPU_SET_IFM2_PRECISION             9, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHWC
+0x0001cc:          0000 0180 - NPU_SET_IFM2_BROADCAST             0, broadcast_h = BROADCAST_MODE_DISABLE, broadcast_w = BROADCAST_MODE_DISABLE, broadcast_c = BROADCAST_MODE_DISABLE, operand_order = IFM2_OPERAND_ORDER_ORDER_B, broadcast_constant = BROADCAST_MODE_DISABLE
+0x0001d0:          000a 018d - NPU_SET_IFM2_IB_START             10, ib_start = 10
+0x0001d4:          0000 0006 - NPU_OP_ELEMENTWISE                 0, elementwise_mode = ELEMENTWISE_MODE_MUL
+// DMA src: Sram:FeatureMap|Staging, address: 0x40, dest: Sram:FeatureMap|Staging, address: 0x50, sizes: (N/A), length: 1
+0x0001d8: 00000040 0000 4030 - NPU_SET_DMA0_SRC                   0, addr = 0x40
+0x0001e0:          0001 0012 - NPU_OP_KERNEL_WAIT                 1, n = 1
+0x0001e4:          0000 0010 - NPU_OP_DMA_START                   0
+// DMA src: Sram:FeatureMap|Staging, address: 0x50, dest: Sram:FeatureMap|Staging, address: 0x80, sizes: (N/A), length: 1
+0x0001e8: 00000050 0000 4030 - NPU_SET_DMA0_SRC                   0, addr = 0x50
+0x0001f0: 00000080 0000 4031 - NPU_SET_DMA0_DST                   0, addr = 0x80
+0x0001f8:          0000 0011 - NPU_OP_DMA_WAIT                    0, k = 0
+0x0001fc:          0000 0010 - NPU_OP_DMA_START                   0
+// Add , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+0x000200: 00000001 0000 4024 - NPU_SET_OFM_SCALE                  0, shift = 0, scale = 1
+0x000208: 00000080 0000 4000 - NPU_SET_IFM_BASE0                  0, addr = 0x80
+0x000210: 00000001 0000 4005 - NPU_SET_IFM_STRIDE_Y               0, addr = 0x1
+0x000218: 00000001 0000 4004 - NPU_SET_IFM_STRIDE_X               0, addr = 0x1
+0x000220: 00000001 0000 4006 - NPU_SET_IFM_STRIDE_C               0, addr = 0x1
+0x000228:          ff80 0109 - NPU_SET_IFM_ZERO_POINT         65408, zero_point = 65408
+0x00022c:          0001 0105 - NPU_SET_IFM_PRECISION              1, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B8, activation_format = ACTIVATION_FORMAT_NHWC, scale_mode = IFM_SCALE_MODE_OPA_OPB_16, round_mode = ROUND_MODE_DBL
+0x000230: 00000040 0000 4010 - NPU_SET_OFM_BASE0                  0, addr = 0x40
+0x000238:          0145 0114 - NPU_SET_OFM_PRECISION            325, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = OFM_SCALE_MODE_GLOBAL, round_mode = ROUND_MODE_DBL
+0x00023c:          0001 0185 - NPU_SET_IFM2_PRECISION             1, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B8, activation_format = ACTIVATION_FORMAT_NHWC
+0x000240:          0080 0180 - NPU_SET_IFM2_BROADCAST           128, broadcast_h = BROADCAST_MODE_DISABLE, broadcast_w = BROADCAST_MODE_DISABLE, broadcast_c = BROADCAST_MODE_DISABLE, operand_order = IFM2_OPERAND_ORDER_ORDER_B, broadcast_constant = BROADCAST_MODE_ENABLE
+0x000244:          0006 018d - NPU_SET_IFM2_IB_START              6, ib_start = 6
+0x000248:          0003 012f - NPU_SET_BLOCKDEP                   3, blockdep = 3
+0x00024c:          0000 0011 - NPU_OP_DMA_WAIT                    0, k = 0
+0x000250:          0001 0006 - NPU_OP_ELEMENTWISE                 1, elementwise_mode = ELEMENTWISE_MODE_ADD
+// Mul , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+0x000254: 00000001 000b 4024 - NPU_SET_OFM_SCALE                 11, shift = 11, scale = 1
+0x00025c: 00000040 0000 4000 - NPU_SET_IFM_BASE0                  0, addr = 0x40
+0x000264: 00000040 0000 4005 - NPU_SET_IFM_STRIDE_Y               0, addr = 0x40
+0x00026c: 00000040 0000 4004 - NPU_SET_IFM_STRIDE_X               0, addr = 0x40
+0x000274: 00000040 0000 4006 - NPU_SET_IFM_STRIDE_C               0, addr = 0x40
+0x00027c:          0000 0109 - NPU_SET_IFM_ZERO_POINT             0, zero_point = 0
+0x000280:          0049 0105 - NPU_SET_IFM_PRECISION             73, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = IFM_SCALE_MODE_OPA_OPB_16, round_mode = ROUND_MODE_DBL
+0x000284:          8145 0114 - NPU_SET_OFM_PRECISION          33093, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = OFM_SCALE_MODE_GLOBAL, round_mode = ROUND_MODE_NATURAL
+0x000288:          0009 0185 - NPU_SET_IFM2_PRECISION             9, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHWC
+0x00028c:          0000 0180 - NPU_SET_IFM2_BROADCAST             0, broadcast_h = BROADCAST_MODE_DISABLE, broadcast_w = BROADCAST_MODE_DISABLE, broadcast_c = BROADCAST_MODE_DISABLE, operand_order = IFM2_OPERAND_ORDER_ORDER_B, broadcast_constant = BROADCAST_MODE_DISABLE
+0x000290:          000a 018d - NPU_SET_IFM2_IB_START             10, ib_start = 10
+0x000294:          0000 012f - NPU_SET_BLOCKDEP                   0, blockdep = 0
+0x000298:          0000 0006 - NPU_OP_ELEMENTWISE                 0, elementwise_mode = ELEMENTWISE_MODE_MUL
+// Add , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+0x00029c: 00000001 0000 4024 - NPU_SET_OFM_SCALE                  0, shift = 0, scale = 1
+0x0002a4:          0145 0114 - NPU_SET_OFM_PRECISION            325, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16, scale_mode = OFM_SCALE_MODE_GLOBAL, round_mode = ROUND_MODE_DBL
+0x0002a8:          0001 018f - NPU_SET_IFM2_REGION                1, region = 1
+0x0002ac: 00000000 0000 4080 - NPU_SET_IFM2_BASE0                 0, addr = 0x0
+0x0002b4: 00000040 0000 4085 - NPU_SET_IFM2_STRIDE_Y              0, addr = 0x40
+0x0002bc: 00000040 0000 4084 - NPU_SET_IFM2_STRIDE_X              0, addr = 0x40
+0x0002c4: 00000040 0000 4086 - NPU_SET_IFM2_STRIDE_C              0, addr = 0x40
+0x0002cc:          0049 0185 - NPU_SET_IFM2_PRECISION            73, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHCWB16
+0x0002d0:          0001 0006 - NPU_OP_ELEMENTWISE                 1, elementwise_mode = ELEMENTWISE_MODE_ADD
+// Mul , subOps: -, size=1,1 stride=1,1, dilation=1,1 padding=[t:0,l:0,b:0,r:0,n:0,f:0] OFM Block=[1, 1, 2, 8], IFM Block=[1, 1, 2, 8], Traversal=DepthFirst, AccType=SHRAM_Acc32
+0x0002d4: 00000001 0032 4024 - NPU_SET_OFM_SCALE                 50, shift = 50, scale = 1
+0x0002dc: 00000000 0000 4010 - NPU_SET_OFM_BASE0                  0, addr = 0x0
+0x0002e4: 00000001 0000 4015 - NPU_SET_OFM_STRIDE_Y               0, addr = 0x1
+0x0002ec: 00000001 0000 4014 - NPU_SET_OFM_STRIDE_X               0, addr = 0x1
+0x0002f4: 00000001 0000 4016 - NPU_SET_OFM_STRIDE_C               0, addr = 0x1
+0x0002fc:          ff80 0118 - NPU_SET_OFM_ZERO_POINT         65408, zero_point = 65408
+0x000300:          8101 0114 - NPU_SET_OFM_PRECISION          33025, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B8, activation_format = ACTIVATION_FORMAT_NHWC, scale_mode = OFM_SCALE_MODE_GLOBAL, round_mode = ROUND_MODE_NATURAL
+0x000304:          ff80 0126 - NPU_SET_ACTIVATION_MIN         65408, clip_boundary = 65408
+0x000308:          007f 0127 - NPU_SET_ACTIVATION_MAX           127, clip_boundary = 127
+0x00030c:          0000 018f - NPU_SET_IFM2_REGION                0, region = 0
+0x000310: 00000010 0000 4080 - NPU_SET_IFM2_BASE0                 0, addr = 0x10
+0x000318: 00000004 0000 4085 - NPU_SET_IFM2_STRIDE_Y              0, addr = 0x4
+0x000320: 00000004 0000 4084 - NPU_SET_IFM2_STRIDE_X              0, addr = 0x4
+0x000328: 00000004 0000 4086 - NPU_SET_IFM2_STRIDE_C              0, addr = 0x4
+0x000330:          0009 0185 - NPU_SET_IFM2_PRECISION             9, activation_type = ACTIVATION_TYPE_SIGNED, activation_precision = ACTIVATION_PRECISION_B32, activation_format = ACTIVATION_FORMAT_NHWC
+0x000334:          0000 0006 - NPU_OP_ELEMENTWISE                 0, elementwise_mode = ELEMENTWISE_MODE_MUL
+// DMA src: Sram:FeatureMap|Staging, address: 0x0, dest: Sram:FeatureMap|Staging, address: 0x10, sizes: (N/A), length: 1
+0x000338: 00000000 0000 4030 - NPU_SET_DMA0_SRC                   0, addr = 0x0
+0x000340: 00000010 0000 4031 - NPU_SET_DMA0_DST                   0, addr = 0x10
+0x000348:          0000 0012 - NPU_OP_KERNEL_WAIT                 0, n = 0
+0x00034c:          0000 0010 - NPU_OP_DMA_START                   0
+// DMA src: Sram:FeatureMap|Staging, address: 0x10, dest: Sram:FeatureMap|Staging, address: 0x0, sizes: (N/A), length: 1
+0x000350: 00000010 0000 4030 - NPU_SET_DMA0_SRC                   0, addr = 0x10
+0x000358: 00000000 0000 4031 - NPU_SET_DMA0_DST                   0, addr = 0x0
+0x000360:          0000 0011 - NPU_OP_DMA_WAIT                    0, k = 0
+0x000364:          0000 0010 - NPU_OP_DMA_START                   0
+0x000368:          ffff 0000 - NPU_OP_STOP                    65535, mask = 65535
 class GraphModule(torch.nn.Module):
     def forward(self, x, y):
         x: "f32[1, 1, 1, 1]"; y: "f32[1, 1, 1, 1]"; 
@@ -37,6 +596,55 @@ class GraphModule(torch.nn.Module):
         dequantize_per_tensor_default_2 = torch.ops.quantized_decomposed.dequantize_per_tensor.default(quantize_per_tensor_default_2, 0.007843137718737125, -128, -128, 127, torch.int8);  quantize_per_tensor_default_2 = None
         return pytree.tree_unflatten((dequantize_per_tensor_default_2,), self._out_spec)
         
+Configuration files:
+   original = ['/workspace/executorch-venv/lib/python3.12/site-packages/ethosu/config_files/Arm/vela.ini']
+   used = ['/workspace/executorch-venv/lib/python3.12/site-packages/ethosu/config_files/Arm/vela.ini']
+System Configuration (Ethos_U55_High_End_Embedded):
+   core_clock = 500000000.0
+   axi0_port = Sram
+   axi1_port = OffChipFlash
+   Sram_clock_scales = 1.0
+   Sram_burst_length = 32
+   Sram_read_latency = 32
+   Sram_write_latency = 32
+   Dram_clock_scales = 1.0
+   Dram_burst_length = 1
+   Dram_read_latency = 0
+   Dram_write_latency = 0
+   OnChipFlash_clock_scales = 1.0
+   OnChipFlash_burst_length = 1
+   OnChipFlash_read_latency = 0
+   OnChipFlash_write_latency = 0
+   OffChipFlash_clock_scales = 0.125
+   OffChipFlash_burst_length = 128
+   OffChipFlash_read_latency = 64
+   OffChipFlash_write_latency = 0
+Memory Mode (Shared_Sram):
+   const_mem_area = Axi1
+   arena_mem_area = Axi0
+   cache_mem_area = Axi0
+   arena_cache_size = 4294967296 from Default
+Architecture Settings:
+   permanent_storage_mem_area = OffChipFlash
+   feature_map_storage_mem_area = Sram
+   fast_storage_mem_area = Sram
+
+################################################################################
+Performance for NPU Grap /tmp/tmp47_dafko/output/out
+Original Operator    NNG Operator         Target Staging Usage  Peak% (Staging)  Op Cycles Network% (cycles)        NPU    SRAM AC    DRAM AC OnFlash AC OffFlash AC  MAC Count Network% (MAC)  Util% (MAC) Name                 
+-------------------- -------------------- ------ ------------- ---------------- ---------- ----------------- ---------- ---------- ---------- ---------- ----------- ---------- -------------- ------------ -------------------- 
+Transpose            Transpose            NPU               48            33.33         32              9.17         32          1          0          0           0          0         100.00         0.00 N/A                  
+Transpose            Transpose            NPU               48            33.33         32              9.17         32          1          0          0           0          0         100.00         0.00 tosa_transpose_default_1 
+Rescale              Add                  NPU               96            66.67         34              9.74         34          2          0          0          16          0         100.00         0.00 tosa_transpose_default_1 
+Rescale              Mul                  NPU               80            55.56         33              9.46         33          4          0          0           0          0         100.00         0.00 layer-2              
+Transpose            Transpose            NPU               96            66.67         32              9.17         32          1          0          0           0          0         100.00         0.00 N/A                  
+Transpose            Transpose            NPU               96            66.67         32              9.17         32          1          0          0           0          0         100.00         0.00 tosa_transpose_default 
+Rescale              Add                  NPU              144           100.00         34              9.74         34          2          0          0          16          0         100.00         0.00 tosa_transpose_default 
+Rescale              Mul                  NPU              128            88.89         33              9.46         33          4          0          0           0          0         100.00         0.00 layer-1              
+Add                  Add                  NPU              128            88.89         21              6.02         21          4          0          0           0          0         100.00         0.00 layer-3              
+Rescale              Mul                  NPU               80            55.56          2              0.57          2          2          0          0           0          0         100.00         0.00 aten_add_tensor      
+Transpose            Transpose            NPU               32            22.22         32              9.17         32          1          0          0           0          0         100.00         0.00 N/A                  
+Transpose            Transpose            NPU               32            22.22         32              9.17         32          1          0          0           0          0         100.00         0.00 tosa_transpose_default_2 
 
 Network summary for out
 Accelerator configuration               Ethos_U55_128
@@ -66,7 +674,24 @@ Output  Off-chip Flash bandwidth                 0.00 MB/batch
 Total   Off-chip Flash bandwidth                 0.00 MB/batch
 Total   Off-chip Flash bandwidth  per input      0.00 MB/inference (batch size 1)
 
+Original Weights Size                            0.00 KiB
+NPU Encoded Weights Size                         0.00 KiB
+
 Neural network macs                                 0 MACs/batch
+
+Info: The numbers below are internal compiler estimates.
+For performance numbers the compiled network should be run on an FVP Model or FPGA.
+
+Network Tops/s                                   0.00 Tops/s
+
+NPU cycles                                        349 cycles/batch
+SRAM Access cycles                                 24 cycles/batch
+DRAM Access cycles                                  0 cycles/batch
+On-chip Flash Access cycles                         0 cycles/batch
+Off-chip Flash Access cycles                       32 cycles/batch
+Total cycles                                      349 cycles/batch
+
+Batch Inference time                 0.00 ms, 1432664.76 inferences/s (batch size 1)
 
 class GraphModule(torch.nn.Module):
     def forward(self, x, y):
