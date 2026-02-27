@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ubuntu:24.04
 
 # Prevent interactive prompts during package installation
@@ -76,24 +77,26 @@ RUN git clone https://github.com/pytorch/executorch.git && \
     git submodule update --init --recursive
 
 # Create CMake module to patch CMSIS-NN for CMake 4.x compatibility
+# (printf-based to avoid heredoc syntax that requires BuildKit in older Docker configurations;
+#  use 'DOCKER_BUILDKIT=1 docker build .' or 'docker buildx build .' to enable BuildKit explicitly)
 RUN mkdir -p /workspace/executorch/cmake/modules && \
-    cat > /workspace/executorch/cmake/modules/PatchCmsisNN.cmake << 'EOF'
-# Patch CMSIS-NN after FetchContent populates it for CMake 4.x compatibility
-macro(patch_cmsis_nn_if_needed)
-  if(EXISTS "${cmsis_nn_SOURCE_DIR}/CMakeLists.txt")
-    file(READ "${cmsis_nn_SOURCE_DIR}/CMakeLists.txt" CMSIS_NN_CONTENT)
-    string(FIND "${CMSIS_NN_CONTENT}" "target_include_directories(cmsis-nn PUBLIC \"Include\")" HAS_RELATIVE_PATH)
-    if(NOT HAS_RELATIVE_PATH EQUAL -1)
-      message(STATUS "Patching CMSIS-NN for CMake 4.x compatibility")
-      string(REPLACE 
-        "target_include_directories(cmsis-nn PUBLIC \"Include\")"
-        "target_include_directories(cmsis-nn PUBLIC \"\${CMAKE_CURRENT_SOURCE_DIR}/Include\")"
-        CMSIS_NN_CONTENT "${CMSIS_NN_CONTENT}")
-      file(WRITE "${cmsis_nn_SOURCE_DIR}/CMakeLists.txt" "${CMSIS_NN_CONTENT}")
-    endif()
-  endif()
-endmacro()
-EOF
+    printf '%s\n' \
+        '# Patch CMSIS-NN after FetchContent populates it for CMake 4.x compatibility' \
+        'macro(patch_cmsis_nn_if_needed)' \
+        '  if(EXISTS "${cmsis_nn_SOURCE_DIR}/CMakeLists.txt")' \
+        '    file(READ "${cmsis_nn_SOURCE_DIR}/CMakeLists.txt" CMSIS_NN_CONTENT)' \
+        '    string(FIND "${CMSIS_NN_CONTENT}" "target_include_directories(cmsis-nn PUBLIC \"Include\")" HAS_RELATIVE_PATH)' \
+        '    if(NOT HAS_RELATIVE_PATH EQUAL -1)' \
+        '      message(STATUS "Patching CMSIS-NN for CMake 4.x compatibility")' \
+        '      string(REPLACE' \
+        '        "target_include_directories(cmsis-nn PUBLIC \"Include\")"' \
+        '        "target_include_directories(cmsis-nn PUBLIC \"\${CMAKE_CURRENT_SOURCE_DIR}/Include\")"' \
+        '        CMSIS_NN_CONTENT "${CMSIS_NN_CONTENT}")' \
+        '      file(WRITE "${cmsis_nn_SOURCE_DIR}/CMakeLists.txt" "${CMSIS_NN_CONTENT}")' \
+        '    endif()' \
+        '  endif()' \
+        'endmacro()' \
+    > /workspace/executorch/cmake/modules/PatchCmsisNN.cmake
 
 # Patch ExecuTorch's cortex_m backend to use the patching module
 RUN cd /workspace/executorch/backends/cortex_m && \
@@ -122,15 +125,14 @@ RUN sed -i '/model-explorer/d' \
 # (pybind11 v2.13+ has breaking changes that break def_property_readonly with keep_alive)
 RUN pip install --break-system-packages "pybind11<2.13"
 
-# Pre-install tosa-tools from Test PyPI (avoids ~3min C++ source build in setup.sh)
-# Use --extra-index-url so dependencies like numpy fall back to main PyPI
-RUN pip install --break-system-packages --extra-index-url https://test.pypi.org/simple/ tosa-tools==0.0.4
+# Pre-install tosa-tools from PyPI (avoids ~3min C++ source build in setup.sh)
+RUN pip install --break-system-packages tosa-tools==2026.2.0
 
 # Neutralize the tosa-tools source-build pip-install lines in setup.sh
 # (the git clone still runs so the directory-existence checks pass)
 RUN sed -i \
-    -e 's|pip install --no-dependencies ./reference_model|true  # tosa-tools pre-installed from Test PyPI|' \
-    -e 's|pip install --no-dependencies ./serialization|true  # tosa-serialization-lib pre-installed from Test PyPI|' \
+    -e 's|pip install --no-dependencies ./reference_model|true  # tosa-tools pre-installed from PyPI|' \
+    -e 's|pip install --no-dependencies ./serialization|true  # tosa-serialization-lib pre-installed from PyPI|' \
     /workspace/executorch/examples/arm/setup.sh
 
 # Setup ARM environment using official script
