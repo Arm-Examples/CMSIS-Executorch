@@ -343,8 +343,8 @@ def main():
     )
     parser.add_argument(
         "--output", "-o",
-        default="ai_layer/REPORT.md",
-        help="Output path for REPORT.md (default: ai_layer/REPORT.md)",
+        default="ai_layer/model/REPORT.md",
+        help="Output path for REPORT.md (default: ai_layer/model/REPORT.md)",
     )
     parser.add_argument(
         "--dry-run", action="store_true",

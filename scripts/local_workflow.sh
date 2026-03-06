@@ -79,7 +79,7 @@ log_and_tee "generate_report" "cd /workspace2 && python3 scripts/generate_report
     --conversion-log $LOG_DIR/model_conversion_${TIMESTAMP}.log \
     --pack-log $LOG_DIR/generate_pack_layer_${TIMESTAMP}.log \
     --verbose \
-    -o ai_layer/REPORT.md"
+    -o ai_layer/model/REPORT.md"
 
 # Step 5: Build Report Summary
 echo -e "\033[1;92m=== Step 5: Build Report Summary ===\033[0m" | tee -a "$MAIN_LOG"
