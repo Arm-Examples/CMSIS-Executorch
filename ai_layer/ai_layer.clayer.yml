@@ -1,109 +1,39 @@
 layer:
-  type: AI / Executorch
-  description: AI layer for ExecuTorch ARM runtime
-  
+  type: AI
+  description: AI layer using PyTorch ExecuTorch pack
+
   packs:
-    - pack: ARM::CMSIS-NN@7.0.0
+    - pack: PyTorch::ExecuTorch
 
-  add-path:
-    # Core ExecuTorch includes
-    - ./engine/include
-    - ./engine/include/executorch
-    - ./engine/include/executorch/runtime
-    - ./engine/include/executorch/runtime/core
-    - ./engine/include/executorch/runtime/executor
-    # - ./engine/include/executorch/runtime/platform
-    - ./engine/include/executorch/extension
-    - ./engine/include/executorch/extension/data_loader
-    - ./engine/include/executorch/extension/memory_allocator
-    - ./engine/include/executorch/extension/runner_util
-    - ./engine/include/executorch/util
-    - ./engine/include/executorch/schema
-    - ./engine/include/executorch/devtools
-    - ./engine/include/executorch/devtools/etdump
-    
-    # Core C10 includes
-    - ./engine/include/executorch/runtime/core/portable_type/c10
-    
-    # Kernel and backend includes
-    - ./engine/include/executorch/kernels
-    - ./engine/include/executorch/kernels/portable
-    - ./engine/include/executorch/backends
-    - ./engine/include/executorch/backends/xnnpack
-    - ./engine/include/executorch/backends/cortex_m/ops
-    
-    # Third party includes
-    - ./engine/include/third-party
-    - ./engine/include/third-party/flatbuffers
-    - ./engine/include/third-party/flatbuffers/include
-
-    # Generated model includes
-    - ./model
+  define:
+    - ET_LOG_ENABLED : 0
 
   components:
-    - component: CMSIS:NN Lib
-
+    # ExecuTorch core runtime
+    - component: Machine Learning:ExecuTorch:Runtime
+    - component: Machine Learning:ExecuTorch:Kernel Utils
+    - component: Machine Learning:ExecuTorch:Kernel Registration
+    # Ethos-U NPU backend
+    - component: Machine Learning:ExecuTorch:Backend EthosU
+    # Bare-metal PAL stubs (replaces posix.cpp)
+    - component: Machine Learning:ExecuTorch:Platform Bare-Metal
+    # Random op stubs (no std::random_device on bare-metal)
+    - component: Machine Learning:ExecuTorch:Stubs RandomOps
+    # Portable operators used by the model
+    - component: Machine Learning:ExecuTorch:Operators Portable add
+    - component: Machine Learning:ExecuTorch:Operators Portable exp
+    - component: Machine Learning:ExecuTorch:Operators Portable mul
+    - component: Machine Learning:ExecuTorch:Operators Portable reciprocal
+    - component: Machine Learning:ExecuTorch:Operators Portable sigmoid
+    - component: Machine Learning:ExecuTorch:Operators Portable sum
+    - component: Machine Learning:ExecuTorch:Operators Portable unsqueeze_copy
+    # Quantized operators used by the model
+    - component: Machine Learning:ExecuTorch:Operators Quantized dequantize
+    - component: Machine Learning:ExecuTorch:Operators Quantized quantize
 
   groups:
-
-    # Libraries with kernel registrations need whole-archive to preserve constructors
-    - group: ExecuTorch Libraries 
-      not-for-context: .Debug-Source
-      for-compiler: GCC
+    # AI Model
+    - group: Executorch Model
       files:
-        # Core runtime libraries
-        - file: ./engine/lib/libexecutorch_core.a
-        - file: ./engine/lib/libportable_kernels.a
-        
-        # ARM Cortex-M optimized kernels
-        - file: ./engine/lib/libcortex_m_kernels.a
-        
-        # Quantized kernels  
-        - file: ./engine/lib/libquantized_kernels.a
-
-        # Libraries requiring whole-archive to preserve constructors/registrations
-        - file: ./engine/lib/libexecutorch.a
-          link: whole-archive
-        - file: ./engine/lib/libportable_ops_lib.a
-          link: whole-archive
-        - file: ./engine/lib/libcortex_m_ops_lib.a
-          link: whole-archive
-        - file: ./engine/lib/libquantized_ops_lib.a
-          link: whole-archive
-        - file: ./engine/lib/libexecutorch_delegate_ethos_u.a
-          link: whole-archive
-
-    - group: Reports
-      files:
-        - file: ./REPORT.md
-
-    # CLANG-specific: Stubs for missing libc++ features (posix_stub only, cxx_stubs is in board layer)
-    - group: Clang Platform Stubs
-      for-context: .Debug-Source
-      for-compiler:
-        - CLANG
-      files:
-        - file: ./stubs/posix_stub.cpp
-        - file: ./stubs/random_ops_stubs.cpp
-
-    # GCC Debug-Source: Random op stubs (excluded from source build for consistency with Clang)
-    - group: GCC Random Op Stubs
-      for-context: .Debug-Source
-      for-compiler:
-        - GCC
-      files:
-        - file: ./stubs/random_ops_stubs.cpp
-
-    # AC6 Debug-Source: Stubs for missing runtime features
-    - group: AC6 Platform Stubs
-      for-context: .Debug-Source
-      for-compiler:
-        - AC6
-      files:
-        - file: ./stubs/posix_stub.cpp
-        - file: ./stubs/random_ops_stubs.cpp
-
-    # Note: GCC could include actual random op sources, but we use stubs for consistency
-    # The random ops (op_rand.cpp, op_randn.cpp, op_native_dropout.cpp) are excluded from 
-    # stage2 generation because they require std::random_device (not available in Clang)
-
+        - file: ./model/model_pte.h
+        - file: ./model/REPORT.md
