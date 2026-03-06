@@ -73,8 +73,16 @@ log_and_tee "generate_pack_layer" "cd /workspace2 && python3 scripts/generate_pa
     --verbose \
     -o ai_layer/ai_layer.clayer.yml"
 
-# Step 4: Build Report Summary
-echo -e "\033[1;92m=== Step 4: Build Report Summary ===\033[0m" | tee -a "$MAIN_LOG"
+# Step 4: Generate AI Layer Report (REPORT.md)
+echo -e "\033[1;92m=== Step 4: Generate AI Layer Report ===\033[0m"
+log_and_tee "generate_report" "cd /workspace2 && python3 scripts/generate_report.py \
+    --conversion-log $LOG_DIR/model_conversion_${TIMESTAMP}.log \
+    --pack-log $LOG_DIR/generate_pack_layer_${TIMESTAMP}.log \
+    --verbose \
+    -o ai_layer/REPORT.md"
+
+# Step 5: Build Report Summary
+echo -e "\033[1;92m=== Step 5: Build Report Summary ===\033[0m" | tee -a "$MAIN_LOG"
 echo "" | tee -a "$MAIN_LOG"
 echo "Generated ai_layer.clayer.yml:" | tee -a "$MAIN_LOG"
 cat /workspace2/ai_layer/ai_layer.clayer.yml 2>/dev/null | tee -a "$MAIN_LOG" || echo "Layer file could not be displayed" | tee -a "$MAIN_LOG"

@@ -1,152 +1,207 @@
-# ExecuTorch AI Layer Build Report
+# AI Layer Report
 
-**Generated:** 2026-01-27T15:55:53Z
-**Git Commit:** f58e85dc74eb on main
-**Repository Status:** 🔄 Modified
-**Last Commit:** 2026-01-27 16:47:30 +0100
+## Selected Operators
 
-## 📊 Build Summary
+### Portable Operators (CPU)
 
-- **Libraries:** 9 static libraries
-- **Models:** 1 model assets
-- **Operators:** 2 selected operators
-- **Build Type:** Release
+| Operator | Pack Component |
+|----------|---------------|
+| `aten::add` | `Machine Learning:ExecuTorch:Operators Portable add` |
+| `aten::exp` | `Machine Learning:ExecuTorch:Operators Portable exp` |
+| `aten::mul` | `Machine Learning:ExecuTorch:Operators Portable mul` |
+| `aten::reciprocal` | `Machine Learning:ExecuTorch:Operators Portable reciprocal` |
+| `aten::sigmoid` | `Machine Learning:ExecuTorch:Operators Portable sigmoid` |
+| `aten::sum` | `Machine Learning:ExecuTorch:Operators Portable sum` |
+| `aten::unsqueeze_copy` | `Machine Learning:ExecuTorch:Operators Portable unsqueeze_copy` |
 
-## 📚 Library Assets
+### Quantized Operators (NPU wrapper)
 
-**Total Size:** 9.9 MiB
+| Operator | Pack Component |
+|----------|---------------|
+| `quantized_decomposed::dequantize_per_tensor` | `Machine Learning:ExecuTorch:Operators Quantized dequantize` |
+| `quantized_decomposed::quantize_per_tensor` | `Machine Learning:ExecuTorch:Operators Quantized quantize` |
 
-| Library | Size | Percentage | Modified | Hash |
-|---------|------|------------|----------|------|
-| libcortex_m_kernels.a | 20.0 KiB | 0.2% | 2026-01-27 15:55:25 | `86ef9627fa72a103` |
-| libcortex_m_ops_lib.a | 12.6 KiB | 0.1% | 2026-01-27 15:55:26 | `f4a47ddf1b21f081` |
-| libexecutorch.a | 51.9 KiB | 0.5% | 2026-01-27 15:55:25 | `4f930898f0b42cb2` |
-| libexecutorch_core.a | 216.5 KiB | 2.1% | 2026-01-27 15:55:25 | `236f25130fc02703` |
-| libexecutorch_delegate_ethos_u.a | 18.6 KiB | 0.2% | 2026-01-27 15:55:26 | `7018288463b78ba6` |
-| libportable_kernels.a | 9.1 MiB | 92.3% | 2026-01-27 15:55:25 | `7e65742bade39aa2` |
-| libportable_ops_lib.a | 199.1 KiB | 2.0% | 2026-01-27 15:55:25 | `c4073b752a26f3fe` |
-| libquantized_kernels.a | 238.6 KiB | 2.4% | 2026-01-27 15:55:26 | `95ab0f70d52a7c81` |
-| libquantized_ops_lib.a | 28.7 KiB | 0.3% | 2026-01-27 15:55:26 | `6a439a0e67d94665` |
-
-## 🤖 Model Assets
-
-| Asset | Type | Size | Modified | Hash |
-|-------|------|------|----------|------|
-| ethos_u_minimal_example.pte | Model | 3.8 KiB | 2026-01-27 15:55:53 | `bd7a211160a18572` |
-
-## ⚙️ Build Configuration
-
-### CMake Configuration
-- **Build Type:** `Release`
-- **Toolchain File:** `/workspace2/model/arm-none-eabi-gcc.cmake`
-- **ARM Baremetal:** `ON`
-- **Cortex-M Support:** `ON`
-- **Portable Ops:** `ON`
-- **Quantized Kernels:** `ON`
-
-### Selected Operators
-
-**Source:** Model file: ethos_u_minimal_example.pte (inferred)
-
-**Count:** 2 operators
-
-```
-quantized_decomposed::dequantize_per_tensor.out
-quantized_decomposed::quantize_per_tensor.out
-```
-
-## 🔄 Model Conversion Details
-
-**Ethos-U Compile Specification:**
-  - target: ethos-u55-128
-  - system_config: Ethos_U55_High_End_Embedded
-  - memory_mode: Shared_Sram
-  - extra_flags: --output-format=raw, --debug-force-regor, --verbose-all
-
-**Quantization Configuration:**
-  - Using EthosUQuantizer with symmetric quantization
-  - Post-training quantization enabled
-
-**Model Architecture:**
-  - Model class: Add
-
-**Vela Compilation Summary:**
-  - Accelerator configuration               Ethos_U55_128
-  - System configuration             Ethos_U55_High_End_Embedded
-  - Memory mode                               Shared_Sram
-  - Accelerator clock                                 500 MHz
-  - Design peak SRAM bandwidth                       3.73 GB/s
-  - Design peak Off-chip Flash bandwidth             0.47 GB/s
-  - Total SRAM used                                  0.14 KiB
-  - Total Off-chip Flash used                        0.03 KiB
-  - CPU operators = 0 (0.0%)
-  - NPU operators = 12 (100.0%)
-  - Average SRAM bandwidth                           0.27 GB/s
-  - Input   SRAM bandwidth                           0.00 MB/batch
-  - Weight  SRAM bandwidth                           0.00 MB/batch
-  - Output  SRAM bandwidth                           0.00 MB/batch
-  - Total   SRAM bandwidth                           0.00 MB/batch
-  - Total   SRAM bandwidth            per input      0.00 MB/inference (batch size 1)
-  - Average Off-chip Flash bandwidth                 0.04 GB/s
-  - Input   Off-chip Flash bandwidth                 0.00 MB/batch
-  - Weight  Off-chip Flash bandwidth                 0.00 MB/batch
-  - Output  Off-chip Flash bandwidth                 0.00 MB/batch
-  - Total   Off-chip Flash bandwidth                 0.00 MB/batch
-  - Total   Off-chip Flash bandwidth  per input      0.00 MB/inference (batch size 1)
-  - Original Weights Size                            0.00 KiB
-  - NPU Encoded Weights Size                         0.00 KiB
-  - Neural network macs                                 0 MACs/batch
-  - Info: The numbers below are internal compiler estimates.
-  - For performance numbers the compiled network should be run on an FVP Model or FPGA.
-  - Network Tops/s                                   0.00 Tops/s
-  - NPU cycles                                        349 cycles/batch
-  - SRAM Access cycles                                 24 cycles/batch
-  - DRAM Access cycles                                  0 cycles/batch
-  - On-chip Flash Access cycles                         0 cycles/batch
-  - Off-chip Flash Access cycles                       32 cycles/batch
-  - Total cycles                                      349 cycles/batch
-  - Batch Inference time                 0.00 ms, 1432664.76 inferences/s (batch size 1)
-
-## 📦 Source Layer Export
-
-**Total Source Files:** 226 files across 2 layers
-
-| Layer | Description | Groups | Files |
-|-------|-------------|--------|-------|
-| stage1 | Generated from compile_commands.json (327 files) | 4 | 37 |
-| stage2 | Generated from compile_commands.json (240 files) | 1 | 189 |
-
-### Group Details
-
-**STAGE1:**
-
-- `Runtime`: 19 files
-- `Schema`: 1 files
-- `Kernels/quantized`: 11 files
-- `Backends`: 6 files
-
-**STAGE2:**
-
-- `Kernels`: 189 files
-
-
-## 🛠️ Build Environment
-
-- **Platform:** `Linux f16f207ed567 6.12.54-linuxkit #1 SMP Fri Nov 21 10:33:45 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux`
-- **Python:** `Python 3.12.3`
-- **CMake:** `cmake version 4.2.0`
-- **ARM GCC:** `arm-none-eabi-gcc (Arm GNU Toolchain 13.3.Rel1 (Build arm-13.24)) 13.3.1 20240614`
-
-## 📁 Asset Locations
-
-```
-ai_layer/
-├── engine/
-│   ├── lib/           # Static libraries
-│   ├── include/       # Header files
-│   └── model/         # Model assets
-└── REPORT.md          # This report
-```
+**Total:** 7 portable + 2 quantized = 9 operator components
 
 ---
-*Report generated by ExecuTorch AI Layer build system at 2026-01-27T15:55:53Z*
+
+## Vela Conversion Log
+
+### TOSA Graph — Before Optimisation
+
+```
+0     Const                tosa_rescale_default_2_output_zp
+1     Const                tosa_rescale_default_2_input_zp
+2     Const                tosa_rescale_default_2_shifts 
+3     Const                tosa_rescale_default_2_multipliers
+4     Const                tosa_rescale_default_1_output_zp
+5     Const                tosa_rescale_default_1_input_zp
+6     Const                tosa_rescale_default_1_shifts 
+7     Const                tosa_rescale_default_1_multipliers
+8     Transpose            tosa_transpose_default_1      
+9     Rescale              tosa_rescale_default_1        
+10    Const                tosa_rescale_default_output_zp
+11    Const                tosa_rescale_default_input_zp 
+12    Const                tosa_rescale_default_shifts   
+13    Const                tosa_rescale_default_multipliers
+14    Transpose            tosa_transpose_default        
+15    Rescale              tosa_rescale_default          
+16    Add                  aten_add_tensor               
+17    Rescale              tosa_rescale_default_2        
+18    Transpose            tosa_transpose_default_2
+```
+
+### TOSA Graph — After Optimisation
+
+```
+0     Transpose            tosa_transpose_default_1      
+1     Add                  tosa_transpose_default_1_int32
+2     Mul                  tosa_rescale_default_1        
+3     Transpose            tosa_transpose_default        
+4     Add                  tosa_transpose_default_int32  
+5     Mul                  tosa_rescale_default          
+6     Add                  tosa_rescale_default_2        
+7     Transpose            tosa_transpose_default_2
+```
+
+### NPU Performance Summary
+
+```
+Original Operator    NNG Operator         Target Staging Usage  Peak% (Staging)  Op Cycles Network% (cycles)        NPU    SRAM AC    DRAM AC OnFlash AC OffFlash AC  MAC Count Network% (MAC)  Util% (MAC) Name                 
+-------------------- -------------------- ------ ------------- ---------------- ---------- ----------------- ---------- ---------- ---------- ---------- ----------- ---------- -------------- ------------ -------------------- 
+Transpose            Transpose            NPU               48            33.33         32              9.76         32          1          0          0           0          0         100.00         0.00 #70                  
+Transpose            Transpose            NPU               48            33.33         32              9.76         32          1          0          0           0          0         100.00         0.00 tosa_transpose_default_1 
+Rescale              Add                  NPU               96            66.67         34             10.37         34          2          0          0          16          0         100.00         0.00 tosa_transpose_default_1_int32 
+Rescale              Mul                  NPU               80            55.56         33             10.06         33          4          0          0           0          0         100.00         0.00 tosa_rescale_default_1 
+Transpose            Transpose            NPU               96            66.67         32              9.76         32          1          0          0           0          0         100.00         0.00 #85                  
+Transpose            Transpose            NPU               96            66.67         32              9.76         32          1          0          0           0          0         100.00         0.00 tosa_transpose_default 
+Rescale              Add                  NPU              144           100.00         34             10.37         34          2          0          0          16          0         100.00         0.00 tosa_transpose_default_int32 
+Rescale              Mul                  NPU              128            88.89         33             10.06         33          4          0          0           0          0         100.00         0.00 tosa_rescale_default 
+Add                  Add                  NPU              144           100.00          2              0.61          1          2          0          0           0          0         100.00         0.00 tosa_rescale_default_2 
+Transpose            Transpose            NPU               32            22.22         32              9.76         32          1          0          0           0          0         100.00         0.00 #101                 
+Transpose            Transpose            NPU               32            22.22         32              9.76         32          1          0          0           0          0         100.00         0.00 tosa_transpose_default_2
+```
+
+### Network Summary
+
+```
+Accelerator configuration               Ethos_U55_128
+System configuration             Ethos_U55_High_End_Embedded
+Memory mode                               Shared_Sram
+Accelerator clock                                 500 MHz
+Design peak SRAM bandwidth                       3.73 GB/s
+Design peak Off-chip Flash bandwidth             0.47 GB/s
+
+Total SRAM used                                  0.14 KiB
+Total Off-chip Flash used                        0.03 KiB
+
+CPU operators = 0 (0.0%)
+NPU operators = 11 (100.0%)
+
+Average SRAM bandwidth                           0.24 GB/s
+Input   SRAM bandwidth                           0.00 MB/batch
+Weight  SRAM bandwidth                           0.00 MB/batch
+Output  SRAM bandwidth                           0.00 MB/batch
+Total   SRAM bandwidth                           0.00 MB/batch
+Total   SRAM bandwidth            per input      0.00 MB/inference (batch size 1)
+
+Average Off-chip Flash bandwidth                 0.05 GB/s
+Input   Off-chip Flash bandwidth                 0.00 MB/batch
+Weight  Off-chip Flash bandwidth                 0.00 MB/batch
+Output  Off-chip Flash bandwidth                 0.00 MB/batch
+Total   Off-chip Flash bandwidth                 0.00 MB/batch
+Total   Off-chip Flash bandwidth  per input      0.00 MB/inference (batch size 1)
+
+Original Weights Size                            0.00 KiB
+NPU Encoded Weights Size                         0.00 KiB
+
+Neural network macs                                 0 MACs/batch
+
+Info: The numbers below are internal compiler estimates.
+For performance numbers the compiled network should be run on an FVP Model or FPGA.
+
+Network Tops/s                                   0.00 Tops/s
+
+NPU cycles                                        327 cycles/batch
+SRAM Access cycles                                 20 cycles/batch
+DRAM Access cycles                                  0 cycles/batch
+On-chip Flash Access cycles                         0 cycles/batch
+Off-chip Flash Access cycles                       32 cycles/batch
+Total cycles                                      328 cycles/batch
+
+Batch Inference time                 0.00 ms, 1524390.24 inferences/s (batch size 1)
+```
+
+### Final Exported Program Graph
+
+```python
+class GraphModule(torch.nn.Module):
+    def forward(self, x, y):
+        x: "f32[1, 1, 1, 1]"; y: "f32[1, 1, 1, 1]"; 
+    
+        x, y, = fx_pytree.tree_flatten_spec(([x, y], {}), self._in_spec)
+        # No stacktrace found for following nodes
+        _tensor_constant0: "f32[1]" = self._tensor_constant0
+        _tensor_constant1: "f32[1]" = self._tensor_constant1
+        alloc: "i8[1, 1, 1, 1]" = executorch_exir_memory_alloc(((1, 1, 1, 1), torch.int8))
+        quantized_decomposed_quantize_per_tensor_default: "i8[1, 1, 1, 1]" = torch.ops.quantized_decomposed.quantize_per_tensor.out(x, 0.003921568859368563, -128, -128, 127, torch.int8, out = alloc);  x = alloc = None
+        alloc_1: "i8[1, 1, 1, 1]" = executorch_exir_memory_alloc(((1, 1, 1, 1), torch.int8))
+        quantized_decomposed_quantize_per_tensor_default_1: "i8[1, 1, 1, 1]" = torch.ops.quantized_decomposed.quantize_per_tensor.out(y, 0.003921568859368563, -128, -128, 127, torch.int8, out = alloc_1);  y = alloc_1 = None
+        lowered_module_0 = self.lowered_module_0
+        executorch_call_delegate = torch.ops.higher_order.executorch_call_delegate(lowered_module_0, quantized_decomposed_quantize_per_tensor_default, quantized_decomposed_quantize_per_tensor_default_1);  lowered_module_0 = quantized_decomposed_quantize_per_tensor_default = quantized_decomposed_quantize_per_tensor_default_1 = None
+        getitem: "i8[1, 1, 1, 1]" = executorch_call_delegate[0];  executorch_call_delegate = None
+        alloc_2: "f32[1, 1, 1, 1]" = executorch_exir_memory_alloc(((1, 1, 1, 1), torch.float32))
+        quantized_decomposed_dequantize_per_tensor_default: "f32[1, 1, 1, 1]" = torch.ops.quantized_decomposed.dequantize_per_tensor.out(getitem, 0.007843137718737125, -128, -128, 127, torch.int8, out = alloc_2);  getitem = alloc_2 = None
+        
+        # File: /workspace2/model/aot_model.py:35 in forward, code: z = z.view(1)                     # aten::view_copy.out
+        aten_view_copy_default: "f32[1]" = executorch_exir_memory_view(quantized_decomposed_dequantize_per_tensor_default, [1]);  quantized_decomposed_dequantize_per_tensor_default = None
+        
+        # No stacktrace found for following nodes
+        alloc_3: "f32[1]" = executorch_exir_memory_alloc(((1,), torch.float32))
+        
+        # File: /workspace2/model/aot_model.py:36 in forward, code: z = z * self.scale                # aten::mul.out
+        aten_mul_tensor: "f32[1]" = torch.ops.aten.mul.out(aten_view_copy_default, _tensor_constant0, out = alloc_3);  aten_view_copy_default = _tensor_constant0 = alloc_3 = None
+        
+        # No stacktrace found for following nodes
+        alloc_4: "f32[1]" = executorch_exir_memory_alloc(((1,), torch.float32))
+        
+        # File: /workspace2/model/aot_model.py:37 in forward, code: z = z + self.bias                 # aten::add.out
+        aten_add_tensor: "f32[1]" = torch.ops.aten.add.out(aten_mul_tensor, _tensor_constant1, out = alloc_4);  aten_mul_tensor = _tensor_constant1 = alloc_4 = None
+        
+        # No stacktrace found for following nodes
+        alloc_5: "f32[1]" = executorch_exir_memory_alloc(((1,), torch.float32))
+        
+        # File: /workspace2/model/aot_model.py:38 in forward, code: z = torch.sigmoid(z)             # aten::sigmoid.out
+        aten_sigmoid_default: "f32[1]" = torch.ops.aten.sigmoid.out(aten_add_tensor, out = alloc_5);  aten_add_tensor = alloc_5 = None
+        
+        # No stacktrace found for following nodes
+        alloc_6: "f32[1, 1]" = executorch_exir_memory_alloc(((1, 1), torch.float32))
+        
+        # File: /workspace2/model/aot_model.py:39 in forward, code: z = z.unsqueeze(0)               # aten::unsqueeze_copy.out
+        aten_unsqueeze_copy_default: "f32[1, 1]" = torch.ops.aten.unsqueeze_copy.out(aten_sigmoid_default, 0, out = alloc_6);  aten_sigmoid_default = alloc_6 = None
+        
+        # No stacktrace found for following nodes
+        alloc_7: "f32[1, 1]" = executorch_exir_memory_alloc(((1, 1), torch.float32))
+        
+        # File: /workspace/executorch-venv/lib/python3.13/site-packages/executorch/backends/arm/_passes/decompose_softmax_unstable_pass.py:80 in call_operator, code: op1 = super().call_operator(exp_op, (_input,), {}, meta, True)
+        aten_exp_default: "f32[1, 1]" = torch.ops.aten.exp.out(aten_unsqueeze_copy_default, out = alloc_7);  aten_unsqueeze_copy_default = alloc_7 = None
+        
+        # No stacktrace found for following nodes
+        alloc_8: "f32[1, 1]" = executorch_exir_memory_alloc(((1, 1), torch.float32))
+        
+        # File: /workspace/executorch-venv/lib/python3.13/site-packages/executorch/backends/arm/_passes/decompose_softmax_unstable_pass.py:81 in call_operator, code: op2 = super().call_operator(sum_op, (op1, dim, True), {}, meta, True)
+        aten_sum_dim_int_list: "f32[1, 1]" = torch.ops.aten.sum.IntList_out(aten_exp_default, [-1], True, out = alloc_8);  alloc_8 = None
+        
+        # No stacktrace found for following nodes
+        alloc_9: "f32[1, 1]" = executorch_exir_memory_alloc(((1, 1), torch.float32))
+        
+        # File: /workspace/executorch-venv/lib/python3.13/site-packages/executorch/backends/arm/_passes/decompose_softmax_unstable_pass.py:82 in call_operator, code: op3 = super().call_operator(reciprocal_op, (op2,), {}, meta, True)
+        aten_reciprocal_default: "f32[1, 1]" = torch.ops.aten.reciprocal.out(aten_sum_dim_int_list, out = alloc_9);  aten_sum_dim_int_list = alloc_9 = None
+        
+        # No stacktrace found for following nodes
+        alloc_10: "f32[1, 1]" = executorch_exir_memory_alloc(((1, 1), torch.float32))
+        
+        # File: /workspace/executorch-venv/lib/python3.13/site-packages/executorch/backends/arm/_passes/decompose_softmax_unstable_pass.py:83 in call_operator, code: op4 = super().call_operator(mul_op, (op1, op3), {}, meta, True)
+        aten_mul_tensor_1: "f32[1, 1]" = torch.ops.aten.mul.out(aten_exp_default, aten_reciprocal_default, out = alloc_10);  aten_exp_default = aten_reciprocal_default = alloc_10 = None
+        return pytree.tree_unflatten((aten_mul_tensor_1,), self._out_spec)
+```
