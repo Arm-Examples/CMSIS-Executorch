@@ -50,7 +50,7 @@
             }
         },
         {
-            "label": "Docker: Run ExecuTorch Build",
+            "label": "Docker: Run ExecuTorch Build - AI Layer Generation",
             "type": "shell",
             "command": "docker",
             "args": [
@@ -166,6 +166,343 @@
                 }
             },
             "problemMatcher": []
+        },
+        {
+            "label": "CMSIS Load+Run",
+            "problemMatcher": [],
+            "type": "shell",
+            "command": "FVP_Corstone_SSE-300_Ethos-U55",
+            "options": {
+                "cwd": "${workspaceFolder}/",
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "args": [
+                "-f",
+                "board/Corstone-300/fvp_config.txt",
+                "--simlimit",
+                "10",
+                "-a",
+                "out/executorch_project/AVH-SSE-300/Debug-Source/executorch_project.axf",
+                ""
+            ]
+        },
+        {
+            "label": "FVP: Run Debug (GCC, Libraries)",
+            "problemMatcher": [],
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v",
+                "${workspaceFolder}:/workspaceFolder",
+                "avh-mlops-licensed:latest",
+                "runops",
+                "FVP_Corstone_SSE-300_Ethos-U55",
+                "-f",
+                "/workspaceFolder/board/Corstone-300/fvp_config.txt",
+                "-a",
+                "/workspaceFolder/out/executorch_project/AVH-SSE-300/Debug/executorch_project.elf"
+            ],
+            "detail": "Run Debug build on FVP (GCC with pre-built libraries)"
+        },
+        {
+            "label": "FVP: Run Debug-Source (GCC / Clang)",
+            "problemMatcher": [],
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v",
+                "${workspaceFolder}:/workspaceFolder",
+                "avh-mlops-licensed:latest",
+                "runops",
+                "FVP_Corstone_SSE-300_Ethos-U55",
+                "-f",
+                "/workspaceFolder/board/Corstone-300/fvp_config.txt",
+                "-a",
+                "/workspaceFolder/out/executorch_project/AVH-SSE-300/Debug-Source/executorch_project.elf"
+            ],
+            "detail": "Run Debug-Source build on FVP (GCC from source)"
+        },
+        {
+            "label": "FVP: Run Release (GCC, Libraries)",
+            "problemMatcher": [],
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v",
+                "${workspaceFolder}:/workspaceFolder",
+                "avh-mlops-licensed:latest",
+                "runops",
+                "FVP_Corstone_SSE-300_Ethos-U55",
+                "-f",
+                "/workspaceFolder/board/Corstone-300/fvp_config.txt",
+                "-a",
+                "/workspaceFolder/out/executorch_project/AVH-SSE-300/Release/executorch_project.elf"
+            ],
+            "detail": "Run Release build on FVP (GCC with pre-built libraries)"
+        },
+        {
+            "label": "FVP: Run Debug-Source (AC6)",
+            "problemMatcher": [],
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v",
+                "${workspaceFolder}:/workspaceFolder",
+                "avh-mlops-licensed:latest",
+                "runops",
+                "FVP_Corstone_SSE-300_Ethos-U55",
+                "-f",
+                "/workspaceFolder/board/Corstone-300/fvp_config.txt",
+                "-a",
+                "/workspaceFolder/out/executorch_project/AVH-SSE-300/Debug-Source/executorch_project.axf"
+            ],
+            "detail": "Run Debug-Source build on FVP (AC6 compiler)"
+        },
+        {
+            "label": "cbuild: Build All",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build all contexts in the solution"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Debug (GCC)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Debug+AVH-SSE-300",
+                "--toolchain",
+                "GCC"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Debug configuration for AVH-SSE-300 with GCC"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Debug (CLANG)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Debug+AVH-SSE-300",
+                "--toolchain",
+                "CLANG"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Debug configuration for AVH-SSE-300 with CLANG"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Debug (AC6)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Debug+AVH-SSE-300",
+                "--toolchain",
+                "AC6"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Debug configuration for AVH-SSE-300 with AC6"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Release (GCC)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Release+AVH-SSE-300",
+                "--toolchain",
+                "GCC"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Release configuration for AVH-SSE-300 with GCC"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Release (CLANG)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Release+AVH-SSE-300",
+                "--toolchain",
+                "CLANG"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Release configuration for AVH-SSE-300 with CLANG"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Release (AC6)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Release+AVH-SSE-300",
+                "--toolchain",
+                "AC6"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Release configuration for AVH-SSE-300 with AC6"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Debug-Source (GCC)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Debug-Source+AVH-SSE-300",
+                "--toolchain",
+                "GCC"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Debug-Source configuration for AVH-SSE-300 with GCC"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Debug-Source (CLANG)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Debug-Source+AVH-SSE-300",
+                "--toolchain",
+                "CLANG"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Debug-Source configuration for AVH-SSE-300 with CLANG"
+        },
+        {
+            "label": "cbuild: AVH-SSE-300 Debug-Source (AC6)",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--context",
+                "executorch_project.Debug-Source+AVH-SSE-300",
+                "--toolchain",
+                "AC6"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Build Debug-Source configuration for AVH-SSE-300 with AC6"
+        },
+        {
+            "label": "cbuild: Clean All",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--clean"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Clean all build outputs"
+        },
+        {
+            "label": "cbuild: Rebuild All",
+            "type": "shell",
+            "command": "cbuild",
+            "args": [
+                "executorch_project.csolution.yml",
+                "--packs",
+                "--rebuild"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Clean and rebuild all contexts"
+        },
+        {
+            "label": "Pack: Generate AI Layer from Model",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "scripts/generate_pack_layer.sh",
+                "--convert-model",
+                "--model-header", "./model/model_pte.h",
+                "--report", "./model/REPORT.md",
+                "--verbose",
+                "model/ethos_u_minimal_example.pte"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Generate a pack-based ai_layer.clayer.yml from model operators (no Docker needed)"
+        },
+        {
+            "label": "Pack: Generate AI Layer from Operators File",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "scripts/generate_pack_clayer.py",
+                "--ops-file", "model/operators_minimal.txt",
+                "--model-header", "./model/model_pte.h",
+                "--report", "./model/REPORT.md",
+                "--verbose",
+                "-o", "ai_layer/ai_layer.clayer.yml"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Generate a pack-based ai_layer.clayer.yml from an operators list file"
+        },
+        {
+            "label": "Test: Full Build Matrix",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "scripts/run_full_matrix.sh"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test",
+            "problemMatcher": [],
+            "detail": "Run the full build-matrix test script"
         }
     ]
 }
