@@ -1,12 +1,39 @@
 import torch
 
-class Add(torch.nn.Module):
+class AddWithPostProcessing(torch.nn.Module):
+    """
+    Model that combines an Ethos-U-delegated add with CPU-side portable ops
+    for testing pack-based operator component integration.
+    
+    The add operation gets quantized and delegated to Ethos-U NPU.
+    The post-processing ops run on the CPU as portable operators:
+      - view_copy   (reshape the output)
+      - mul         (scale the values)
+      - add         (apply bias)
+      - sigmoid     (squash to [0, 1])
+      - softmax     (normalize to probability distribution)
+    """
+    def __init__(self):
+        super().__init__()
+        # Learnable scale and bias for post-processing (not quantized)
+        self.register_buffer('scale', torch.tensor([2.0]))
+        self.register_buffer('bias', torch.tensor([0.5]))
+
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return x + y
+        # This add will be delegated to Ethos-U via quantization
+        z = x + y
+        # --- CPU portable ops (not delegated) ---
+        z = z.view(1)                     # aten::view_copy.out
+        z = z * self.scale                # aten::mul.out
+        z = z + self.bias                 # aten::add.out
+        z = torch.sigmoid(z)             # aten::sigmoid.out
+        z = z.unsqueeze(0)               # aten::unsqueeze_copy.out
+        z = torch.softmax(z, dim=-1)     # aten::_softmax.out
+        return z
 
 example_inputs = (torch.ones(1,1,1,1),torch.ones(1,1,1,1))
 
-model = Add()
+model = AddWithPostProcessing()
 model = model.eval()
 exported_program = torch.export.export(model, example_inputs)
 graph_module = exported_program.module()
