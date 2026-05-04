@@ -17,7 +17,7 @@ The diagram below outlines the overall project structure. The embedded applicati
    - Install **Keil Studio for VS Code** from the Visual Studio Code Marketplace.
    - **Clone your repository** to a folder on the desktop computer for example using Git in VS Code.
    - Open the folder in VS Code and the [CMSIS View](https://mdk-packs.github.io/vscode-cmsis-solution-docs/userinterface.html#2-main-area-of-the-cmsis-view).
-   - Use the [Action buttons](https://github.com/ARM-software/vscode-cmsis-csolution?tab=readme-ov-file#action-buttons) to build, load, and run the example on the pre-configured AVH-SSE-300 FastModel simulation.
+   - Use the [Action buttons](https://github.com/ARM-software/vscode-cmsis-csolution?tab=readme-ov-file#action-buttons) to build, load, and run the example on the pre-configured AVH-SSE-320 FastModel simulation (Cortex-M85 + Ethos-U85).
 
 You may now [Customize the Model](#customize-the-model) for your own application or [Add Board Layer for Target Hardware](#add-board-layer-for-target-hardware) to run the example on an evaluation board.
 
@@ -36,17 +36,18 @@ The following tools are used by this template project. The user should have a ba
 ## Build Configurations
 
 
-Build targets are CMSIS “contexts” formed by combining a build type (Debug, Debug-Source, Release) with a target (AVH-SSE-300, DevKit-E7-HE, DevKit-E7-HP). Each context selects the board layer and device for that target and applies the build-type flags.
+Build targets are CMSIS "contexts" formed by combining a build type (Debug, Release) with a target (AVH-SSE-320 for the Corstone-320 FVP, AppKit-E8-HP for the Alif AE822FA0E5597BS0 hardware board). Each context selects the board layer and device for that target and applies the build-type flags.
 
-Compiler selection is controlled by the csolution toolchain selection. The solution lists supported compilers and defaults to GCC in executorch_project.csolution.yml. Change the *compiler:* setting in this file to select a different compiler toolchain. 
+Compiler selection is controlled by the csolution toolchain selection. The solution lists supported compilers and defaults to GCC in executorch_project.csolution.yml. Change the *compiler:* setting in this file to select a different compiler toolchain.
 
 ### Supported combinations of build types and compiler toolchains
 
-| Build Type | GCC | CLANG | AC6 | Comments
-| --- | --- | --- | --- | --- |
-| Debug | ✅ |   |   | Optimization low - pre-build libraries in ai_layer             |
-| Debug-Source | ✅ | ✅ | ✅ | Optimization settings customizable - ai_layer full source |  
-| Release | ✅ |   |   | Optimization size - pre-build libraries in ai_layer          |
+| Target | GCC | AC6 | Comments |
+| --- | --- | --- | --- |
+| AVH-SSE-320 (Corstone-320 FVP) | ✅ Debug + Release | ✅ Debug + Release | Validated end-to-end (Ethos-U85 inference) on FVP. |
+| AppKit-E8-HP (Alif AE822FA0E5597BS0) | ✅ Debug + Release | ✅ Debug + Release | Validated end-to-end on hardware. |
+
+CLANG / ATfE is not in the tested toolchain matrix because the Alif Ensemble DFP linker scripts do not provide the `__bothinit_array_*` bracket symbols required by ATfE 22.x picolibc — see [documentation/PACK_REQUIREMENTS_CORTEX_M_KERNELS.md](documentation/PACK_REQUIREMENTS_CORTEX_M_KERNELS.md).
 
 
 ## Repository Content
