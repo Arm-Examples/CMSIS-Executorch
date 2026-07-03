@@ -1,0 +1,7 @@
+# TOSA serialization dependencies for the Arm Ethos-U AOT export.
+# Mirrors executorch's backends/arm/requirements-arm-tosa.txt and is installed
+# with `pip install --no-dependencies` (see setup_venv.sh) so it does not drag
+# in a conflicting torch/numpy. tosa-tools provides the `tosa_serializer` module.
+ml_dtypes == 0.5.1
+flatbuffers == 24.3.25
+tosa-tools == 2026.2.1

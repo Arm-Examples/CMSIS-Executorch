@@ -1,0 +1,8 @@
+# Python packages for the model export (venv, no Docker).
+# executorch must match the runtime shipped by the vendored pack (1.3.1).
+#
+# The Arm Ethos-U AOT flow also needs the TOSA serializer and the Vela compiler.
+# tosa-tools is installed with --no-dependencies (see setup_venv.sh and
+# requirements-arm-tosa.txt), mirroring executorch's examples/arm/setup.sh.
+executorch==1.3.1
+ethos-u-vela==5.0.0
