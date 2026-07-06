@@ -91,8 +91,19 @@ the model — no Python edits.
 
 ## Regenerating the component list
 
-The AI layer selects exactly the ExecuTorch components the model needs. After
-changing the model architecture, regenerate it from the exported `.pte`:
+The AI layer selects exactly the ExecuTorch components the model needs. The
+`convert-model` build step regenerates `ai_layer/ai_layer.clayer.yml` from the
+exported `.pte` automatically (via `scripts/gen_components.py`). Because
+CMSIS-Toolbox resolves components *before* the build runs, a changed operator
+set cannot take effect in the same build: the step then stops with
+
+```
+[run_export] The model's operator set changed: ai_layer.clayer.yml was regenerated.
+[run_export] Re-run the build to compile and link the updated component selection.
+```
+
+Simply re-run the build — the second run uses the updated selection and goes
+through. The script can still be run manually:
 
 ```bash
 .venv/bin/python scripts/gen_components.py \

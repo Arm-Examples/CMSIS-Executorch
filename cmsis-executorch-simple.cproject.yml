@@ -42,8 +42,10 @@ project:
       type: AI
 
   # Model conversion as a build step. Runs the venv's PyTorch export, driven by
-  # the MLOps metadata (cbuild-mlops.yml), and regenerates model_pte.h whenever
-  # the model or NPU configuration changes.
+  # the MLOps metadata (cbuild-mlops.yml), and regenerates model_pte.h plus the
+  # AI layer's component selection whenever the model or NPU config changes.
+  # If the operator set (and thus the clayer) changed, the step fails with a
+  # re-run hint, since components are resolved before the build starts.
   executes:
     - execute: convert-model
       run: bash $input(0)$
@@ -52,8 +54,10 @@ project:
         - $SolutionDir()$/model/model.py
         - $SolutionDir()$/model/export_model.py
         - $SolutionDir()$/cmsis-executorch-simple.cbuild-mlops.yml
+        - $SolutionDir()$/scripts/gen_components.py
       output:
         - $SolutionDir()$/ai_layer/model/model_pte.h
+        - $SolutionDir()$/ai_layer/ai_layer.clayer.yml
 
   output:
     type:
