@@ -56,8 +56,11 @@ project:
         - $SolutionDir()$/cmsis-executorch-simple.cbuild-mlops.yml
         - $SolutionDir()$/scripts/gen_components.py
       output:
+        # NOTE: ai_layer.clayer.yml is deliberately NOT listed here. It is a
+        # configure-time input; the step only rewrites it (and then aborts the
+        # build) when the operator set changed, so declaring it as an output
+        # would make ninja consider this step perpetually out of date.
         - $SolutionDir()$/ai_layer/model/model_pte.h
-        - $SolutionDir()$/ai_layer/ai_layer.clayer.yml
 
   output:
     type:

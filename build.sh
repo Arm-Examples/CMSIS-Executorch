@@ -11,7 +11,9 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${HERE}"
 
 # Acquire the toolchain set declared in vcpkg-configuration.json.
-export Z_VCPKG_POSTSCRIPT="$(mktemp /tmp/vcpkg.XXXXXX.sh)"
+# No .sh suffix: macOS mktemp only substitutes a trailing run of Xs, so a
+# suffixed template creates a literal vcpkg.XXXXXX.sh once and fails forever.
+export Z_VCPKG_POSTSCRIPT="$(mktemp /tmp/vcpkg.XXXXXX)"
 vcpkg activate
 # shellcheck disable=SC1090
 source "${Z_VCPKG_POSTSCRIPT}"
