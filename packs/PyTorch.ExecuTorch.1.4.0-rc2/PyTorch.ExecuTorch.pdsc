@@ -1,0 +1,3035 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2026 Arm Limited and/or its affiliates.
+
+  This source code is licensed under the BSD-style license found in the
+  LICENSE file in the root directory of this source tree.
+-->
+<package schemaVersion="1.7"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" 
+  xs:noNamespaceSchemaLocation="PACK.xsd">
+  
+  <vendor>PyTorch</vendor>
+  <name>ExecuTorch</name>
+  <description overview="Documentation/README.md">ExecuTorch: PyTorch Edge Runtime for on-device AI inference on Arm Cortex-M processors.</description>
+  
+  <url>https://github.com/pytorch/executorch/releases/download/1.4.0-rc2/</url>
+  <license>LICENSE</license>
+  <repository type="git">https://github.com/pytorch/executorch.git</repository>
+  
+  <releases>
+    <release version="1.4.0-rc2" date="2026-07-21">
+      ExecuTorch 1.4.0-rc2 - PyTorch Edge Runtime
+      - Portable operators for Cortex-M
+      - Ethos-U NPU backend support
+      - Cortex-M optimized kernels
+    </release>
+    
+  </releases>
+
+  <requirements>
+    <packages>
+      <package name="CMSIS" vendor="ARM" version="6.0.0:6.99.99"/>
+    </packages>
+  </requirements>
+
+  <taxonomy>
+    <description Cclass="Machine Learning">Software Components for Machine Learning</description>
+    <description Cclass="Machine Learning" Cgroup="ExecuTorch">ExecuTorch PyTorch Edge Runtime</description>
+    <description Cclass="Machine Learning" Cgroup="ExecuTorch Operators">ExecuTorch Operator Components</description>
+  </taxonomy>
+
+  <conditions>
+    <!-- Toolchain conditions -->
+    <condition id="Cortex-M">
+      <description>Cortex-M processor</description>
+      <accept Dcore="Cortex-M0"/>
+      <accept Dcore="Cortex-M0+"/>
+      <accept Dcore="Cortex-M3"/>
+      <accept Dcore="Cortex-M4"/>
+      <accept Dcore="Cortex-M7"/>
+      <accept Dcore="Cortex-M23"/>
+      <accept Dcore="Cortex-M33"/>
+      <accept Dcore="Cortex-M55"/>
+      <accept Dcore="Cortex-M85"/>
+    </condition>
+
+    <condition id="GCC">
+      <description>GNU Compiler</description>
+      <require Tcompiler="GCC"/>
+    </condition>
+    
+    <condition id="AC6">
+      <description>Arm Compiler 6</description>
+      <require Tcompiler="ARMCC" Toptions="AC6"/>
+    </condition>
+    
+    <condition id="CLANG">
+      <description>LLVM/Clang Compiler</description>
+      <require Tcompiler="CLANG"/>
+    </condition>
+
+    <!-- Component dependency conditions -->
+    <condition id="Runtime">
+      <description>ExecuTorch Runtime required</description>
+      <require condition="Cortex-M"/>
+      <require Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Runtime"/>
+    </condition>
+    
+    <condition id="Kernel Utils">
+      <description>Kernel registration utilities required</description>
+      <require Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Kernel Utils"/>
+    </condition>
+    
+    <condition id="CMSIS-NN">
+      <description>CMSIS-NN optimized backend</description>
+      <require condition="Runtime"/>
+      <require Cclass="CMSIS" Cgroup="NN Lib"/>
+    </condition>
+    
+    <condition id="Ethos-U">
+      <description>Ethos-U NPU backend (Cortex-M host, bare-metal)</description>
+      <require condition="Cortex-M"/>
+      <require Cclass="Machine Learning" Cgroup="NPU Support" Csub="Ethos-U Driver"/>
+    </condition>
+
+    <condition id="Extension Tensor">
+      <description>ExecuTorch Tensor extension (TensorPtr utilities)</description>
+      <require condition="Runtime"/>
+    </condition>
+
+    <!-- Operator conditions - each operator requires Kernel Utils -->
+    <condition id="op_portable_adaptive_avg_pool2d">
+      <description>Operator: adaptive_avg_pool2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_clone_dim_order">
+      <description>Operator: clone_dim_order</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_conj_physical">
+      <description>Operator: conj_physical</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_device_copy">
+      <description>Operator: device_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_empty_dim_order">
+      <description>Operator: empty_dim_order</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_to_dim_order_copy">
+      <description>Operator: to_dim_order_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_abs">
+      <description>Operator: abs</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_acos">
+      <description>Operator: acos</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_acosh">
+      <description>Operator: acosh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_add">
+      <description>Operator: add</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_addmm">
+      <description>Operator: addmm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_alias_copy">
+      <description>Operator: alias_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_allclose">
+      <description>Operator: allclose</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_amax">
+      <description>Operator: amax</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_amin">
+      <description>Operator: amin</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_any">
+      <description>Operator: any</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_arange">
+      <description>Operator: arange</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_argmax">
+      <description>Operator: argmax</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_argmin">
+      <description>Operator: argmin</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_as_strided_copy">
+      <description>Operator: as_strided_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_asin">
+      <description>Operator: asin</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_asinh">
+      <description>Operator: asinh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_atan">
+      <description>Operator: atan</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_atan2">
+      <description>Operator: atan2</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_atanh">
+      <description>Operator: atanh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_avg_pool2d">
+      <description>Operator: avg_pool2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bitwise_and">
+      <description>Operator: bitwise_and</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bitwise_left_shift">
+      <description>Operator: bitwise_left_shift</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bitwise_not">
+      <description>Operator: bitwise_not</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bitwise_or">
+      <description>Operator: bitwise_or</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bitwise_right_shift">
+      <description>Operator: bitwise_right_shift</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bitwise_xor">
+      <description>Operator: bitwise_xor</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_bmm">
+      <description>Operator: bmm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_cat">
+      <description>Operator: cat</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_cdist_forward">
+      <description>Operator: cdist_forward</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_ceil">
+      <description>Operator: ceil</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_clamp">
+      <description>Operator: clamp</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_clone">
+      <description>Operator: clone</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_constant_pad_nd">
+      <description>Operator: constant_pad_nd</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_convolution">
+      <description>Operator: convolution</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_convolution_backward">
+      <description>Operator: convolution_backward</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_copy">
+      <description>Operator: copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_cos">
+      <description>Operator: cos</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_cosh">
+      <description>Operator: cosh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_cumsum">
+      <description>Operator: cumsum</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_detach_copy">
+      <description>Operator: detach_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_diagonal_copy">
+      <description>Operator: diagonal_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_div">
+      <description>Operator: div</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_elu">
+      <description>Operator: elu</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_embedding">
+      <description>Operator: embedding</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_empty">
+      <description>Operator: empty</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_eq">
+      <description>Operator: eq</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_erf">
+      <description>Operator: erf</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_exp">
+      <description>Operator: exp</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_expand_copy">
+      <description>Operator: expand_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_expm1">
+      <description>Operator: expm1</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_fill">
+      <description>Operator: fill</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_flip">
+      <description>Operator: flip</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_floor">
+      <description>Operator: floor</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_floor_divide">
+      <description>Operator: floor_divide</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_fmod">
+      <description>Operator: fmod</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_full">
+      <description>Operator: full</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_full_like">
+      <description>Operator: full_like</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_gather">
+      <description>Operator: gather</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_ge">
+      <description>Operator: ge</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_gelu">
+      <description>Operator: gelu</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_glu">
+      <description>Operator: glu</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_grid_sampler_2d">
+      <description>Operator: grid_sampler_2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_gt">
+      <description>Operator: gt</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_hardtanh">
+      <description>Operator: hardtanh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_index">
+      <description>Operator: index</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_index_put">
+      <description>Operator: index_put</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_index_select">
+      <description>Operator: index_select</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_isinf">
+      <description>Operator: isinf</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_isnan">
+      <description>Operator: isnan</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_le">
+      <description>Operator: le</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_leaky_relu">
+      <description>Operator: leaky_relu</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_lift_fresh_copy">
+      <description>Operator: lift_fresh_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_log">
+      <description>Operator: log</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_log10">
+      <description>Operator: log10</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_log1p">
+      <description>Operator: log1p</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_log2">
+      <description>Operator: log2</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_log_softmax">
+      <description>Operator: log_softmax</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_logical_and">
+      <description>Operator: logical_and</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_logical_not">
+      <description>Operator: logical_not</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_logical_or">
+      <description>Operator: logical_or</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_logical_xor">
+      <description>Operator: logical_xor</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_logit">
+      <description>Operator: logit</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_lt">
+      <description>Operator: lt</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_masked_fill">
+      <description>Operator: masked_fill</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_masked_scatter">
+      <description>Operator: masked_scatter</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_masked_select">
+      <description>Operator: masked_select</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_max">
+      <description>Operator: max</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_max_pool2d_with_indices">
+      <description>Operator: max_pool2d_with_indices</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_max_pool2d_with_indices_backward">
+      <description>Operator: max_pool2d_with_indices_backward</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_maximum">
+      <description>Operator: maximum</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_mean">
+      <description>Operator: mean</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_min">
+      <description>Operator: min</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_minimum">
+      <description>Operator: minimum</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_mm">
+      <description>Operator: mm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_mul">
+      <description>Operator: mul</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_narrow_copy">
+      <description>Operator: narrow_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_native_batch_norm">
+      <description>Operator: native_batch_norm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_native_dropout">
+      <description>Operator: native_dropout</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_native_group_norm">
+      <description>Operator: native_group_norm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_native_layer_norm">
+      <description>Operator: native_layer_norm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_ne">
+      <description>Operator: ne</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_neg">
+      <description>Operator: neg</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_nonzero">
+      <description>Operator: nonzero</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_ones">
+      <description>Operator: ones</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_pdist_forward">
+      <description>Operator: pdist_forward</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_permute_copy">
+      <description>Operator: permute_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_pixel_shuffle">
+      <description>Operator: pixel_shuffle</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_pixel_unshuffle">
+      <description>Operator: pixel_unshuffle</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_pow">
+      <description>Operator: pow</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_prod">
+      <description>Operator: prod</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_rand">
+      <description>Operator: rand</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_randn">
+      <description>Operator: randn</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_reciprocal">
+      <description>Operator: reciprocal</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_reflection_pad1d">
+      <description>Operator: reflection_pad1d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_reflection_pad2d">
+      <description>Operator: reflection_pad2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_reflection_pad3d">
+      <description>Operator: reflection_pad3d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_relu">
+      <description>Operator: relu</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_remainder">
+      <description>Operator: remainder</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_repeat">
+      <description>Operator: repeat</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_repeat_interleave">
+      <description>Operator: repeat_interleave</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_replication_pad1d">
+      <description>Operator: replication_pad1d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_replication_pad2d">
+      <description>Operator: replication_pad2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_replication_pad3d">
+      <description>Operator: replication_pad3d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_roll">
+      <description>Operator: roll</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_round">
+      <description>Operator: round</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_rsqrt">
+      <description>Operator: rsqrt</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_rsub">
+      <description>Operator: rsub</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_scalar_tensor">
+      <description>Operator: scalar_tensor</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_scatter">
+      <description>Operator: scatter</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_scatter_add">
+      <description>Operator: scatter_add</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_select_copy">
+      <description>Operator: select_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_select_scatter">
+      <description>Operator: select_scatter</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sigmoid">
+      <description>Operator: sigmoid</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sign">
+      <description>Operator: sign</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sin">
+      <description>Operator: sin</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sinh">
+      <description>Operator: sinh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_slice_copy">
+      <description>Operator: slice_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_slice_scatter">
+      <description>Operator: slice_scatter</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_softmax">
+      <description>Operator: softmax</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_split_copy">
+      <description>Operator: split_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_split_with_sizes_copy">
+      <description>Operator: split_with_sizes_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sqrt">
+      <description>Operator: sqrt</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_squeeze_copy">
+      <description>Operator: squeeze_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_stack">
+      <description>Operator: stack</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sub">
+      <description>Operator: sub</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_sum">
+      <description>Operator: sum</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_t_copy">
+      <description>Operator: t_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_tan">
+      <description>Operator: tan</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_tanh">
+      <description>Operator: tanh</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_to_copy">
+      <description>Operator: to_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_topk">
+      <description>Operator: topk</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_transpose_copy">
+      <description>Operator: transpose_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_tril">
+      <description>Operator: tril</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_trunc">
+      <description>Operator: trunc</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_unbind_copy">
+      <description>Operator: unbind_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_unfold_copy">
+      <description>Operator: unfold_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_unsqueeze_copy">
+      <description>Operator: unsqueeze_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_upsample_bilinear2d">
+      <description>Operator: upsample_bilinear2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_upsample_bilinear2d_aa">
+      <description>Operator: upsample_bilinear2d_aa</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_upsample_nearest2d">
+      <description>Operator: upsample_nearest2d</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_var">
+      <description>Operator: var</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_var_mean">
+      <description>Operator: var_mean</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_view_as_real_copy">
+      <description>Operator: view_as_real_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_view_copy">
+      <description>Operator: view_copy</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_where">
+      <description>Operator: where</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_portable_zeros">
+      <description>Operator: zeros</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_add">
+      <description>Operator: add</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_choose_qparams">
+      <description>Operator: choose_qparams</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_dequantize">
+      <description>Operator: dequantize</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_embedding">
+      <description>Operator: embedding</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_embedding2b">
+      <description>Operator: embedding2b</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_embedding4b">
+      <description>Operator: embedding4b</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_mixed_linear">
+      <description>Operator: mixed_linear</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_mixed_mm">
+      <description>Operator: mixed_mm</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_quantized_quantize">
+      <description>Operator: quantize</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_cortex_m_dequantize_per_tensor">
+      <description>Operator: dequantize_per_tensor</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_cortex_m_maximum">
+      <description>Operator: maximum</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_minimum">
+      <description>Operator: minimum</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_pad">
+      <description>Operator: pad</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantize_per_tensor">
+      <description>Operator: quantize_per_tensor</description>
+      <require condition="Kernel Utils"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_activation">
+      <description>Operator: quantized_activation</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_add">
+      <description>Operator: quantized_add</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_avg_pool2d">
+      <description>Operator: quantized_avg_pool2d</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_batch_matmul">
+      <description>Operator: quantized_batch_matmul</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_conv2d">
+      <description>Operator: quantized_conv2d</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_depthwise_conv2d">
+      <description>Operator: quantized_depthwise_conv2d</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_linear">
+      <description>Operator: quantized_linear</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_max_pool2d">
+      <description>Operator: quantized_max_pool2d</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_mul">
+      <description>Operator: quantized_mul</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_quantized_transpose_conv2d">
+      <description>Operator: quantized_transpose_conv2d</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_softmax">
+      <description>Operator: softmax</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+    <condition id="op_cortex_m_transpose">
+      <description>Operator: transpose</description>
+      <require condition="Kernel Utils"/>
+      <require condition="CMSIS-NN"/>
+    </condition>
+  </conditions>
+
+  <components>
+    <!-- ==================== Core Runtime ==================== -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Runtime" Cversion="1.4.0-rc2" condition="Cortex-M">
+      <description>ExecuTorch Core Runtime - Required for all ExecuTorch applications</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_RUNTIME     /* ExecuTorch Runtime */
+      </RTE_Components_h>
+      <Pre_Include_Global_h>
+        /* ExecuTorch global configuration */
+        #define C10_USING_CUSTOM_GENERATED_MACROS
+        #define FLATBUFFERS_MAX_ALIGNMENT 1024
+        #define FLATBUFFERS_LOCALE_INDEPENDENT 0
+      </Pre_Include_Global_h>
+      <files>
+        <file category="sourceCpp" name="src/runtime/backend/interface.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/device_allocator.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/device_memory_buffer.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/evalue.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/exec_aten/util/tensor_shape_to_c_string.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/exec_aten/util/tensor_util_portable.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/portable_type/tensor_impl.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/tag.cpp"/>
+        <file category="sourceCpp" name="src/runtime/core/tensor_layout.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/method.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/method_meta.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/program.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/program_validation.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/pte_data_map.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/tensor_parser_exec_aten.cpp"/>
+        <file category="sourceCpp" name="src/runtime/executor/tensor_parser_portable.cpp"/>
+        <file category="sourceCpp" name="src/runtime/kernel/operator_registry.cpp"/>
+        <file category="sourceCpp" name="src/runtime/platform/abort.cpp"/>
+        <file category="sourceCpp" name="src/runtime/platform/default/minimal.cpp"/>
+        <file category="sourceCpp" name="src/runtime/platform/log.cpp"/>
+        <file category="sourceCpp" name="src/runtime/platform/platform.cpp"/>
+        <file category="sourceCpp" name="src/runtime/platform/profiler.cpp"/>
+        <file category="sourceCpp" name="src/runtime/platform/runtime.cpp"/>
+        <file category="sourceCpp" name="src/schema/extended_header.cpp"/>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/embeddingxb.cpp"/>
+        <file category="include" name="include/"/>
+        <!-- AC6 sysroot has no <sys/types.h>; runtime/platform/compiler.h
+             includes it unconditionally on non-MSVC. The shim under
+             armclang_shims/sys/types.h forwards to #include_next on
+             GCC/CLANG (which both ship the real header) and supplies
+             ssize_t directly under AC6. -->
+        <file category="include" name="armclang_shims/" condition="AC6"/>
+      </files>
+    </component>
+
+    <!-- ==================== Kernel Utils ==================== -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Kernel Utils" Cversion="1.4.0-rc2" condition="Runtime">
+      <description>ExecuTorch Kernel Registration Utilities</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_KERNEL_UTILS     /* ExecuTorch Kernel Utils */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/activation_ops_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/advanced_index_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/arange_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/broadcast_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/copy_ops_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/delinearize_index.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/distance_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/dtype_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/grid_sampler_2d_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/index_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/kernel_ops_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/matmul_ops_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/normalization_ops_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/padding_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/reduce_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/repeat_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/select_copy_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/slice_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/stack_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/util/upsample_util.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/pattern/unary_ufunc_realhbbf16_to_bool.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/pattern/unary_ufunc_realhbbf16_to_floathbf16.cpp"/>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/pattern/unary_ufunc_realhbf16.cpp"/>
+      </files>
+    </component>
+
+    <!-- ==================== Extensions ==================== -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Extension Tensor" Cversion="1.4.0-rc2" condition="Extension Tensor">
+      <description>ExecuTorch Tensor Extension - TensorPtr / make_tensor_ptr utilities</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_EXTENSION_TENSOR     /* ExecuTorch Tensor Extension */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/extension/tensor/tensor_ptr.cpp"/>
+        <file category="sourceCpp" name="src/extension/tensor/tensor_ptr_maker.cpp"/>
+      </files>
+    </component>
+
+    <!-- ==================== Kernel Registration ==================== -->
+    <!-- 
+      This component provides unified kernel registration for all operators.
+      Each operator registration is guarded by #ifdef RTE_ML_EXECUTORCH_OP_<NAME>,
+      which is defined by the corresponding operator component.
+      This allows selective registration based on which operators are selected.
+    -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Kernel Registration" Cversion="1.4.0-rc2" condition="Kernel Utils">
+      <description>ExecuTorch Kernel Registration - Registers all selected operators</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_KERNEL_REGISTRATION     /* ExecuTorch Kernel Registration */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/registration/RegisterAllKernels.cpp"/>
+      </files>
+    </component>
+
+    <!-- ==================== Portable Operators ==================== -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable adaptive_avg_pool2d" Cversion="1.4.0-rc2" condition="op_portable_adaptive_avg_pool2d">
+      <description>ExecuTorch Portable Operator: adaptive_avg_pool2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ADAPTIVE_AVG_POOL2D     /* ExecuTorch op_adaptive_avg_pool2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op__adaptive_avg_pool2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable clone_dim_order" Cversion="1.4.0-rc2" condition="op_portable_clone_dim_order">
+      <description>ExecuTorch Portable Operator: clone_dim_order</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CLONE_DIM_ORDER     /* ExecuTorch op_clone_dim_order */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op__clone_dim_order.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable conj_physical" Cversion="1.4.0-rc2" condition="op_portable_conj_physical">
+      <description>ExecuTorch Portable Operator: conj_physical</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CONJ_PHYSICAL     /* ExecuTorch op_conj_physical */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op__conj_physical.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable device_copy" Cversion="1.4.0-rc2" condition="op_portable_device_copy">
+      <description>ExecuTorch Portable Operator: device_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_DEVICE_COPY     /* ExecuTorch op_device_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op__device_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable empty_dim_order" Cversion="1.4.0-rc2" condition="op_portable_empty_dim_order">
+      <description>ExecuTorch Portable Operator: empty_dim_order</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EMPTY_DIM_ORDER     /* ExecuTorch op_empty_dim_order */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op__empty_dim_order.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable to_dim_order_copy" Cversion="1.4.0-rc2" condition="op_portable_to_dim_order_copy">
+      <description>ExecuTorch Portable Operator: to_dim_order_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TO_DIM_ORDER_COPY     /* ExecuTorch op_to_dim_order_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op__to_dim_order_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable abs" Cversion="1.4.0-rc2" condition="op_portable_abs">
+      <description>ExecuTorch Portable Operator: abs</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ABS     /* ExecuTorch op_abs */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_abs.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable acos" Cversion="1.4.0-rc2" condition="op_portable_acos">
+      <description>ExecuTorch Portable Operator: acos</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ACOS     /* ExecuTorch op_acos */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_acos.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable acosh" Cversion="1.4.0-rc2" condition="op_portable_acosh">
+      <description>ExecuTorch Portable Operator: acosh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ACOSH     /* ExecuTorch op_acosh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_acosh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable add" Cversion="1.4.0-rc2" condition="op_portable_add">
+      <description>ExecuTorch Portable Operator: add</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ADD     /* ExecuTorch op_add */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_add.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable addmm" Cversion="1.4.0-rc2" condition="op_portable_addmm">
+      <description>ExecuTorch Portable Operator: addmm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ADDMM     /* ExecuTorch op_addmm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_addmm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable alias_copy" Cversion="1.4.0-rc2" condition="op_portable_alias_copy">
+      <description>ExecuTorch Portable Operator: alias_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ALIAS_COPY     /* ExecuTorch op_alias_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_alias_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable allclose" Cversion="1.4.0-rc2" condition="op_portable_allclose">
+      <description>ExecuTorch Portable Operator: allclose</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ALLCLOSE     /* ExecuTorch op_allclose */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_allclose.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable amax" Cversion="1.4.0-rc2" condition="op_portable_amax">
+      <description>ExecuTorch Portable Operator: amax</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_AMAX     /* ExecuTorch op_amax */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_amax.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable amin" Cversion="1.4.0-rc2" condition="op_portable_amin">
+      <description>ExecuTorch Portable Operator: amin</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_AMIN     /* ExecuTorch op_amin */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_amin.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable any" Cversion="1.4.0-rc2" condition="op_portable_any">
+      <description>ExecuTorch Portable Operator: any</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ANY     /* ExecuTorch op_any */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_any.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable arange" Cversion="1.4.0-rc2" condition="op_portable_arange">
+      <description>ExecuTorch Portable Operator: arange</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ARANGE     /* ExecuTorch op_arange */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_arange.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable argmax" Cversion="1.4.0-rc2" condition="op_portable_argmax">
+      <description>ExecuTorch Portable Operator: argmax</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ARGMAX     /* ExecuTorch op_argmax */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_argmax.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable argmin" Cversion="1.4.0-rc2" condition="op_portable_argmin">
+      <description>ExecuTorch Portable Operator: argmin</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ARGMIN     /* ExecuTorch op_argmin */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_argmin.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable as_strided_copy" Cversion="1.4.0-rc2" condition="op_portable_as_strided_copy">
+      <description>ExecuTorch Portable Operator: as_strided_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_AS_STRIDED_COPY     /* ExecuTorch op_as_strided_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_as_strided_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable asin" Cversion="1.4.0-rc2" condition="op_portable_asin">
+      <description>ExecuTorch Portable Operator: asin</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ASIN     /* ExecuTorch op_asin */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_asin.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable asinh" Cversion="1.4.0-rc2" condition="op_portable_asinh">
+      <description>ExecuTorch Portable Operator: asinh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ASINH     /* ExecuTorch op_asinh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_asinh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable atan" Cversion="1.4.0-rc2" condition="op_portable_atan">
+      <description>ExecuTorch Portable Operator: atan</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ATAN     /* ExecuTorch op_atan */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_atan.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable atan2" Cversion="1.4.0-rc2" condition="op_portable_atan2">
+      <description>ExecuTorch Portable Operator: atan2</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ATAN2     /* ExecuTorch op_atan2 */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_atan2.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable atanh" Cversion="1.4.0-rc2" condition="op_portable_atanh">
+      <description>ExecuTorch Portable Operator: atanh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ATANH     /* ExecuTorch op_atanh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_atanh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable avg_pool2d" Cversion="1.4.0-rc2" condition="op_portable_avg_pool2d">
+      <description>ExecuTorch Portable Operator: avg_pool2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_AVG_POOL2D     /* ExecuTorch op_avg_pool2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_avg_pool2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bitwise_and" Cversion="1.4.0-rc2" condition="op_portable_bitwise_and">
+      <description>ExecuTorch Portable Operator: bitwise_and</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BITWISE_AND     /* ExecuTorch op_bitwise_and */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bitwise_and.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bitwise_left_shift" Cversion="1.4.0-rc2" condition="op_portable_bitwise_left_shift">
+      <description>ExecuTorch Portable Operator: bitwise_left_shift</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BITWISE_LEFT_SHIFT     /* ExecuTorch op_bitwise_left_shift */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bitwise_left_shift.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bitwise_not" Cversion="1.4.0-rc2" condition="op_portable_bitwise_not">
+      <description>ExecuTorch Portable Operator: bitwise_not</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BITWISE_NOT     /* ExecuTorch op_bitwise_not */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bitwise_not.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bitwise_or" Cversion="1.4.0-rc2" condition="op_portable_bitwise_or">
+      <description>ExecuTorch Portable Operator: bitwise_or</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BITWISE_OR     /* ExecuTorch op_bitwise_or */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bitwise_or.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bitwise_right_shift" Cversion="1.4.0-rc2" condition="op_portable_bitwise_right_shift">
+      <description>ExecuTorch Portable Operator: bitwise_right_shift</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BITWISE_RIGHT_SHIFT     /* ExecuTorch op_bitwise_right_shift */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bitwise_right_shift.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bitwise_xor" Cversion="1.4.0-rc2" condition="op_portable_bitwise_xor">
+      <description>ExecuTorch Portable Operator: bitwise_xor</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BITWISE_XOR     /* ExecuTorch op_bitwise_xor */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bitwise_xor.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable bmm" Cversion="1.4.0-rc2" condition="op_portable_bmm">
+      <description>ExecuTorch Portable Operator: bmm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_BMM     /* ExecuTorch op_bmm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_bmm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable cat" Cversion="1.4.0-rc2" condition="op_portable_cat">
+      <description>ExecuTorch Portable Operator: cat</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CAT     /* ExecuTorch op_cat */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_cat.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable cdist_forward" Cversion="1.4.0-rc2" condition="op_portable_cdist_forward">
+      <description>ExecuTorch Portable Operator: cdist_forward</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CDIST_FORWARD     /* ExecuTorch op_cdist_forward */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_cdist_forward.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable ceil" Cversion="1.4.0-rc2" condition="op_portable_ceil">
+      <description>ExecuTorch Portable Operator: ceil</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CEIL     /* ExecuTorch op_ceil */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_ceil.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable clamp" Cversion="1.4.0-rc2" condition="op_portable_clamp">
+      <description>ExecuTorch Portable Operator: clamp</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CLAMP     /* ExecuTorch op_clamp */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_clamp.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable clone" Cversion="1.4.0-rc2" condition="op_portable_clone">
+      <description>ExecuTorch Portable Operator: clone</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CLONE     /* ExecuTorch op_clone */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_clone.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable constant_pad_nd" Cversion="1.4.0-rc2" condition="op_portable_constant_pad_nd">
+      <description>ExecuTorch Portable Operator: constant_pad_nd</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CONSTANT_PAD_ND     /* ExecuTorch op_constant_pad_nd */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_constant_pad_nd.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable convolution" Cversion="1.4.0-rc2" condition="op_portable_convolution">
+      <description>ExecuTorch Portable Operator: convolution</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CONVOLUTION     /* ExecuTorch op_convolution */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_convolution.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable convolution_backward" Cversion="1.4.0-rc2" condition="op_portable_convolution_backward">
+      <description>ExecuTorch Portable Operator: convolution_backward</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CONVOLUTION_BACKWARD     /* ExecuTorch op_convolution_backward */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_convolution_backward.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable copy" Cversion="1.4.0-rc2" condition="op_portable_copy">
+      <description>ExecuTorch Portable Operator: copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_COPY     /* ExecuTorch op_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable cos" Cversion="1.4.0-rc2" condition="op_portable_cos">
+      <description>ExecuTorch Portable Operator: cos</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_COS     /* ExecuTorch op_cos */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_cos.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable cosh" Cversion="1.4.0-rc2" condition="op_portable_cosh">
+      <description>ExecuTorch Portable Operator: cosh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_COSH     /* ExecuTorch op_cosh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_cosh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable cumsum" Cversion="1.4.0-rc2" condition="op_portable_cumsum">
+      <description>ExecuTorch Portable Operator: cumsum</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_CUMSUM     /* ExecuTorch op_cumsum */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_cumsum.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable detach_copy" Cversion="1.4.0-rc2" condition="op_portable_detach_copy">
+      <description>ExecuTorch Portable Operator: detach_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_DETACH_COPY     /* ExecuTorch op_detach_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_detach_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable diagonal_copy" Cversion="1.4.0-rc2" condition="op_portable_diagonal_copy">
+      <description>ExecuTorch Portable Operator: diagonal_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_DIAGONAL_COPY     /* ExecuTorch op_diagonal_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_diagonal_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable div" Cversion="1.4.0-rc2" condition="op_portable_div">
+      <description>ExecuTorch Portable Operator: div</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_DIV     /* ExecuTorch op_div */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_div.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable elu" Cversion="1.4.0-rc2" condition="op_portable_elu">
+      <description>ExecuTorch Portable Operator: elu</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ELU     /* ExecuTorch op_elu */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_elu.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable embedding" Cversion="1.4.0-rc2" condition="op_portable_embedding">
+      <description>ExecuTorch Portable Operator: embedding</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EMBEDDING     /* ExecuTorch op_embedding */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_embedding.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable empty" Cversion="1.4.0-rc2" condition="op_portable_empty">
+      <description>ExecuTorch Portable Operator: empty</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EMPTY     /* ExecuTorch op_empty */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_empty.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable eq" Cversion="1.4.0-rc2" condition="op_portable_eq">
+      <description>ExecuTorch Portable Operator: eq</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EQ     /* ExecuTorch op_eq */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_eq.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable erf" Cversion="1.4.0-rc2" condition="op_portable_erf">
+      <description>ExecuTorch Portable Operator: erf</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ERF     /* ExecuTorch op_erf */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_erf.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable exp" Cversion="1.4.0-rc2" condition="op_portable_exp">
+      <description>ExecuTorch Portable Operator: exp</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EXP     /* ExecuTorch op_exp */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_exp.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable expand_copy" Cversion="1.4.0-rc2" condition="op_portable_expand_copy">
+      <description>ExecuTorch Portable Operator: expand_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EXPAND_COPY     /* ExecuTorch op_expand_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_expand_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable expm1" Cversion="1.4.0-rc2" condition="op_portable_expm1">
+      <description>ExecuTorch Portable Operator: expm1</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_EXPM1     /* ExecuTorch op_expm1 */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_expm1.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable fill" Cversion="1.4.0-rc2" condition="op_portable_fill">
+      <description>ExecuTorch Portable Operator: fill</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FILL     /* ExecuTorch op_fill */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_fill.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable flip" Cversion="1.4.0-rc2" condition="op_portable_flip">
+      <description>ExecuTorch Portable Operator: flip</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FLIP     /* ExecuTorch op_flip */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_flip.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable floor" Cversion="1.4.0-rc2" condition="op_portable_floor">
+      <description>ExecuTorch Portable Operator: floor</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FLOOR     /* ExecuTorch op_floor */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_floor.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable floor_divide" Cversion="1.4.0-rc2" condition="op_portable_floor_divide">
+      <description>ExecuTorch Portable Operator: floor_divide</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FLOOR_DIVIDE     /* ExecuTorch op_floor_divide */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_floor_divide.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable fmod" Cversion="1.4.0-rc2" condition="op_portable_fmod">
+      <description>ExecuTorch Portable Operator: fmod</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FMOD     /* ExecuTorch op_fmod */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_fmod.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable full" Cversion="1.4.0-rc2" condition="op_portable_full">
+      <description>ExecuTorch Portable Operator: full</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FULL     /* ExecuTorch op_full */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_full.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable full_like" Cversion="1.4.0-rc2" condition="op_portable_full_like">
+      <description>ExecuTorch Portable Operator: full_like</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_FULL_LIKE     /* ExecuTorch op_full_like */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_full_like.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable gather" Cversion="1.4.0-rc2" condition="op_portable_gather">
+      <description>ExecuTorch Portable Operator: gather</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_GATHER     /* ExecuTorch op_gather */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_gather.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable ge" Cversion="1.4.0-rc2" condition="op_portable_ge">
+      <description>ExecuTorch Portable Operator: ge</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_GE     /* ExecuTorch op_ge */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_ge.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable gelu" Cversion="1.4.0-rc2" condition="op_portable_gelu">
+      <description>ExecuTorch Portable Operator: gelu</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_GELU     /* ExecuTorch op_gelu */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_gelu.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable glu" Cversion="1.4.0-rc2" condition="op_portable_glu">
+      <description>ExecuTorch Portable Operator: glu</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_GLU     /* ExecuTorch op_glu */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_glu.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable grid_sampler_2d" Cversion="1.4.0-rc2" condition="op_portable_grid_sampler_2d">
+      <description>ExecuTorch Portable Operator: grid_sampler_2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_GRID_SAMPLER_2D     /* ExecuTorch op_grid_sampler_2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_grid_sampler_2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable gt" Cversion="1.4.0-rc2" condition="op_portable_gt">
+      <description>ExecuTorch Portable Operator: gt</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_GT     /* ExecuTorch op_gt */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_gt.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable hardtanh" Cversion="1.4.0-rc2" condition="op_portable_hardtanh">
+      <description>ExecuTorch Portable Operator: hardtanh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_HARDTANH     /* ExecuTorch op_hardtanh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_hardtanh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable index" Cversion="1.4.0-rc2" condition="op_portable_index">
+      <description>ExecuTorch Portable Operator: index</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_INDEX     /* ExecuTorch op_index */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_index.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable index_put" Cversion="1.4.0-rc2" condition="op_portable_index_put">
+      <description>ExecuTorch Portable Operator: index_put</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_INDEX_PUT     /* ExecuTorch op_index_put */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_index_put.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable index_select" Cversion="1.4.0-rc2" condition="op_portable_index_select">
+      <description>ExecuTorch Portable Operator: index_select</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_INDEX_SELECT     /* ExecuTorch op_index_select */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_index_select.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable isinf" Cversion="1.4.0-rc2" condition="op_portable_isinf">
+      <description>ExecuTorch Portable Operator: isinf</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ISINF     /* ExecuTorch op_isinf */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_isinf.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable isnan" Cversion="1.4.0-rc2" condition="op_portable_isnan">
+      <description>ExecuTorch Portable Operator: isnan</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ISNAN     /* ExecuTorch op_isnan */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_isnan.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable le" Cversion="1.4.0-rc2" condition="op_portable_le">
+      <description>ExecuTorch Portable Operator: le</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LE     /* ExecuTorch op_le */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_le.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable leaky_relu" Cversion="1.4.0-rc2" condition="op_portable_leaky_relu">
+      <description>ExecuTorch Portable Operator: leaky_relu</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LEAKY_RELU     /* ExecuTorch op_leaky_relu */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_leaky_relu.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable lift_fresh_copy" Cversion="1.4.0-rc2" condition="op_portable_lift_fresh_copy">
+      <description>ExecuTorch Portable Operator: lift_fresh_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LIFT_FRESH_COPY     /* ExecuTorch op_lift_fresh_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_lift_fresh_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable log" Cversion="1.4.0-rc2" condition="op_portable_log">
+      <description>ExecuTorch Portable Operator: log</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOG     /* ExecuTorch op_log */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_log.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable log10" Cversion="1.4.0-rc2" condition="op_portable_log10">
+      <description>ExecuTorch Portable Operator: log10</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOG10     /* ExecuTorch op_log10 */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_log10.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable log1p" Cversion="1.4.0-rc2" condition="op_portable_log1p">
+      <description>ExecuTorch Portable Operator: log1p</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOG1P     /* ExecuTorch op_log1p */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_log1p.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable log2" Cversion="1.4.0-rc2" condition="op_portable_log2">
+      <description>ExecuTorch Portable Operator: log2</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOG2     /* ExecuTorch op_log2 */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_log2.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable log_softmax" Cversion="1.4.0-rc2" condition="op_portable_log_softmax">
+      <description>ExecuTorch Portable Operator: log_softmax</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOG_SOFTMAX     /* ExecuTorch op_log_softmax */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_log_softmax.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable logical_and" Cversion="1.4.0-rc2" condition="op_portable_logical_and">
+      <description>ExecuTorch Portable Operator: logical_and</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOGICAL_AND     /* ExecuTorch op_logical_and */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_logical_and.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable logical_not" Cversion="1.4.0-rc2" condition="op_portable_logical_not">
+      <description>ExecuTorch Portable Operator: logical_not</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOGICAL_NOT     /* ExecuTorch op_logical_not */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_logical_not.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable logical_or" Cversion="1.4.0-rc2" condition="op_portable_logical_or">
+      <description>ExecuTorch Portable Operator: logical_or</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOGICAL_OR     /* ExecuTorch op_logical_or */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_logical_or.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable logical_xor" Cversion="1.4.0-rc2" condition="op_portable_logical_xor">
+      <description>ExecuTorch Portable Operator: logical_xor</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOGICAL_XOR     /* ExecuTorch op_logical_xor */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_logical_xor.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable logit" Cversion="1.4.0-rc2" condition="op_portable_logit">
+      <description>ExecuTorch Portable Operator: logit</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LOGIT     /* ExecuTorch op_logit */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_logit.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable lt" Cversion="1.4.0-rc2" condition="op_portable_lt">
+      <description>ExecuTorch Portable Operator: lt</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_LT     /* ExecuTorch op_lt */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_lt.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable masked_fill" Cversion="1.4.0-rc2" condition="op_portable_masked_fill">
+      <description>ExecuTorch Portable Operator: masked_fill</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MASKED_FILL     /* ExecuTorch op_masked_fill */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_masked_fill.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable masked_scatter" Cversion="1.4.0-rc2" condition="op_portable_masked_scatter">
+      <description>ExecuTorch Portable Operator: masked_scatter</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MASKED_SCATTER     /* ExecuTorch op_masked_scatter */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_masked_scatter.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable masked_select" Cversion="1.4.0-rc2" condition="op_portable_masked_select">
+      <description>ExecuTorch Portable Operator: masked_select</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MASKED_SELECT     /* ExecuTorch op_masked_select */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_masked_select.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable max" Cversion="1.4.0-rc2" condition="op_portable_max">
+      <description>ExecuTorch Portable Operator: max</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MAX     /* ExecuTorch op_max */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_max.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable max_pool2d_with_indices" Cversion="1.4.0-rc2" condition="op_portable_max_pool2d_with_indices">
+      <description>ExecuTorch Portable Operator: max_pool2d_with_indices</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MAX_POOL2D_WITH_INDICES     /* ExecuTorch op_max_pool2d_with_indices */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_max_pool2d_with_indices.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable max_pool2d_with_indices_backward" Cversion="1.4.0-rc2" condition="op_portable_max_pool2d_with_indices_backward">
+      <description>ExecuTorch Portable Operator: max_pool2d_with_indices_backward</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MAX_POOL2D_WITH_INDICES_BACKWARD     /* ExecuTorch op_max_pool2d_with_indices_backward */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_max_pool2d_with_indices_backward.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable maximum" Cversion="1.4.0-rc2" condition="op_portable_maximum">
+      <description>ExecuTorch Portable Operator: maximum</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MAXIMUM     /* ExecuTorch op_maximum */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_maximum.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable mean" Cversion="1.4.0-rc2" condition="op_portable_mean">
+      <description>ExecuTorch Portable Operator: mean</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MEAN     /* ExecuTorch op_mean */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_mean.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable min" Cversion="1.4.0-rc2" condition="op_portable_min">
+      <description>ExecuTorch Portable Operator: min</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MIN     /* ExecuTorch op_min */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_min.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable minimum" Cversion="1.4.0-rc2" condition="op_portable_minimum">
+      <description>ExecuTorch Portable Operator: minimum</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MINIMUM     /* ExecuTorch op_minimum */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_minimum.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable mm" Cversion="1.4.0-rc2" condition="op_portable_mm">
+      <description>ExecuTorch Portable Operator: mm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MM     /* ExecuTorch op_mm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_mm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable mul" Cversion="1.4.0-rc2" condition="op_portable_mul">
+      <description>ExecuTorch Portable Operator: mul</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_MUL     /* ExecuTorch op_mul */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_mul.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable narrow_copy" Cversion="1.4.0-rc2" condition="op_portable_narrow_copy">
+      <description>ExecuTorch Portable Operator: narrow_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NARROW_COPY     /* ExecuTorch op_narrow_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_narrow_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable native_batch_norm" Cversion="1.4.0-rc2" condition="op_portable_native_batch_norm">
+      <description>ExecuTorch Portable Operator: native_batch_norm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NATIVE_BATCH_NORM     /* ExecuTorch op_native_batch_norm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_native_batch_norm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable native_dropout" Cversion="1.4.0-rc2" condition="op_portable_native_dropout">
+      <description>ExecuTorch Portable Operator: native_dropout</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NATIVE_DROPOUT     /* ExecuTorch op_native_dropout */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_native_dropout.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable native_group_norm" Cversion="1.4.0-rc2" condition="op_portable_native_group_norm">
+      <description>ExecuTorch Portable Operator: native_group_norm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NATIVE_GROUP_NORM     /* ExecuTorch op_native_group_norm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_native_group_norm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable native_layer_norm" Cversion="1.4.0-rc2" condition="op_portable_native_layer_norm">
+      <description>ExecuTorch Portable Operator: native_layer_norm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NATIVE_LAYER_NORM     /* ExecuTorch op_native_layer_norm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_native_layer_norm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable ne" Cversion="1.4.0-rc2" condition="op_portable_ne">
+      <description>ExecuTorch Portable Operator: ne</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NE     /* ExecuTorch op_ne */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_ne.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable neg" Cversion="1.4.0-rc2" condition="op_portable_neg">
+      <description>ExecuTorch Portable Operator: neg</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NEG     /* ExecuTorch op_neg */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_neg.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable nonzero" Cversion="1.4.0-rc2" condition="op_portable_nonzero">
+      <description>ExecuTorch Portable Operator: nonzero</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_NONZERO     /* ExecuTorch op_nonzero */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_nonzero.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable ones" Cversion="1.4.0-rc2" condition="op_portable_ones">
+      <description>ExecuTorch Portable Operator: ones</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ONES     /* ExecuTorch op_ones */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_ones.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable pdist_forward" Cversion="1.4.0-rc2" condition="op_portable_pdist_forward">
+      <description>ExecuTorch Portable Operator: pdist_forward</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_PDIST_FORWARD     /* ExecuTorch op_pdist_forward */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_pdist_forward.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable permute_copy" Cversion="1.4.0-rc2" condition="op_portable_permute_copy">
+      <description>ExecuTorch Portable Operator: permute_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_PERMUTE_COPY     /* ExecuTorch op_permute_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_permute_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable pixel_shuffle" Cversion="1.4.0-rc2" condition="op_portable_pixel_shuffle">
+      <description>ExecuTorch Portable Operator: pixel_shuffle</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_PIXEL_SHUFFLE     /* ExecuTorch op_pixel_shuffle */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_pixel_shuffle.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable pixel_unshuffle" Cversion="1.4.0-rc2" condition="op_portable_pixel_unshuffle">
+      <description>ExecuTorch Portable Operator: pixel_unshuffle</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_PIXEL_UNSHUFFLE     /* ExecuTorch op_pixel_unshuffle */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_pixel_unshuffle.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable pow" Cversion="1.4.0-rc2" condition="op_portable_pow">
+      <description>ExecuTorch Portable Operator: pow</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_POW     /* ExecuTorch op_pow */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_pow.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable prod" Cversion="1.4.0-rc2" condition="op_portable_prod">
+      <description>ExecuTorch Portable Operator: prod</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_PROD     /* ExecuTorch op_prod */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_prod.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable rand" Cversion="1.4.0-rc2" condition="op_portable_rand">
+      <description>ExecuTorch Portable Operator: rand</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_RAND     /* ExecuTorch op_rand */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_rand.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable randn" Cversion="1.4.0-rc2" condition="op_portable_randn">
+      <description>ExecuTorch Portable Operator: randn</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_RANDN     /* ExecuTorch op_randn */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_randn.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable reciprocal" Cversion="1.4.0-rc2" condition="op_portable_reciprocal">
+      <description>ExecuTorch Portable Operator: reciprocal</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_RECIPROCAL     /* ExecuTorch op_reciprocal */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_reciprocal.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable reflection_pad1d" Cversion="1.4.0-rc2" condition="op_portable_reflection_pad1d">
+      <description>ExecuTorch Portable Operator: reflection_pad1d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REFLECTION_PAD1D     /* ExecuTorch op_reflection_pad1d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_reflection_pad1d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable reflection_pad2d" Cversion="1.4.0-rc2" condition="op_portable_reflection_pad2d">
+      <description>ExecuTorch Portable Operator: reflection_pad2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REFLECTION_PAD2D     /* ExecuTorch op_reflection_pad2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_reflection_pad2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable reflection_pad3d" Cversion="1.4.0-rc2" condition="op_portable_reflection_pad3d">
+      <description>ExecuTorch Portable Operator: reflection_pad3d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REFLECTION_PAD3D     /* ExecuTorch op_reflection_pad3d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_reflection_pad3d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable relu" Cversion="1.4.0-rc2" condition="op_portable_relu">
+      <description>ExecuTorch Portable Operator: relu</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_RELU     /* ExecuTorch op_relu */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_relu.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable remainder" Cversion="1.4.0-rc2" condition="op_portable_remainder">
+      <description>ExecuTorch Portable Operator: remainder</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REMAINDER     /* ExecuTorch op_remainder */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_remainder.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable repeat" Cversion="1.4.0-rc2" condition="op_portable_repeat">
+      <description>ExecuTorch Portable Operator: repeat</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REPEAT     /* ExecuTorch op_repeat */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_repeat.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable repeat_interleave" Cversion="1.4.0-rc2" condition="op_portable_repeat_interleave">
+      <description>ExecuTorch Portable Operator: repeat_interleave</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REPEAT_INTERLEAVE     /* ExecuTorch op_repeat_interleave */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_repeat_interleave.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable replication_pad1d" Cversion="1.4.0-rc2" condition="op_portable_replication_pad1d">
+      <description>ExecuTorch Portable Operator: replication_pad1d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REPLICATION_PAD1D     /* ExecuTorch op_replication_pad1d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_replication_pad1d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable replication_pad2d" Cversion="1.4.0-rc2" condition="op_portable_replication_pad2d">
+      <description>ExecuTorch Portable Operator: replication_pad2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REPLICATION_PAD2D     /* ExecuTorch op_replication_pad2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_replication_pad2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable replication_pad3d" Cversion="1.4.0-rc2" condition="op_portable_replication_pad3d">
+      <description>ExecuTorch Portable Operator: replication_pad3d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_REPLICATION_PAD3D     /* ExecuTorch op_replication_pad3d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_replication_pad3d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable roll" Cversion="1.4.0-rc2" condition="op_portable_roll">
+      <description>ExecuTorch Portable Operator: roll</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ROLL     /* ExecuTorch op_roll */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_roll.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable round" Cversion="1.4.0-rc2" condition="op_portable_round">
+      <description>ExecuTorch Portable Operator: round</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ROUND     /* ExecuTorch op_round */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_round.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable rsqrt" Cversion="1.4.0-rc2" condition="op_portable_rsqrt">
+      <description>ExecuTorch Portable Operator: rsqrt</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_RSQRT     /* ExecuTorch op_rsqrt */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_rsqrt.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable rsub" Cversion="1.4.0-rc2" condition="op_portable_rsub">
+      <description>ExecuTorch Portable Operator: rsub</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_RSUB     /* ExecuTorch op_rsub */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_rsub.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable scalar_tensor" Cversion="1.4.0-rc2" condition="op_portable_scalar_tensor">
+      <description>ExecuTorch Portable Operator: scalar_tensor</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SCALAR_TENSOR     /* ExecuTorch op_scalar_tensor */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_scalar_tensor.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable scatter" Cversion="1.4.0-rc2" condition="op_portable_scatter">
+      <description>ExecuTorch Portable Operator: scatter</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SCATTER     /* ExecuTorch op_scatter */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_scatter.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable scatter_add" Cversion="1.4.0-rc2" condition="op_portable_scatter_add">
+      <description>ExecuTorch Portable Operator: scatter_add</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SCATTER_ADD     /* ExecuTorch op_scatter_add */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_scatter_add.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable select_copy" Cversion="1.4.0-rc2" condition="op_portable_select_copy">
+      <description>ExecuTorch Portable Operator: select_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SELECT_COPY     /* ExecuTorch op_select_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_select_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable select_scatter" Cversion="1.4.0-rc2" condition="op_portable_select_scatter">
+      <description>ExecuTorch Portable Operator: select_scatter</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SELECT_SCATTER     /* ExecuTorch op_select_scatter */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_select_scatter.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sigmoid" Cversion="1.4.0-rc2" condition="op_portable_sigmoid">
+      <description>ExecuTorch Portable Operator: sigmoid</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SIGMOID     /* ExecuTorch op_sigmoid */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sigmoid.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sign" Cversion="1.4.0-rc2" condition="op_portable_sign">
+      <description>ExecuTorch Portable Operator: sign</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SIGN     /* ExecuTorch op_sign */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sign.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sin" Cversion="1.4.0-rc2" condition="op_portable_sin">
+      <description>ExecuTorch Portable Operator: sin</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SIN     /* ExecuTorch op_sin */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sin.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sinh" Cversion="1.4.0-rc2" condition="op_portable_sinh">
+      <description>ExecuTorch Portable Operator: sinh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SINH     /* ExecuTorch op_sinh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sinh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable slice_copy" Cversion="1.4.0-rc2" condition="op_portable_slice_copy">
+      <description>ExecuTorch Portable Operator: slice_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SLICE_COPY     /* ExecuTorch op_slice_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_slice_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable slice_scatter" Cversion="1.4.0-rc2" condition="op_portable_slice_scatter">
+      <description>ExecuTorch Portable Operator: slice_scatter</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SLICE_SCATTER     /* ExecuTorch op_slice_scatter */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_slice_scatter.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable softmax" Cversion="1.4.0-rc2" condition="op_portable_softmax">
+      <description>ExecuTorch Portable Operator: softmax</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SOFTMAX     /* ExecuTorch op_softmax */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_softmax.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable split_copy" Cversion="1.4.0-rc2" condition="op_portable_split_copy">
+      <description>ExecuTorch Portable Operator: split_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SPLIT_COPY     /* ExecuTorch op_split_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_split_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable split_with_sizes_copy" Cversion="1.4.0-rc2" condition="op_portable_split_with_sizes_copy">
+      <description>ExecuTorch Portable Operator: split_with_sizes_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SPLIT_WITH_SIZES_COPY     /* ExecuTorch op_split_with_sizes_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_split_with_sizes_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sqrt" Cversion="1.4.0-rc2" condition="op_portable_sqrt">
+      <description>ExecuTorch Portable Operator: sqrt</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SQRT     /* ExecuTorch op_sqrt */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sqrt.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable squeeze_copy" Cversion="1.4.0-rc2" condition="op_portable_squeeze_copy">
+      <description>ExecuTorch Portable Operator: squeeze_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SQUEEZE_COPY     /* ExecuTorch op_squeeze_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_squeeze_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable stack" Cversion="1.4.0-rc2" condition="op_portable_stack">
+      <description>ExecuTorch Portable Operator: stack</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_STACK     /* ExecuTorch op_stack */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_stack.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sub" Cversion="1.4.0-rc2" condition="op_portable_sub">
+      <description>ExecuTorch Portable Operator: sub</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SUB     /* ExecuTorch op_sub */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sub.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable sum" Cversion="1.4.0-rc2" condition="op_portable_sum">
+      <description>ExecuTorch Portable Operator: sum</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_SUM     /* ExecuTorch op_sum */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_sum.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable t_copy" Cversion="1.4.0-rc2" condition="op_portable_t_copy">
+      <description>ExecuTorch Portable Operator: t_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_T_COPY     /* ExecuTorch op_t_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_t_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable tan" Cversion="1.4.0-rc2" condition="op_portable_tan">
+      <description>ExecuTorch Portable Operator: tan</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TAN     /* ExecuTorch op_tan */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_tan.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable tanh" Cversion="1.4.0-rc2" condition="op_portable_tanh">
+      <description>ExecuTorch Portable Operator: tanh</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TANH     /* ExecuTorch op_tanh */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_tanh.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable to_copy" Cversion="1.4.0-rc2" condition="op_portable_to_copy">
+      <description>ExecuTorch Portable Operator: to_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TO_COPY     /* ExecuTorch op_to_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_to_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable topk" Cversion="1.4.0-rc2" condition="op_portable_topk">
+      <description>ExecuTorch Portable Operator: topk</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TOPK     /* ExecuTorch op_topk */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_topk.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable transpose_copy" Cversion="1.4.0-rc2" condition="op_portable_transpose_copy">
+      <description>ExecuTorch Portable Operator: transpose_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TRANSPOSE_COPY     /* ExecuTorch op_transpose_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_transpose_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable tril" Cversion="1.4.0-rc2" condition="op_portable_tril">
+      <description>ExecuTorch Portable Operator: tril</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TRIL     /* ExecuTorch op_tril */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_tril.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable trunc" Cversion="1.4.0-rc2" condition="op_portable_trunc">
+      <description>ExecuTorch Portable Operator: trunc</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_TRUNC     /* ExecuTorch op_trunc */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_trunc.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable unbind_copy" Cversion="1.4.0-rc2" condition="op_portable_unbind_copy">
+      <description>ExecuTorch Portable Operator: unbind_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_UNBIND_COPY     /* ExecuTorch op_unbind_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_unbind_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable unfold_copy" Cversion="1.4.0-rc2" condition="op_portable_unfold_copy">
+      <description>ExecuTorch Portable Operator: unfold_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_UNFOLD_COPY     /* ExecuTorch op_unfold_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_unfold_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable unsqueeze_copy" Cversion="1.4.0-rc2" condition="op_portable_unsqueeze_copy">
+      <description>ExecuTorch Portable Operator: unsqueeze_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_UNSQUEEZE_COPY     /* ExecuTorch op_unsqueeze_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_unsqueeze_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable upsample_bilinear2d" Cversion="1.4.0-rc2" condition="op_portable_upsample_bilinear2d">
+      <description>ExecuTorch Portable Operator: upsample_bilinear2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_UPSAMPLE_BILINEAR2D     /* ExecuTorch op_upsample_bilinear2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_upsample_bilinear2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable upsample_bilinear2d_aa" Cversion="1.4.0-rc2" condition="op_portable_upsample_bilinear2d_aa">
+      <description>ExecuTorch Portable Operator: upsample_bilinear2d_aa</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_UPSAMPLE_BILINEAR2D_AA     /* ExecuTorch op_upsample_bilinear2d_aa */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_upsample_bilinear2d_aa.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable upsample_nearest2d" Cversion="1.4.0-rc2" condition="op_portable_upsample_nearest2d">
+      <description>ExecuTorch Portable Operator: upsample_nearest2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_UPSAMPLE_NEAREST2D     /* ExecuTorch op_upsample_nearest2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_upsample_nearest2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable var" Cversion="1.4.0-rc2" condition="op_portable_var">
+      <description>ExecuTorch Portable Operator: var</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_VAR     /* ExecuTorch op_var */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_var.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable var_mean" Cversion="1.4.0-rc2" condition="op_portable_var_mean">
+      <description>ExecuTorch Portable Operator: var_mean</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_VAR_MEAN     /* ExecuTorch op_var_mean */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_var_mean.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable view_as_real_copy" Cversion="1.4.0-rc2" condition="op_portable_view_as_real_copy">
+      <description>ExecuTorch Portable Operator: view_as_real_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_VIEW_AS_REAL_COPY     /* ExecuTorch op_view_as_real_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_view_as_real_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable view_copy" Cversion="1.4.0-rc2" condition="op_portable_view_copy">
+      <description>ExecuTorch Portable Operator: view_copy</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_VIEW_COPY     /* ExecuTorch op_view_copy */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_view_copy.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable where" Cversion="1.4.0-rc2" condition="op_portable_where">
+      <description>ExecuTorch Portable Operator: where</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_WHERE     /* ExecuTorch op_where */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_where.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Portable zeros" Cversion="1.4.0-rc2" condition="op_portable_zeros">
+      <description>ExecuTorch Portable Operator: zeros</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_PORTABLE_ZEROS     /* ExecuTorch op_zeros */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/portable/cpu/op_zeros.cpp"/>
+      </files>
+    </component>
+
+    <!-- ==================== Quantized Operators ==================== -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized add" Cversion="1.4.0-rc2" condition="op_quantized_add">
+      <description>ExecuTorch Quantized Operator: add</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_ADD     /* ExecuTorch op_add */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_add.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized choose_qparams" Cversion="1.4.0-rc2" condition="op_quantized_choose_qparams">
+      <description>ExecuTorch Quantized Operator: choose_qparams</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_CHOOSE_QPARAMS     /* ExecuTorch op_choose_qparams */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_choose_qparams.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized dequantize" Cversion="1.4.0-rc2" condition="op_quantized_dequantize">
+      <description>ExecuTorch Quantized Operator: dequantize</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_DEQUANTIZE     /* ExecuTorch op_dequantize */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_dequantize.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized embedding" Cversion="1.4.0-rc2" condition="op_quantized_embedding">
+      <description>ExecuTorch Quantized Operator: embedding</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_EMBEDDING     /* ExecuTorch op_embedding */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_embedding.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized embedding2b" Cversion="1.4.0-rc2" condition="op_quantized_embedding2b">
+      <description>ExecuTorch Quantized Operator: embedding2b</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_EMBEDDING2B     /* ExecuTorch op_embedding2b */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_embedding2b.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized embedding4b" Cversion="1.4.0-rc2" condition="op_quantized_embedding4b">
+      <description>ExecuTorch Quantized Operator: embedding4b</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_EMBEDDING4B     /* ExecuTorch op_embedding4b */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_embedding4b.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized mixed_linear" Cversion="1.4.0-rc2" condition="op_quantized_mixed_linear">
+      <description>ExecuTorch Quantized Operator: mixed_linear</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_MIXED_LINEAR     /* ExecuTorch op_mixed_linear */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_mixed_linear.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized mixed_mm" Cversion="1.4.0-rc2" condition="op_quantized_mixed_mm">
+      <description>ExecuTorch Quantized Operator: mixed_mm</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_MIXED_MM     /* ExecuTorch op_mixed_mm */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_mixed_mm.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Quantized quantize" Cversion="1.4.0-rc2" condition="op_quantized_quantize">
+      <description>ExecuTorch Quantized Operator: quantize</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_QUANTIZED_QUANTIZE     /* ExecuTorch op_quantize */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/kernels/quantized/cpu/op_quantize.cpp"/>
+      </files>
+    </component>
+
+    <!-- ==================== Cortex-M Operators ==================== -->
+    <!-- Each per-op component ships its own op_*.cpp from the Cortex-M
+         backend ops/ tree. The ones that route through CMSIS-NN add a
+         <require condition="CMSIS-NN"/> on top of "Kernel Utils" via
+         their generated condition; quantize/dequantize/softmax are
+         pure-CPU and require only "Kernel Utils". -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M dequantize_per_tensor" Cversion="1.4.0-rc2" condition="op_cortex_m_dequantize_per_tensor">
+      <description>ExecuTorch Cortex-M Operator: dequantize_per_tensor</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_DEQUANTIZE_PER_TENSOR     /* ExecuTorch op_dequantize_per_tensor */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_dequantize_per_tensor.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M maximum" Cversion="1.4.0-rc2" condition="op_cortex_m_maximum">
+      <description>ExecuTorch Cortex-M Operator: maximum</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_MAXIMUM     /* ExecuTorch op_maximum */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_maximum.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M minimum" Cversion="1.4.0-rc2" condition="op_cortex_m_minimum">
+      <description>ExecuTorch Cortex-M Operator: minimum</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_MINIMUM     /* ExecuTorch op_minimum */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_minimum.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M pad" Cversion="1.4.0-rc2" condition="op_cortex_m_pad">
+      <description>ExecuTorch Cortex-M Operator: pad</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_PAD     /* ExecuTorch op_pad */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_pad.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantize_per_tensor" Cversion="1.4.0-rc2" condition="op_cortex_m_quantize_per_tensor">
+      <description>ExecuTorch Cortex-M Operator: quantize_per_tensor</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZE_PER_TENSOR     /* ExecuTorch op_quantize_per_tensor */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantize_per_tensor.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_activation" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_activation">
+      <description>ExecuTorch Cortex-M Operator: quantized_activation</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_ACTIVATION     /* ExecuTorch op_quantized_activation */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_activation.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_add" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_add">
+      <description>ExecuTorch Cortex-M Operator: quantized_add</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_ADD     /* ExecuTorch op_quantized_add */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_add.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_avg_pool2d" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_avg_pool2d">
+      <description>ExecuTorch Cortex-M Operator: quantized_avg_pool2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_AVG_POOL2D     /* ExecuTorch op_quantized_avg_pool2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_avg_pool2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_batch_matmul" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_batch_matmul">
+      <description>ExecuTorch Cortex-M Operator: quantized_batch_matmul</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_BATCH_MATMUL     /* ExecuTorch op_quantized_batch_matmul */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_batch_matmul.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_conv2d" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_conv2d">
+      <description>ExecuTorch Cortex-M Operator: quantized_conv2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_CONV2D     /* ExecuTorch op_quantized_conv2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_conv2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_depthwise_conv2d" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_depthwise_conv2d">
+      <description>ExecuTorch Cortex-M Operator: quantized_depthwise_conv2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_DEPTHWISE_CONV2D     /* ExecuTorch op_quantized_depthwise_conv2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_depthwise_conv2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_linear" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_linear">
+      <description>ExecuTorch Cortex-M Operator: quantized_linear</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_LINEAR     /* ExecuTorch op_quantized_linear */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_linear.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_max_pool2d" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_max_pool2d">
+      <description>ExecuTorch Cortex-M Operator: quantized_max_pool2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_MAX_POOL2D     /* ExecuTorch op_quantized_max_pool2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_max_pool2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_mul" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_mul">
+      <description>ExecuTorch Cortex-M Operator: quantized_mul</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_MUL     /* ExecuTorch op_quantized_mul */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_mul.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M quantized_transpose_conv2d" Cversion="1.4.0-rc2" condition="op_cortex_m_quantized_transpose_conv2d">
+      <description>ExecuTorch Cortex-M Operator: quantized_transpose_conv2d</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_QUANTIZED_TRANSPOSE_CONV2D     /* ExecuTorch op_quantized_transpose_conv2d */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_quantized_transpose_conv2d.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M softmax" Cversion="1.4.0-rc2" condition="op_cortex_m_softmax">
+      <description>ExecuTorch Cortex-M Operator: softmax</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_SOFTMAX     /* ExecuTorch op_softmax */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_softmax.cpp"/>
+      </files>
+    </component>
+
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch Operators" Csub="Cortex-M transpose" Cversion="1.4.0-rc2" condition="op_cortex_m_transpose">
+      <description>ExecuTorch Cortex-M Operator: transpose</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_OP_CORTEX_M_TRANSPOSE     /* ExecuTorch op_transpose */
+      </RTE_Components_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/cortex_m/ops/op_transpose.cpp"/>
+      </files>
+    </component>
+
+    <!-- ==================== Backends ==================== -->
+    
+    <!-- Ethos-U Backend (Cortex-M host, bare-metal) -->
+    <!-- Ships only EthosUBackend_Cortex_M.cpp. The Cortex-A/Linux host
+         variant is intentionally not exposed in this pack and may be
+         added in a follow-up release. -->
+    <component Cclass="Machine Learning" Cgroup="ExecuTorch" Csub="Backend EthosU" Cversion="1.4.0-rc2" condition="Ethos-U">
+      <description>ExecuTorch Ethos-U NPU Backend - Cortex-M host (bare-metal). Hardware acceleration for Ethos-U55/U65</description>
+      <RTE_Components_h>
+        #define RTE_ML_EXECUTORCH_BACKEND_ETHOS_U     /* ExecuTorch Ethos-U Backend (Cortex-M host) */
+      </RTE_Components_h>
+      <Pre_Include_Global_h>
+        #define EXECUTORCH_BUILD_ARM_BAREMETAL 1
+        #define ET_USE_ETHOS_U_BACKEND 1
+      </Pre_Include_Global_h>
+      <files>
+        <file category="sourceCpp" name="src/backends/arm/runtime/EthosUBackend.cpp"/>
+        <file category="sourceCpp" name="src/backends/arm/runtime/EthosUBackend_Cortex_M.cpp"/>
+        <file category="sourceCpp" name="src/backends/arm/runtime/EthosUBackend_IoMemcpy.cpp"/>
+        <file category="sourceCpp" name="src/backends/arm/runtime/VelaBinStream.cpp"/>
+      </files>
+    </component>
+
+  </components>
+
+</package>

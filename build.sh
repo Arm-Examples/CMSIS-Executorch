@@ -18,10 +18,11 @@ vcpkg activate
 # shellcheck disable=SC1090
 source "${Z_VCPKG_POSTSCRIPT}"
 
+# --context must not be combined with --active (cbuild 2.14.1 rejects it);
+# the csolution's target-set already selects the Debug context.
 cbuild cmsis-executorch-simple.csolution.yml \
     --active SSE-320-U85 \
-    --packs --update-rte \
-    --context cmsis-executorch-simple.Debug+SSE-320-U85
+    --packs --update-rte
 
 echo
 echo "ELF: $(find out -name '*.elf' | head -1)"

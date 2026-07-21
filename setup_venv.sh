@@ -15,22 +15,25 @@ PY="${PYTHON:-python3}"
 CMAKE_POLICY_VERSION_MINIMUM=3.5 \
     "${HERE}/.venv/bin/pip" install --no-dependencies -r "${HERE}/requirements-arm-tosa.txt"
 
-# Sanity check: executorch 1.3.1's Arm quantizer references named-tensor op
-# overloads (torch.ops.aten.transpose.Dimname) that PyTorch 2.13 removed. A
-# stray torch upgrade in this venv would only fail later, at export time, with
-# a confusing AttributeError - catch it here instead.
+# Sanity check: import the module the export flow actually needs. A torch /
+# executorch version mismatch in this venv (e.g. a stray torch upgrade) would
+# otherwise only fail later, at export time, with a confusing error - e.g.
+# executorch <= 1.3.1 referenced named-tensor op overloads that torch 2.13
+# removed, which surfaced as an AttributeError deep in this import.
 "${HERE}/.venv/bin/python" - <<'EOF'
 import sys
-import torch
 
 try:
-    torch.ops.aten.transpose.Dimname
-except AttributeError:
+    import executorch.backends.arm.quantizer.quantization_annotator  # noqa: F401
+except Exception as exc:
+    import torch, executorch  # noqa: E401
+    from importlib.metadata import version
     sys.exit(
-        f"error: torch {torch.__version__} in this venv has no named-tensor op "
-        "overloads (removed in torch 2.13), which executorch 1.3.1 still needs.\n"
-        "Recreate the venv so pip resolves the torch version pinned by "
-        "executorch: rm -rf .venv && ./setup_venv.sh"
+        "error: the executorch Arm quantizer failed to import "
+        f"(torch {torch.__version__}, executorch {version('executorch')}):\n"
+        f"  {type(exc).__name__}: {exc}\n"
+        "The torch and executorch versions in this venv are likely mismatched. "
+        "Recreate the venv with the pinned versions: rm -rf .venv && ./setup_venv.sh"
     )
 EOF
 

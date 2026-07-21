@@ -10,7 +10,7 @@ pack offers (straight from its .pdsc), and writes an `ai_layer.clayer.yml`
 selecting the runtime plus exactly those operator components.
 
   python scripts/gen_components.py --pte model/model.pte \
-      --pack-path packs/PyTorch.ExecuTorch.1.3.1-rc9 \
+      --pack-path packs/PyTorch.ExecuTorch.1.4.0-rc2 \
       --output ai_layer/ai_layer.clayer.yml
 """
 

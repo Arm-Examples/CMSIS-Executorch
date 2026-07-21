@@ -1,8 +1,20 @@
 # Python packages for the model export (venv, no Docker).
-# executorch must match the runtime shipped by the vendored pack (1.3.1).
+# executorch must match the runtime shipped by the vendored pack (1.4.0-rc2).
+# No 1.4.0 wheel is published to PyPI yet, so this pins the nightly wheel cut
+# from the same upstream commit the rc2 pack was built from.
+#
+# The nightly executorch wheel does not declare a torch dependency, so torch
+# must be pinned here explicitly: executorch 1.4.0-rc2 targets torch 2.12
+# (torch 2.13 removed the named-tensor overloads and is untested with this
+# flow -- see the guard in setup_venv.sh).
 #
 # The Arm Ethos-U AOT flow also needs the TOSA serializer and the Vela compiler.
 # tosa-tools is installed with --no-dependencies (see setup_venv.sh and
 # requirements-arm-tosa.txt), mirroring executorch's examples/arm/setup.sh.
-executorch==1.3.1
-ethos-u-vela==5.0.0
+--extra-index-url https://download.pytorch.org/whl/nightly/cpu
+executorch==1.4.0.dev20260721
+torch==2.12.*
+# The Arm quantizer imports torchao, which the nightly executorch wheel also
+# does not declare (upstream vendors it as a submodule).
+torchao==0.17.0
+ethos-u-vela==5.1.0

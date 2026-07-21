@@ -25,7 +25,7 @@ It is deliberately small and has two goals:
 | `ai_layer/ai_layer.clayer.yml` | The model's CMSIS component selection (generated) |
 | `board/Corstone-320/` | Board bring-up (UART stdout + Ethos-U driver), trimmed |
 | `src/app_main.cpp` | Headless runner: load `.pte`, run one inference, print logits |
-| `packs/PyTorch.ExecuTorch.1.3.1-rc9/` | The vendored ExecuTorch source pack |
+| `packs/PyTorch.ExecuTorch.1.4.0-rc2/` | The vendored ExecuTorch source pack |
 
 ## Prerequisites
 
@@ -108,7 +108,7 @@ through. The script can still be run manually:
 ```bash
 .venv/bin/python scripts/gen_components.py \
     --pte model/model.pte \
-    --pack-path packs/PyTorch.ExecuTorch.1.3.1-rc9 \
+    --pack-path packs/PyTorch.ExecuTorch.1.4.0-rc2 \
     --output ai_layer/ai_layer.clayer.yml
 ```
 
@@ -125,4 +125,4 @@ through. The script can still be run manually:
 
 The example code is licensed under **Apache-2.0** (see `LICENSE`). The vendored
 ExecuTorch pack keeps its upstream **BSD** license
-(`packs/PyTorch.ExecuTorch.1.3.1-rc9/LICENSE`).
+(`packs/PyTorch.ExecuTorch.1.4.0-rc2/LICENSE`).

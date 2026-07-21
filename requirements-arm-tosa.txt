@@ -4,4 +4,4 @@
 # in a conflicting torch/numpy. tosa-tools provides the `tosa_serializer` module.
 ml_dtypes == 0.5.1
 flatbuffers == 24.3.25
-tosa-tools == 2026.2.1
+tosa-tools == 2026.5.0
