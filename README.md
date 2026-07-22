@@ -17,7 +17,7 @@ The diagram below outlines the overall project structure. The embedded applicati
    - Install **Keil Studio for VS Code** from the Visual Studio Code Marketplace.
    - **Clone your repository** to a folder on the desktop computer for example using Git in VS Code.
    - Open the folder in VS Code and the [CMSIS View](https://mdk-packs.github.io/vscode-cmsis-solution-docs/userinterface.html#2-main-area-of-the-cmsis-view).
-   - Use the [Action buttons](https://github.com/ARM-software/vscode-cmsis-csolution?tab=readme-ov-file#action-buttons) to build, load, and run the example on the pre-configured AVH-SSE-300 FastModel simulation.
+   - Use the [Action buttons](https://github.com/Open-CMSIS-Pack/vscode-cmsis-solution#action-buttons) to build, load, and run the example on the pre-configured AVH-SSE-300 FastModel simulation.
 
 You may now [Customize the Model](#customize-the-model) for your own application or [Add Board Layer for Target Hardware](#add-board-layer-for-target-hardware) to run the example on an evaluation board.
 
