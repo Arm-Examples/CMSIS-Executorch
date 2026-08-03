@@ -1,0 +1,37 @@
+# Parameters:
+# instance.parameter=value       #(type, mode) default = 'def value' : description : [min..max]
+#------------------------------------------------------------------------------
+mps4_board.subsystem.ethosu.num_macs=256              # (int   , init-time) default = '0x400'  : Number of 8x8 MACs performed per cycle (128, 256, 512, 1024, or 2048). : [0x80:0x800]
+                                                      # NOTE: must match the AOT compile target. model/aot_model_*.py
+                                                      # uses target="ethos-u85-256" so this FVP must run with
+                                                      # num_macs=256, otherwise the Vela bin stream rejects the
+                                                      # NPU config at runtime ("npu.macs_per_cc != optimizer.macs_per_cc").
+mps4_board.subsystem.cpu0.INITSVTOR=0x12000000        # (int   , init-time) default = '0x11000000' : Secure vector-table offset at reset
+mps4_board.subsystem.iotss3_systemcontrol.INITSVTOR_RST=0x12000000  # (int, init-time) default = '0x11000000' : Reset value for INITSVTOR. Should match cpu0.INITSVTOR
+                                                      # NOTE: the application's vector table (__Vectors) is linked to BRAM at
+                                                      # 0x12000000 (see gcc_linker_script.ld.src), but the FVP default points
+                                                      # at 0x11000000 where nothing is loaded. The first boot works anyway
+                                                      # because the ELF loader sets the PC directly -- but any debugger reset
+                                                      # reboots from INITSVTOR, fetches a garbage MSP/PC and locks the core up
+                                                      # (HardFault escalation during exception entry). Pin both to the real
+                                                      # vector table so resets survive.
+mps4_board.subsystem.cpu0.semihosting-enable=1        # (bool  , init-time) default = '0'      : Enable semihosting SVC traps
+                                                      # NOTE: stdio is retargeted to semihosting (board/Corstone-320/
+                                                      # retarget_stdio.c); the FVP serves it directly on its stdout.
+mps4_board.telnetterminal0.quiet=1                    # (bool  , init-time) default = '0'      : Avoid output on stdout/stderr
+mps4_board.telnetterminal0.start_telnet=0             # (bool  , init-time) default = '1'      : Start telnet if nothing connected
+mps4_board.telnetterminal1.quiet=1                    # (bool  , init-time) default = '0'      : Avoid output on stdout/stderr
+mps4_board.telnetterminal1.start_telnet=0             # (bool  , init-time) default = '1'      : Start telnet if nothing connected
+mps4_board.telnetterminal2.quiet=1                    # (bool  , init-time) default = '0'      : Avoid output on stdout/stderr
+mps4_board.telnetterminal2.start_telnet=0             # (bool  , init-time) default = '1'      : Start telnet if nothing connected
+mps4_board.telnetterminal5.quiet=1                    # (bool  , init-time) default = '0'      : Avoid output on stdout/stderr
+mps4_board.telnetterminal5.start_telnet=0             # (bool  , init-time) default = '1'      : Start telnet if nothing connected
+mps4_board.uart0.out_file=-                           # (string, init-time) default = ''       : Output file to hold data written by the UART (use '-' to send all output to stdout)
+mps4_board.uart0.unbuffered_output=1                  # (bool  , init-time) default = '0'      : Unbuffered output
+                                                      # NOTE: without this the FVP block-buffers uart0 stdout when it is a
+                                                      # pipe (docker run without -t, redirected fvp-gdb logs) and printf
+                                                      # output only appears when the FVP exits.
+mps4_board.uart0.shutdown_on_eot=1                    # (bool  , init-time) default = '0'      : Shutdown simulation when a EOT (ASCII 4) char is transmitted (useful for regression tests when semihosting is not available)
+mps4_board.visualisation.disable-visualisation=1      # (bool  , init-time) default = '0'      : Enable/disable visualisation
+vis_hdlcd.disable_visualisation=1                     # (bool  , init-time) default = '0'      : Enable/disable visualisation
+#------------------------------------------------------------------------------

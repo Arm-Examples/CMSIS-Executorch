@@ -1,0 +1,78 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMSIS Load",
+            "type": "shell",
+            "command": "${workspaceFolder}/.vscode/start-fvp-gdb.sh",
+            "args": ["--reload", "${command:cmsis-csolution.getBinaryFile}"],
+            "dependsOn": ["FVP Output (fvp-gdb)"],
+            "options": { "cwd": "${workspaceFolder}/" },
+            "isBackground": true,
+            "presentation": { "panel": "dedicated", "reveal": "always", "showReuseMessage": false },
+            "problemMatcher": {
+                "pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting fvp-gdb|Reload requested",
+                    "endsPattern": "ready on :|already listening on :|not found|did not come up|exited before|Docker is not running"
+                }
+            }
+        },
+        {
+            "label": "CMSIS Run",
+            "type": "shell",
+            "command": "arm-none-eabi-gdb",
+            "args": ["-batch", "-ex", "target remote localhost:3333", "-ex", "detach"],
+            "options": { "cwd": "${workspaceFolder}/" },
+            "problemMatcher": []
+        },
+        {
+            "label": "CMSIS Erase",
+            "type": "shell",
+            "command": "echo",
+            "args": ["FVP target: nothing to erase"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Start FVP (fvp-gdb)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.vscode/start-fvp-gdb.sh",
+            "args": ["${command:cmsis-csolution.getBinaryFile}"],
+            "dependsOn": ["FVP Output (fvp-gdb)"],
+            "options": { "cwd": "${workspaceFolder}/" },
+            "isBackground": true,
+            "presentation": { "panel": "dedicated", "reveal": "always", "showReuseMessage": false },
+            "problemMatcher": {
+                "pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting fvp-gdb|Reload requested",
+                    "endsPattern": "ready on :|already listening on :|not found|did not come up|exited before|Docker is not running"
+                }
+            }
+        },
+        {
+            "label": "Stop FVP (fvp-gdb)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.vscode/stop-fvp-gdb.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "FVP Output (fvp-gdb)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.vscode/tail-fvp-log.sh",
+            "options": { "cwd": "${workspaceFolder}/" },
+            "isBackground": true,
+            "presentation": { "panel": "dedicated", "reveal": "always", "showReuseMessage": false },
+            "problemMatcher": {
+                "pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "FVP output terminal ready",
+                    "endsPattern": "FVP output terminal ready"
+                }
+            }
+        }
+    ]
+}

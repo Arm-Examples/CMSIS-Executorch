@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Build the example for the Corstone-320 / Ethos-U85 target. Acquires the
+# CMSIS-Toolbox + arm-none-eabi-gcc via vcpkg, then runs cbuild with --active so
+# the MLOps metadata (cbuild-mlops.yml) is generated and the model-conversion
+# build step can consume it.
+#
+# Needs ~/.vcpkg on PATH in non-interactive shells: `vcpkg-init` only defines
+# the `vcpkg-shell` shell function, while the `vcpkg` binary itself lives there.
+# Windows equivalent: build.ps1
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${HERE}"
+
+# Acquire the toolchain set declared in vcpkg-configuration.json.
+# No .sh suffix: macOS mktemp only substitutes a trailing run of Xs, so a
+# suffixed template creates a literal vcpkg.XXXXXX.sh once and fails forever.
+export Z_VCPKG_POSTSCRIPT="$(mktemp /tmp/vcpkg.XXXXXX)"
+vcpkg activate
+# shellcheck disable=SC1090
+source "${Z_VCPKG_POSTSCRIPT}"
+
+# --context must not be combined with --active (cbuild 2.14.1 rejects it);
+# the csolution's target-set already selects the Debug context.
+cbuild cmsis-executorch-simple.csolution.yml \
+    --active SSE-320-U85 \
+    --packs --update-rte
+
+echo
+echo "ELF: $(find out -name '*.elf' | head -1)"

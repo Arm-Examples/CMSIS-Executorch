@@ -1,0 +1,66 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP.
+# The model is exported from PyTorch in a venv (no Docker) and converted to a
+# .pte as a build step. The `mlops:` node makes CMSIS-Toolbox emit
+# `cmsis-executorch-simple.cbuild-mlops.yml`, which the export script consumes
+# to drive Vela -- see model/export_model.py.
+solution:
+  created-for: CMSIS-Toolbox@2.14.1
+  cdefault:
+  compiler: GCC
+
+  packs:
+    - pack: PyTorch::ExecuTorch
+      path: ./packs/PyTorch.ExecuTorch.1.4.0-rc2
+    - pack: ARM::CMSIS
+    - pack: ARM::CMSIS-NN
+    - pack: ARM::CMSIS-Compiler
+    - pack: ARM::Cortex_DFP
+
+  target-types:
+    # Corstone-320 with an Ethos-U85 NPU, simulated on the Arm FVP.
+    - type: SSE-320-U85
+      board: SSE-320
+      device: SSE-320-FVP
+      variables:
+        - Board-Layer: $SolutionDir()$/board/Corstone-320/Board-U85.clayer.yml
+        - AI-Layer: $SolutionDir()$/ai_layer/ai_layer.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: cmsis-executorch-simple.Debug
+          debugger:
+            # CMSIS-DAP@pyOCD makes the extension generate the launch config /
+            # CMSIS tasks that .vscode/.vscode.d override to drive the FVP via
+            # fvp-gdb (the Arm-FVP adapter generates no launch config, so the
+            # Load & Debug button cannot work with it). The FVP invocation
+            # lives in .vscode/start-fvp-gdb.sh:
+            #   FVP_Corstone_SSE-320 -f board/Corstone-320/fvp_config.txt
+            name: CMSIS-DAP@pyOCD
+
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: debug
+
+  projects:
+    - project: ./cmsis-executorch-simple.cproject.yml
+
+  # MLOps information: exported to cmsis-executorch-simple.cbuild-mlops.yml when
+  # building with `cbuild ... --active SSE-320-U85`. Retarget the NPU here and
+  # the export script (model/export_model.py) picks it up automatically.
+  # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
+  mlops:
+    description: TinyCNN int8 image classifier for Ethos-U85
+    npu:
+      type: Ethos-U85
+    vela:
+      system: Ethos_U85_SYS_DRAM_Mid # system-config from the Vela config
+      memory: Shared_Sram # memory-mode from the Vela config
+    model:
+      clayer: $AI-Layer$
+      name: TinyCNN
+    simulator:
+      target: SSE-320-U85
