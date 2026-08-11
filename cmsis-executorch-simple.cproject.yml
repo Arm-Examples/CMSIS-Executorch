@@ -6,8 +6,7 @@
 # the AI layer; board bring-up from the Board layer.
 project:
   packs:
-    - pack: PyTorch::ExecuTorch
-      path: ./packs/PyTorch.ExecuTorch.1.4.0-rc2
+    - pack: PyTorch::ExecuTorch@1.4.0
     - pack: ARM::CMSIS
 
   misc:
@@ -46,11 +45,18 @@ project:
   # AI layer's component selection whenever the model or NPU config changes.
   # If the operator set (and thus the clayer) changed, the step fails with a
   # re-run hint, since components are resolved before the build starts.
+  #
+  # Dispatched through CMake rather than a shell: `executes:` has no host-OS
+  # conditional, so the single `run:` string must work on Linux, macOS and
+  # Windows. ${CMAKE_COMMAND} is always available (cbuild drives CMake), while
+  # `bash` is not present by default on Windows. run_export.cmake only selects
+  # the venv interpreter for the host and hands over to run_export.py.
   executes:
     - execute: convert-model
-      run: bash $input(0)$
+      run: ${CMAKE_COMMAND} -P $input(0)$
       input:
-        - $SolutionDir()$/scripts/run_export.sh
+        - $SolutionDir()$/scripts/run_export.cmake
+        - $SolutionDir()$/scripts/run_export.py
         - $SolutionDir()$/model/model.py
         - $SolutionDir()$/model/export_model.py
         - $SolutionDir()$/cmsis-executorch-simple.cbuild-mlops.yml

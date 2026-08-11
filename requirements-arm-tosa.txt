@@ -1,7 +1,15 @@
 # TOSA serialization dependencies for the Arm Ethos-U AOT export.
-# Mirrors executorch's backends/arm/requirements-arm-tosa.txt and is installed
-# with `pip install --no-dependencies` (see setup_venv.sh) so it does not drag
-# in a conflicting torch/numpy. tosa-tools provides the `tosa_serializer` module.
+# Mirrors executorch's backends/arm/requirements-arm-tosa.txt, trimmed to what
+# the export flow actually needs (upstream also lists the model-explorer viewer
+# and pytest-timeout, which are development tools).
+#
+# setup_venv.py installs this file with `pip install --no-dependencies`, and
+# that is deliberate: tosa-tools 2026.5.0 requires flatbuffers==25.2.10, while
+# executorch pins flatbuffers==24.3.25 below. Letting pip resolve tosa-tools'
+# dependencies would silently upgrade flatbuffers and break serialization.
+# Installing executorch[ethos_u] instead of these files has the same problem.
+#
+# tosa-tools provides the `tosa_serializer` module.
 ml_dtypes == 0.5.1
 flatbuffers == 24.3.25
 tosa-tools == 2026.5.0

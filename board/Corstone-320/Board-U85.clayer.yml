@@ -13,7 +13,6 @@ layer:
   connections:
     - connect: Corstone-320
       provides:
-        - CMSIS_USART
         - STDIN
         - STDOUT
         - STDERR
@@ -33,8 +32,6 @@ layer:
   components:
     - component: CMSIS:CORE
 
-    - component: CMSIS Driver:USART
-
     - component: CMSIS-Compiler:CORE
     - component: CMSIS-Compiler:STDERR:Custom
     - component: CMSIS-Compiler:STDIN:Custom
@@ -46,7 +43,6 @@ layer:
     - component: Device:Native Driver:SysCounter
     - component: Device:Native Driver:SysTimer
     - component: Device:Native Driver:Timeout
-    - component: Device:Native Driver:UART
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
 

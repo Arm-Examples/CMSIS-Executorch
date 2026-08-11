@@ -19,17 +19,6 @@
 #ifndef CORSTONE_320_H_
 #define CORSTONE_320_H_
 
-#include "Driver_USART.h"
-
-// CMSIS Driver instances of Board peripherals
-#define CMSIS_DRIVER_USART  0  // CMSIS Driver USART instance number
-
-// Retarget stdio to CMSIS UART
-#define RETARGET_STDIO_UART 0
-
-// CMSIS Drivers
-extern ARM_DRIVER_USART Driver_USART0;          /* Serial */
-
 #ifdef CMSIS_shield_header
 #include CMSIS_shield_header
 #endif

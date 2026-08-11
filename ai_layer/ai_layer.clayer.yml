@@ -6,7 +6,6 @@ layer:
 
   packs:
     - pack: PyTorch::ExecuTorch
-      path: ../packs/PyTorch.ExecuTorch.1.4.0-rc2
 
   define:
     - ET_LOG_ENABLED: 0

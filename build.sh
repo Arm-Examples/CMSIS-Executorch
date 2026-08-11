@@ -6,6 +6,10 @@
 # CMSIS-Toolbox + arm-none-eabi-gcc via vcpkg, then runs cbuild with --active so
 # the MLOps metadata (cbuild-mlops.yml) is generated and the model-conversion
 # build step can consume it.
+#
+# Needs ~/.vcpkg on PATH in non-interactive shells: `vcpkg-init` only defines
+# the `vcpkg-shell` shell function, while the `vcpkg` binary itself lives there.
+# Windows equivalent: build.ps1
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${HERE}"

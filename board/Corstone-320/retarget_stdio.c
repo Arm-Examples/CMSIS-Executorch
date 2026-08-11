@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------
- * Copyright (c) 2025 Arm Limited (or its affiliates).
- * All rights reserved.
+ * Copyright 2026 Arm Limited and/or its affiliates.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,36 +16,26 @@
  * limitations under the License.
  *
  *      Name:    retarget_stdio.c
- *      Purpose: Retarget stdio to CMSIS UART
+ *      Purpose: Retarget stdio to Arm semihosting
  *
+ * CMSIS-Compiler STDOUT/STDERR/STDIN:Custom backend. The CMSIS-Compiler CORE
+ * component provides the toolchain-specific low-level retarget (newlib _write
+ * for GCC) and routes every character here. Characters go out over Arm
+ * semihosting (BKPT 0xAB), which the FVP serves directly on its stdout --
+ * no UART model, base address, or driver involved. Requires
+ * mps4_board.subsystem.cpu0.semihosting-enable=1 (see fvp_config.txt).
  *---------------------------------------------------------------------------*/
 
-#ifdef   CMSIS_target_header
-#include CMSIS_target_header
-#else
-#include "Driver_USART.h"
-#endif
+/* Semihosting operation numbers (Arm semihosting specification). */
+#define SYS_WRITEC  0x03
+#define SYS_READC   0x07
 
-#ifndef RETARGET_STDIO_UART
-#error "RETARGET_STDIO_UART not defined!"
-#endif
-
-/* Compile-time configuration */
-#ifndef UART_BAUDRATE
-#define UART_BAUDRATE     115200
-#endif
-
-/* References to the external retarget functions */
-extern int stdio_init     (void);
-extern int stderr_putchar (int ch);
-extern int stdout_putchar (int ch);
-extern int stdin_getchar  (void);
-
-/* Reference to the underlying USART driver */
-#ifndef CMSIS_target_header
-extern ARM_DRIVER_USART   ARM_Driver_USART_(RETARGET_STDIO_UART);
-#endif
-#define ptrUSART        (&ARM_Driver_USART_(RETARGET_STDIO_UART))
+static int semihosting_call (int op, void *param) {
+  register int   r0 __asm__("r0") = op;
+  register void *r1 __asm__("r1") = param;
+  __asm__ volatile ("bkpt 0xAB" : "+r"(r0) : "r"(r1) : "memory");
+  return r0;
+}
 
 /**
   Initialize stdio
@@ -54,32 +43,7 @@ extern ARM_DRIVER_USART   ARM_Driver_USART_(RETARGET_STDIO_UART);
   \return          0 on success, or -1 on error.
 */
 int stdio_init (void) {
-
-  if (ptrUSART->Initialize(NULL) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  if (ptrUSART->PowerControl(ARM_POWER_FULL) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  if (ptrUSART->Control(ARM_USART_MODE_ASYNCHRONOUS |
-                        ARM_USART_DATA_BITS_8       |
-                        ARM_USART_PARITY_NONE       |
-                        ARM_USART_STOP_BITS_1       |
-                        ARM_USART_FLOW_CONTROL_NONE,
-                        UART_BAUDRATE) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  if (ptrUSART->Control(ARM_USART_CONTROL_RX, 1U) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  if (ptrUSART->Control(ARM_USART_CONTROL_TX, 1U) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
+  /* Semihosting needs no initialization. */
   return 0;
 }
 
@@ -90,26 +54,8 @@ int stdio_init (void) {
   \return          The character written, or -1 on write error.
 */
 int stderr_putchar (int ch) {
-  uint8_t buf[1];
-
-  if (ch == '\n') {
-    buf[0] = (uint8_t)'\r';
-
-    if (ptrUSART->Send(buf, 1U) != ARM_DRIVER_OK) {
-      return -1;
-    }
-
-    while (ptrUSART->GetStatus().tx_busy != 0U);
-  }
-
-  buf[0] = (uint8_t)ch;
-
-  if (ptrUSART->Send(buf, 1U) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  while (ptrUSART->GetStatus().tx_busy != 0U);
-
+  char c = (char)ch;
+  (void)semihosting_call(SYS_WRITEC, &c);
   return ch;
 }
 
@@ -120,26 +66,8 @@ int stderr_putchar (int ch) {
   \return          The character written, or -1 on write error.
 */
 int stdout_putchar (int ch) {
-  uint8_t buf[1];
-
-  if (ch == '\n') {
-    buf[0] = (uint8_t)'\r';
-
-    if (ptrUSART->Send(buf, 1U) != ARM_DRIVER_OK) {
-      return -1;
-    }
-
-    while (ptrUSART->GetStatus().tx_busy != 0U);
-  }
-
-  buf[0] = (uint8_t)ch;
-
-  if (ptrUSART->Send(buf, 1U) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  while (ptrUSART->GetStatus().tx_busy != 0U);
-
+  char c = (char)ch;
+  (void)semihosting_call(SYS_WRITEC, &c);
   return ch;
 }
 
@@ -149,13 +77,5 @@ int stdout_putchar (int ch) {
   \return     The next character from the input, or -1 on read error.
 */
 int stdin_getchar (void) {
-  uint8_t buf[1];
-
-  if (ptrUSART->Receive(buf, 1U) != ARM_DRIVER_OK) {
-    return -1;
-  }
-
-  while (ptrUSART->GetStatus().rx_busy != 0U);
-
-  return (int)buf[0];
+  return semihosting_call(SYS_READC, 0);
 }

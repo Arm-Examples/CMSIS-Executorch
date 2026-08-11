@@ -1,5 +1,0 @@
-CompileFlags:
-  CompilationDatabase: out/cmsis-executorch-simple/SSE-320-U85/Debug
-  Add:
-    - -include
-    - out/cmsis-executorch-simple/SSE-320-U85/Debug/compile_macros.h

@@ -12,8 +12,10 @@ solution:
   compiler: GCC
 
   packs:
-    - pack: PyTorch::ExecuTorch
-      path: ./packs/PyTorch.ExecuTorch.1.4.0-rc2
+    # Pinned exactly: the pack's C++ runtime and the Python exporter pinned in
+    # requirements-executorch.txt must be the same ExecuTorch version, or the
+    # .pte fails to load. `cbuild --packs` fetches it from the public index.
+    - pack: PyTorch::ExecuTorch@1.4.0
     - pack: ARM::CMSIS
     - pack: ARM::CMSIS-NN
     - pack: ARM::CMSIS-Compiler
@@ -31,14 +33,6 @@ solution:
         - set:
           images:
             - project-context: cmsis-executorch-simple.Debug
-          debugger:
-            # CMSIS-DAP@pyOCD makes the extension generate the launch config /
-            # CMSIS tasks that .vscode/.vscode.d override to drive the FVP via
-            # fvp-gdb (the Arm-FVP adapter generates no launch config, so the
-            # Load & Debug button cannot work with it). The FVP invocation
-            # lives in .vscode/start-fvp-gdb.sh:
-            #   FVP_Corstone_SSE-320 -f board/Corstone-320/fvp_config.txt
-            name: CMSIS-DAP@pyOCD
 
   build-types:
     - type: Debug
