@@ -9,7 +9,7 @@
 solution:
   created-for: CMSIS-Toolbox@2.14.1
   cdefault:
-  compiler: GCC
+  compiler: AC6
 
   packs:
     # Pinned exactly: the pack's C++ runtime and the Python exporter pinned in
@@ -33,6 +33,11 @@ solution:
         - set:
           images:
             - project-context: cmsis-executorch-simple.Debug
+          debugger:
+            name: Arm-FVP
+            model: FVP_Corstone_SSE-320
+            config-file: board/Corstone-320/fvp_config.txt
+            args: "--simlimit 60 "
 
   build-types:
     - type: Debug
