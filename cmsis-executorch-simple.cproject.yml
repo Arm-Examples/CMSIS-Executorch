@@ -71,3 +71,6 @@ project:
   output:
     type:
       - elf
+      - hex
+      - map
+

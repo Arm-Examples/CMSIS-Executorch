@@ -1,9 +1,11 @@
-# The MLOps flow, hop by hop
+# The MLOps flow
 
-The point of this branch is that the NPU target is declared **once**, in the
-csolution, and everything downstream follows from it. This page traces that
-path and explains the two build-scheduling decisions that are not obvious from
-reading the YAML.
+The `mlops:` node in `cmsis-executorch-simple.csolution.yml` is the central
+definition of the Ethos-U target for this example. It follows the CMSIS-Toolbox
+[MLOps information](https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information)
+specification. This document explains how the build process uses and propagates
+that information, including two build-scheduling decisions that are not
+apparent from the YAML alone.
 
 ```mermaid
 flowchart TD
@@ -20,57 +22,48 @@ flowchart TD
     J --> K["cmsis-executorch-simple.elf"]
 ```
 
-## 1. The csolution declares the target
+## 1. The csolution declares the Ethos-U target
+
+The `cmsis-executorch-simple.csolution.yml` file defines the Ethos-U parameters and location/name for generating the ML model.
+It is the central place where the NPU parameters are specified.
 
 ```yaml
-mlops:
-  description: TinyCNN int8 image classifier for Ethos-U85
-  npu:
-    type: Ethos-U85
-  vela:
-    system: Ethos_U85_SYS_DRAM_Mid   # system-config from the Vela config
-    memory: Shared_Sram              # memory-mode from the Vela config
-  model:
-    clayer: $AI-Layer$
-    name: TinyCNN
-  simulator:
-    target: SSE-320-U85
+csolution:
+  mlops:
+    description: TinyCNN int8 image classifier for Ethos-U85
+    npu:
+      type: Ethos-U85
+    vela:
+      system: Ethos_U85_SYS_DRAM_Mid   # system-config from the Vela config
+      memory: Shared_Sram              # memory-mode from the Vela config
+    model:
+      clayer: $AI-Layer$
+      name: TinyCNN
+    simulator:
+      target: SSE-320-U85
 ```
 
-This is the only place the NPU is named. See the CMSIS-Toolbox
-[MLOps information](https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information)
-reference for the full node.
+## 2. CMSIS-Toolbox emits `*.cbuild-mlops.yml`
 
-## 2. CMSIS-Toolbox emits `cbuild-mlops.yml`
-
-Building with `--active SSE-320-U85` makes csolution translate the `mlops:`
-node into `cmsis-executorch-simple.cbuild-mlops.yml`, which carries a
-ready-made Vela command line:
+The `cbuild` command with the option `--active SSE-320-U85` generates the file  `cmsis-executorch-simple.cbuild-mlops.yml`, which contains the Vela command line options:
 
 ```
 --accelerator-config ethos-u85-256 --system-config Ethos_U85_SYS_DRAM_Mid --memory-mode Shared_Sram
 ```
 
-The `--active` flag is what triggers this. Without it the file is not
-generated and the export step has nothing to read — which is why `build.sh`
-always passes it, and why it cannot also pass `--context` (cbuild 2.14.1
-rejects the combination; the csolution's `target-set` selects the context
-instead).
+## 3. `export_model.py` consumes `*.cbuild-mlops.yml`
 
-This file is generated, so it is `.gitignore`d.
+The `export_model.py` script reads `vela.options` from the generated YAML file
+and passes the options to ExecuTorch's `EthosUCompileSpec`. The Python
+implementation therefore contains no hard-coded NPU configuration. Changes to
+the target in the csolution take effect during the next build.
 
-## 3. `export_model.py` consumes it
+The script then quantizes the model, lowers its computation graph to the
+Ethos-U delegate, and generates two artifacts:
 
-The export script parses `vela.options` out of that YAML and hands the flags
-straight to ExecuTorch's `EthosUCompileSpec`. Nothing about the NPU is
-hard-coded in Python — retargeting is a csolution edit, and the next build
-picks it up.
-
-It then quantizes the model, lowers it fully to the Ethos-U delegate, and
-writes two artifacts:
-
-- `model/model.pte` — the ExecuTorch program
-- `ai_layer/model/model_pte.h` — the same bytes as a C array for the firmware
+- `model/model.pte` — the serialized ExecuTorch program
+- `ai_layer/model/model_pte.h` — a C array representation of the program for
+  inclusion in the firmware
 
 ## 4. `gen_components.py` narrows the link
 

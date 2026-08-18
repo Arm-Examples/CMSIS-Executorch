@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Setup Python virtual environment",
+            "type": "shell",
+            "command": "./setup_venv.sh",
+            "windows": {
+                "command": ".\\setup_venv.bat"
+            },
+            "linux": {
+                "command": "./setup_venv.sh"
+            },
+            "osx": {
+                "command": "./setup_venv.sh"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

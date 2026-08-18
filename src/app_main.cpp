@@ -145,5 +145,7 @@ extern "C" int app_main(void) {
   }
 
   printf("Test_result: PASS\n");
+  printf("\0x04");   // EOT to stop FVP simulation
+  fflush(stdout) ;
   return 0;
 }

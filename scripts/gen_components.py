@@ -176,7 +176,8 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
-        render(portable, quantized, cortex_m, args.pack_name, args.description)
+        render(portable, quantized, cortex_m, args.pack_name, args.description),
+        newline="\n",
     )
     print(f"[gen_components] {args.output} (from {pdsc})")
     print(f"  cortex-m: {cortex_m}")
