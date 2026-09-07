@@ -46,7 +46,9 @@ def run_in_venv() -> None:
     except ImportError:
         venv = HERE / ".venv"
         python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-        if not python.is_file() or Path(sys.executable).resolve() == python.resolve():
+        # sys.prefix is the venv directory when running inside it (comparing
+        # interpreter paths does not work: venv symlinks resolve to the base).
+        if not python.is_file() or Path(sys.prefix).resolve() == venv.resolve():
             sys.exit(
                 f"torch is not installed for {sys.executable}.\n"
                 "Create the venv first: ./setup_venv.sh (Linux/macOS) or setup_venv.bat (Windows)"
