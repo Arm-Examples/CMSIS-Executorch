@@ -14,8 +14,8 @@ which is also what its `.pdsc` declares as its download location:
 <url>https://github.com/pytorch/executorch/releases/download/v1.4.0/</url>
 ```
 
-So the normal acquisition routes work, and `./build.sh` (which passes
-`--packs`) takes care of it on a fresh clone. To install it by hand:
+So the normal acquisition routes work, and `cbuild setup ... --packs` takes
+care of it on a fresh clone. To install it by hand:
 
 ```bash
 cpackget add PyTorch::ExecuTorch@1.4.0
@@ -33,14 +33,11 @@ Both must agree. The pin is exact rather than a `@^1.4.0` range because the
 pack's C++ runtime and the Python exporter have to be the *same* ExecuTorch
 version — see [Moving to a new ExecuTorch version](#moving-to-a-new-executorch-version).
 
-`scripts/gen_components.py` reads the installed pack's `.pdsc` out of the pack
-root (`$CMSIS_PACK_ROOT`, or cpackget's default) to find out which operator
-components exist. During a build it is told which version to read: the
-`convert-model` step picks the resolved version out of
+`create_ai_layer.py` reads the installed pack's `.pdsc` out of the pack root
+(`$CMSIS_PACK_ROOT`, or cpackget's default) to find out which operator
+components exist. It reads the version `cbuild setup` resolved, taken from
 `cmsis-executorch-simple.cbuild-pack.yml`, so a pack root holding several
-ExecuTorch versions cannot make it read the wrong one. Run by hand it defaults
-to the newest installed version, and `--pack-path` points it at an unpacked
-pack directory anywhere on disk.
+ExecuTorch versions cannot make it read the wrong one.
 
 ## What is in the pack
 
@@ -54,7 +51,7 @@ pack directory anywhere on disk.
 | `LICENSE` | Upstream BSD-3-Clause (the example code around it is Apache-2.0) |
 
 It is a **source** pack: nothing is prebuilt. Every operator is a selectable
-component, which is what lets `scripts/gen_components.py` narrow the link to
+component, which is what lets `create_ai_layer.py` narrow the link to
 exactly the kernels a given `.pte` needs.
 
 ## Building a pack yourself
@@ -135,17 +132,17 @@ in order:
    for the `torch` and `torchao` versions it expects. Update
    `requirements.txt` (torch) accordingly. See the README's
    [Version pinning](../README.md#version-pinning) table for the current set.
-4. **Rebuild the venv and the project:**
+4. **Rebuild the venv, the AI layer and the project:**
 
    ```bash
    ./setup_venv.sh --recreate
-   ./build.sh                     # may abort once; see below
+   cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85 --packs
+   python3 create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
+   cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85
    ```
 
-If the new version changes the operator set, the first build stops with the
-"operator set changed" notice and rewrites `ai_layer/ai_layer.clayer.yml`.
-That is expected — run `./build.sh` again. See
-[mlops-flow.md](mlops-flow.md#why-the-clayer-cannot-update-in-place) for why.
+   A changed operator set simply shows up in the regenerated
+   `ai_layer/ai_layer.clayer.yml`.
 
 Finally, update the version wherever it appears in prose: `README.md`
 (Prerequisites, Version pinning) and this page.

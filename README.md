@@ -16,8 +16,8 @@ application.
 
 - Exporting an ExecuTorch model for Ethos-U using a Python virtual environment (without requiring Docker).
 - The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
-- Manage NPU and Vela configuration using CMSIS solution project rather duplicating the Python exporter.
-- Generating the model as part of the normal CMSIS-Toolbox build process.
+- Managing the NPU and Vela configuration in the CMSIS solution project rather than duplicating it in the Python exporter.
+- A three-step flow with a clean hand-over from the CMSIS-Toolbox to an MLOps system: the toolbox describes the target in a `*.cbuild-mlops.yml` file, a script turns that into the AI layer, and the toolbox builds the application.
 - Running the finished application on a Corstone-320 FVP simulation model.
 
 ## Prerequisites
@@ -40,15 +40,18 @@ cpackget add PyTorch::ExecuTorch@1.4.0
 
 ## Quick start
 
-The example can be built and run entirely in Keil Studio for VS Code; no
-command-line commands are required.
+The example can be built and run entirely in Keil Studio for VS Code.
 
 1. Install [Keil Studio for VS Code](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) and [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) from the VS Code marketplace.
 2. Clone or download this repository, then open its folder in VS Code.
 3. Before using the example for the first time, select **Terminal > Run Task >
    Setup Python virtual environment**. Wait for the task to create the `.venv`
    environment and install the packages required to export the model.
-4. Use the CMSIS action buttons to build the application, then select **Run** or
+4. Select **Terminal > Run Task > Create AI layer**. This exports the model for
+   the NPU of the active target and writes the `ai_layer/` directory. (The
+   repository ships a generated layer, so this step is only needed after
+   changing the model or the target.)
+5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically.
 
 A successful run prints the Ethos-U configuration, output logits, and a pass
@@ -60,15 +63,17 @@ Ethos-U version info:
     MACs/cc:    256
     Cmd stream: v1
 ExecuTorch Ethos-U85 example: 8864 byte model
-Output: 10 element(s): 0.0187 -0.0204 -0.0645 0.0034 0.0187 ...
+Output: 10 element(s): 0.0082 0.0489 0.0489 -0.0489 0.0857 ...
 Test_result: PASS
 ```
 
 ### Command-line build
 
-The same workflow can be performed from the VS Code Terminal as described below.
+The same workflow from the VS Code Terminal (or any shell with the tools from
+`vcpkg-configuration.json` on the path) is three commands plus the one-time
+venv setup.
 
-#### 1. Create the Python environment
+#### 0. Create the Python environment (once)
 
 On Linux or macOS:
 
@@ -90,37 +95,52 @@ you want a completely new environment.
 > On Windows, enable long-path support or keep the repository close to the drive
 > root. PyTorch packages can otherwise exceed the legacy 260-character path limit.
 
-#### 2. Build the application
+#### 1. Generate the MLOps information
 
 ```bash
-cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85 --packs --update-rte
+cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85 --packs --update-rte
 ```
 
-This command:
+This resolves the packs and the active target and writes
+`cmsis-executorch-simple.cbuild-mlops.yml`: the processor, NPU and Vela
+settings of the target, and the location of the AI layer. (`--packs` and
+`--update-rte` are only needed on a fresh checkout.)
 
-1. Resolves and installs the required CMSIS packs.
-2. Generates the MLOps build information for the selected target.
-3. Quantizes and exports the model for Ethos-U85.
-4. Generates the model's CMSIS component selection.
-5. Compiles and links the embedded application.
+#### 2. Create the AI layer
 
-The resulting image is:
+```bash
+python3 create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
+```
+
+This is the MLOps step. The script reads the NPU and Vela settings from the
+file, quantizes and exports `model/model.py` for that NPU, and writes the
+complete AI layer into `ai_layer/`: the component selection and the model as a
+C array. It runs itself in `.venv` when started with another interpreter (use
+`python` on Windows).
+
+#### 3. Build the application
+
+```bash
+cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85
+```
+
+A plain CMSIS build; no Python is involved. The resulting image is:
 
 ```text
-out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.hex
+out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.axf
 ```
 
-#### 3. Run on the FVP
+#### 4. Run on the FVP
 
 ```bash
 FVP_Corstone_SSE-320 \
     -f board/Corstone-320/fvp_config.txt \
-    -a out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.hex
+    -a out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.axf
 ```
 
 ## How model generation works
 
-The selected target is described by the `mlops:` node in
+The target is described by the `mlops:` node in
 `cmsis-executorch-simple.csolution.yml`:
 
 ```yaml
@@ -135,17 +155,15 @@ mlops:
     name: TinyCNN
 ```
 
-Building with `--active SSE-320-U85` generates
-`cmsis-executorch-simple.cbuild-mlops.yml`. This file contains the resolved
-processor, NPU, and Vela options. `model/export_model.py` reads those options
-and passes them to ExecuTorch's `EthosUCompileSpec`, so the target configuration
-does not need to be duplicated in Python.
+`cbuild setup --active SSE-320-U85` resolves it into
+`cmsis-executorch-simple.cbuild-mlops.yml`, which contains the processor, NPU
+and Vela options. `create_ai_layer.py` reads those options and passes them to
+ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
+duplicated in Python. The script then writes:
 
-The export step produces:
-
-- `model/model.pte`: the ExecuTorch program.
-- `ai_layer/model/model_pte.h`: the same program embedded as a C array.
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
+- `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
+- `ai_layer/model.pte`: the program itself, for inspection.
 
 See [the MLOps flow](documentation/mlops-flow.md) for a detailed walkthrough.
 
@@ -153,32 +171,22 @@ See [the MLOps flow](documentation/mlops-flow.md) for a detailed walkthrough.
 
 The [ExecuTorch CMSIS Pack](https://www.keil.arm.com/packs/executorch-pytorch/)
 provides the runtime, backends, and individual operators as selectable CMSIS
-components. `scripts/gen_components.py` examines the exported `.pte` and
-updates `ai_layer/ai_layer.clayer.yml` so only the required components are
-linked.
-
-CMSIS-Toolbox resolves components before it executes the model-export step. If
-a model change also changes its operator set, the first build updates the
-component list and asks you to build again:
-
-```text
-[run_export] The model's operator set changed: ai_layer.clayer.yml was regenerated.
-[run_export] Re-run the build to compile and link the updated component selection.
-```
-
-Run the same build command a second time to use the new selection.
+components. `create_ai_layer.py` examines the exported program and writes
+`ai_layer/ai_layer.clayer.yml` so only the required components are linked.
+Because the layer is complete before the build starts, a model change that
+changes the operator set needs nothing more than re-running steps 2 and 3.
 
 ## Adapting the example
 
 To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required. The next build regenerates the `.pte`
-and embedded model data.
+model name or input handling as required. Then re-run `create_ai_layer.py` and
+build.
 
 To target another Ethos-U configuration, update the target and `mlops:`
-settings in the CMSIS solution. The generated Vela options then follow that
-configuration automatically. Moving to a different board or reference platform
-also requires the corresponding device pack, board support, memory layout, and
-FVP configuration.
+settings in the CMSIS solution and re-run all three steps. The generated Vela
+options then follow that configuration automatically. Moving to a different
+board or reference platform also requires the corresponding device pack, board
+support, memory layout, and FVP configuration.
 
 When updating ExecuTorch, update the CMSIS pack and Python package versions
 together. More information is available in
@@ -189,19 +197,17 @@ together. More information is available in
 | Path | Purpose |
 |------|---------|
 | `cmsis-executorch-simple.csolution.yml` | Solution, target, and MLOps configuration |
-| `cmsis-executorch-simple.cproject.yml` | Application project and model-conversion build step |
+| `cmsis-executorch-simple.cproject.yml` | Application project: sources plus the Board and AI layers |
 | `model/model.py` | Example TinyCNN model |
-| `model/export_model.py` | Quantizes and delegates the model to Ethos-U |
-| `scripts/run_export.py` | Runs model export and component generation |
-| `scripts/gen_components.py` | Maps model operators to CMSIS components |
-| `ai_layer/ai_layer.clayer.yml` | Generated model-specific component selection |
+| `create_ai_layer.py` | Exports the model for the target and writes the AI layer |
+| `ai_layer/` | Generated: component selection and the embedded model data |
+| `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
 | `src/app_main.cpp` | Loads the model, runs inference, and prints the result |
 | `documentation/` | Detailed MLOps, pack, and cross-platform notes |
 
 ## Known limitations
 
-- A model change that changes the operator set requires two builds.
 - The supplied platform configuration targets Corstone-320 with Ethos-U85;
   another target needs its corresponding platform integration.
 

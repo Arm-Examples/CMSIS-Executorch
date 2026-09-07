@@ -2,7 +2,7 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
-# Create the Python venv used by the model-conversion build step. No Docker.
+# Create the Python venv used by create_ai_layer.py to export the model. No Docker.
 #
 # Runs on Linux, macOS and Windows. The thin wrappers setup_venv.sh and
 # setup_venv.bat just delegate here; everything OS-specific lives in this file.
@@ -27,15 +27,13 @@ VENV_DIR = HERE / ".venv"
 MIN_PYTHON = (3, 10)
 MAX_PYTHON_EXCLUSIVE = (3, 15)
 
-EXECUTORCH_REPO = "https://github.com/pytorch/executorch.git"
-
 
 def venv_python(venv_dir: Path) -> Path:
     """Path to the interpreter inside a venv, on any host OS.
 
     Windows puts it in Scripts/python.exe, everyone else in bin/python. This is
-    the one place that difference is encoded; scripts/run_export.cmake makes the
-    same choice for the build step.
+    the one place that difference is encoded; run_in_venv() in
+    create_ai_layer.py makes the same choice.
     """
     if os.name == "nt":
         return venv_dir / "Scripts" / "python.exe"
@@ -156,15 +154,6 @@ except Exception as exc:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--executorch-ref",
-        metavar="REF",
-        help=(
-            "install executorch from this git ref of pytorch/executorch "
-            "(e.g. release/1.4) instead of the pinned wheel. Builds from "
-            "source: needs CMake and a C++ toolchain, and takes tens of minutes."
-        ),
-    )
-    parser.add_argument(
         "--recreate",
         action="store_true",
         help="delete and rebuild .venv even if it looks usable",
@@ -193,28 +182,9 @@ def main() -> int:
     # directive so pip cannot prefer a nightly torch over the pinned release.
     pip(python, "install", "-r", str(HERE / "requirements.txt"))
 
-    # Pass 2: executorch + torchao. From the PyTorch nightly index (see the
-    # file header), or from a git ref when the caller asked for one.
-    if args.executorch_ref:
-        print(
-            f"\nBuilding executorch from {EXECUTORCH_REPO}@{args.executorch_ref}.\n"
-            "This is a source build: it needs CMake and a C++ toolchain and\n"
-            "takes tens of minutes. Ctrl-C now to use the pinned wheel instead.\n",
-            file=sys.stderr,
-        )
-        pip(python, "install", f"git+{EXECUTORCH_REPO}@{args.executorch_ref}")
-        # The git install brings no torchao pin; take the one 1.4 expects.
-        pip(
-            python,
-            "install",
-            "--index-url",
-            "https://download.pytorch.org/whl/nightly/cpu",
-            "--extra-index-url",
-            "https://pypi.org/simple",
-            "torchao==0.18.0.dev20260715",
-        )
-    else:
-        pip(python, "install", "-r", str(HERE / "requirements-executorch.txt"))
+    # Pass 2: executorch + torchao from the PyTorch nightly index (see the
+    # file header of requirements-executorch.txt).
+    pip(python, "install", "-r", str(HERE / "requirements-executorch.txt"))
 
     # Pass 3: the TOSA serializer, without dependencies. See the header of
     # requirements-arm-tosa.txt for why --no-dependencies is load-bearing.
@@ -233,7 +203,7 @@ def main() -> int:
 
     print()
     print(f"venv ready: {VENV_DIR}")
-    print("The build step invokes this interpreter automatically:")
+    print("create_ai_layer.py runs itself with this interpreter:")
     print(f"  {python}")
     return 0
 
