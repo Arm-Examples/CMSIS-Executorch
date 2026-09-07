@@ -31,6 +31,9 @@ class TinyCNN(nn.Module):
 
 
 def get_model() -> nn.Module:
+    # Fixed seed: the example uses untrained (random) weights, and a fixed seed
+    # keeps the generated AI layer identical from one export to the next.
+    torch.manual_seed(0)
     return TinyCNN().eval()
 
 

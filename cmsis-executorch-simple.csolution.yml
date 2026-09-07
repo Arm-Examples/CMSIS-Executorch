@@ -2,10 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP.
-# The model is exported from PyTorch in a venv (no Docker) and converted to a
-# .pte as a build step. The `mlops:` node makes CMSIS-Toolbox emit
-# `cmsis-executorch-simple.cbuild-mlops.yml`, which the export script consumes
-# to drive Vela -- see model/export_model.py.
+# Three steps build it:
+#
+#   cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85
+#   python create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
+#   cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85
+#
+# The `mlops:` node below makes `cbuild setup` emit the *.cbuild-mlops.yml;
+# create_ai_layer.py reads the NPU and Vela settings from it, exports the model
+# from PyTorch in a venv (no Docker) and writes the AI layer.
 solution:
   created-for: CMSIS-Toolbox@2.14.1
   cdefault:
@@ -47,9 +52,9 @@ solution:
   projects:
     - project: ./cmsis-executorch-simple.cproject.yml
 
-  # MLOps information: exported to cmsis-executorch-simple.cbuild-mlops.yml when
-  # building with `cbuild ... --active SSE-320-U85`. Retarget the NPU here and
-  # the export script (model/export_model.py) picks it up automatically.
+  # MLOps information: exported to cmsis-executorch-simple.cbuild-mlops.yml by
+  # `cbuild setup ... --active SSE-320-U85`. Retarget the NPU here and
+  # create_ai_layer.py picks it up on its next run.
   # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
   mlops:
     description: TinyCNN int8 image classifier for Ethos-U85

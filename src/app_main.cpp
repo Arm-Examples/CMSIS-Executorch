@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Headless ExecuTorch runner for the Corstone-320 / Ethos-U85 example. Loads
-// the .pte embedded by the model-conversion build step (model_pte.h), runs one
+// the .pte embedded by the AI layer (model_pte.h, see create_ai_layer.py), runs one
 // inference on the NPU, and prints the output logits. Built entirely from the
 // PyTorch::ExecuTorch pack's runtime + operator components; the board layer
 // provides main(), stdout and the Ethos-U driver init and then calls app_main.

@@ -8,11 +8,19 @@
             "windows": {
                 "command": ".\\setup_venv.bat"
             },
-            "linux": {
-                "command": "./setup_venv.sh"
+            "options": {
+                "cwd": "${workspaceFolder}"
             },
-            "osx": {
-                "command": "./setup_venv.sh"
+            "problemMatcher": []
+        },
+        {
+            "label": "Create AI layer",
+            "detail": "Export model/model.py for the NPU in cmsis-executorch-simple.cbuild-mlops.yml and write ai_layer/ (run a CMSIS build or 'cbuild setup' first)",
+            "type": "shell",
+            "command": "python3",
+            "args": ["create_ai_layer.py", "cmsis-executorch-simple.cbuild-mlops.yml"],
+            "windows": {
+                "command": "python"
             },
             "options": {
                 "cwd": "${workspaceFolder}"

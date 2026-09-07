@@ -11,11 +11,6 @@
 # below if torchao 0.18.0 has shipped too, and change the executorch line to
 #     executorch==1.4.0
 # then move it into requirements.txt. Nothing else needs to change.
-#
-# To install from the release/1.4 branch head instead of a nightly wheel:
-#     ./setup_venv.sh --executorch-ref release/1.4
-# That builds executorch from source (submodules, CMake, a C++ toolchain, tens
-# of minutes) and is not practical on Windows -- see documentation/versions.md.
 --index-url https://download.pytorch.org/whl/nightly/cpu
 --extra-index-url https://pypi.org/simple
 executorch==1.4.0.dev20260728
