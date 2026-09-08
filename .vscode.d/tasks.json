@@ -40,9 +40,68 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)",
+            "detail": "Programs the ATOC/MRAM stubs with Alif SETOOLS so J-Link can load and debug the M55_HP core. Set SW4 to SEUART, set 'alif.setools.root' in your VS Code settings.",
+            "type": "shell",
+            "command": [
+                "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json';",
+                "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin';",
+                "cd '${config:alif.setools.root}';",
+                "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json';",
+                "./app-write-mram -p ${input:discoverCOM};"
+            ],
+            "windows": {
+                "options": {
+                    "shell": {
+                        "executable": "powershell.exe",
+                        "args": [
+                            "-Command"
+                        ]
+                    }
+                }
+            },
+            "linux": {
+                "options": {
+                    "shell": {
+                        "executable": "/bin/bash",
+                        "args": [
+                            "-c"
+                        ]
+                    }
+                }
+            },
+            "osx": {
+                "options": {
+                    "shell": {
+                        "executable": "/bin/bash",
+                        "args": [
+                            "-c"
+                        ]
+                    }
+                }
+            },
+            "problemMatcher": []
         }
     ],
     "inputs": [
+        {
+            "id": "discoverCOM",
+            "type": "pickString",
+            "description": "Select COM Port for SETOOLS?",
+            "options": [
+                {
+                    "label": "Yes - Enable COM Port Discovery using command option",
+                    "value": "-d"
+                },
+                {
+                    "label": "No - COM port is already selected",
+                    "value": ""
+                }
+            ],
+            "default": ""
+        },
         {
             "id": "setupPythonVersion",
             "type": "promptString",

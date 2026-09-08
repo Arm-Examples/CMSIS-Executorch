@@ -1,0 +1,100 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Alif Ensemble E8 DevKit board bring-up for the Ethos-U85 NPU, running on the
+# Cortex-M55 high-performance (HP) core. Derived from the pack's
+# Boards/DevKit-e8/Layers/M55_HP/Board_HP-U85.clayer.yml and trimmed to what a
+# headless ExecuTorch inference runner needs: device startup, the Secure
+# Enclave services (clocks, pin mux), a UART-backed stdout on the PRG USB
+# connector, and the Ethos-U driver. Camera, display, Ethernet, USB, VIO and
+# the vStream drivers are omitted.
+layer:
+  type: Board
+  description: DevKit-E8 board setup for headless Ethos-U85 inference on M55_HP
+  for-board: Alif Semiconductor::DevKit-E8
+  for-device: Alif Semiconductor::AE822FA0E5597LS0:M55_HP
+  device: :M55_HP
+
+  processor:
+    trustzone: off
+
+  connections:
+    - connect: DevKit-E8 Board
+      provides:
+        - STDIN
+        - STDOUT
+        - STDERR
+        - Heap: 98304
+
+  define:
+    - CMSIS_target_header: \"DevKit-E8.h\"
+    - ETHOSU85
+    # The runner's memory pools (src/app_main.cpp) do not fit the 1 MB DTCM
+    # that the Alif linker scripts use for .bss. Place them in the bulk SRAM0
+    # (4 MB at 0x02000000, NPU-accessible) via the section named here, and
+    # size them for that region; the linker scripts in this layer route the
+    # section there.
+    - APP_POOL_SECTION: \".bss.ai_pool\"
+    - APP_METHOD_POOL_SIZE: 0x100000
+    - APP_TEMP_POOL_SIZE: 0x200000
+
+  packs:
+    - pack: AlifSemiconductor::Ensemble@^2.2.0-0
+    - pack: ARM::CMSIS@^6.2.0
+    - pack: ARM::CMSIS-Compiler@^2.1.0
+    - pack: ARM::ethos-u-core-driver@^1.26.2
+
+  misc:
+    - for-compiler: AC6
+      Link:
+        - '--diag_suppress 6312,6314,6329,6848'
+
+  components:
+    - component: Device:Startup
+
+    - component: BSP:Board Config
+    - component: BSP:DevKit Config&DevKit-e8
+
+    - component: CMSIS:CORE
+
+    - component: CMSIS Driver:USART
+
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDERR:Custom
+    - component: CMSIS-Compiler:STDIN:Custom
+    - component: CMSIS-Compiler:STDOUT:Custom
+
+    - component: Device:SOC Peripherals:MHU
+    - component: Device:SOC Peripherals:PINCONF
+
+    - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
+
+    - component: Services:Retarget IO:STDERR
+    - component: Services:Retarget IO:STDIN
+    - component: Services:Retarget IO:STDOUT
+    - component: Services:Secure Enclave:core&Source
+    - component: Services:Secure Enclave:Initialization Helper&Source
+
+  groups:
+    - group: Board
+      files:
+        - file: ./main.c
+        - file: ./main.h
+        - file: ./DevKit-E8.h
+        - file: ./ethos_setup.c
+        - file: ./retarget_stdio.c
+
+    - group: Ethos Interface
+      files:
+        - file: ./ethosu_cb_dcache.c
+
+  # The pack's linker scripts keep every .bss in DTCM; these copies add the
+  # .bss.ai_pool section in bulk SRAM and a 32 kB main stack.
+  linker:
+    - regions: ./RTE/Device/AE822FA0E5597LS0_M55_HP/app_mem_regions.h
+    - script: ./linker_ac6_mram.sct.src
+      for-compiler: AC6
+    - script: ./linker_gnu_mram.ld.src
+      for-compiler: GCC
+    - script: ./linker_gnu_mram.ld.src
+      for-compiler: CLANG

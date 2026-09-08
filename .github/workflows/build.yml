@@ -85,6 +85,44 @@ jobs:
             out/**/*.elf
             ai_layer/
 
+  # The same solution for the Alif Ensemble E8 DevKit (target-type DevKit-E8).
+  # Build only: the hardware is not in CI. The shipped ai_layer/ is used, so no
+  # venv is needed.
+  build-devkit-e8:
+    name: Build for the Alif Ensemble E8 DevKit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Install tools
+        uses: ARM-software/cmsis-actions/vcpkg@v1
+
+      - name: Activate Arm tool license
+        uses: ARM-software/cmsis-actions/armlm@v1
+
+      - name: Cache packs
+        uses: actions/cache@v6
+        with:
+          key: cmsis-packs
+          path: /home/runner/.cache/arm/packs
+
+      - name: Generate the MLOps information
+        run: cbuild setup ${SOLUTION}.csolution.yml --active DevKit-E8 --packs --update-rte
+
+      - name: Build
+        run: cbuild ${SOLUTION}.csolution.yml --active DevKit-E8
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devkit-e8-build
+          path: |
+            out/**/*.axf
+            out/**/*.hex
+
   # The export flow must work on all three host OSes -- that is the point of a
   # venv-based (rather than Docker-based) model build. No FVP and no Arm
   # license needed, so this is cheap to matrix. Without this job, Windows

@@ -7,10 +7,21 @@ provides the source code components to build the ExecuTorch runtime, required op
 The build process uses the [CMSIS-Toolbox 2.14.1](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
 
 This example application targets the Arm Corstone-320 reference platform with
-an Ethos-U85 NPU. It demonstrates the same overall workflow used for other
-Ethos-U systems: export and quantize a PyTorch model, delegate it to Ethos-U,
-select only the required runtime components, and build it into an embedded
-application.
+an Ethos-U85 NPU, simulated on the Arm FVP, and the
+[Alif Ensemble E8 DevKit](https://alifsemi.com/support/kits/ensemble-e8devkit/),
+real hardware with the same NPU. It demonstrates the same overall workflow used
+for other Ethos-U systems: export and quantize a PyTorch model, delegate it to
+Ethos-U, select only the required runtime components, and build it into an
+embedded application.
+
+| Target-type | Hardware | Run/debug through |
+|-------------|----------|-------------------|
+| `SSE-320-U85` | Corstone-320 (Cortex-M85 + Ethos-U85), FVP | `FVP_Corstone_SSE-320` |
+| `DevKit-E8` | Alif Ensemble E8 DevKit (Cortex-M55 HP core + Ethos-U85) | On-board J-Link, UART console |
+
+The step-by-step setup for the DevKit-E8, from installing Keil Studio to
+exploring the demo, is in the
+[learning path](documentation/learning-path-devkit-e8.md).
 
 ## What the example demonstrates
 
@@ -18,7 +29,8 @@ application.
 - The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
 - Managing the NPU and Vela configuration in the CMSIS solution project rather than duplicating it in the Python exporter.
 - A three-step flow with a clean hand-over from the CMSIS-Toolbox to an MLOps system: the toolbox describes the target in a `*.cbuild-mlops.yml` file, a script turns that into the AI layer, and the toolbox builds the application.
-- Running the finished application on a Corstone-320 FVP simulation model.
+- Running the finished application on a Corstone-320 FVP simulation model or on
+  the Alif Ensemble E8 DevKit, switching between them by target-type only.
 
 ## Prerequisites
 
@@ -60,6 +72,11 @@ The example can be built and run entirely in Keil Studio for VS Code.
    container image (about 100 MB download). On Windows, set `model:` in the
    csolution's target-set back to `FVP_Corstone_SSE-320` (the shim is a bash
    script).
+
+For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
+**Manage Solution** and follow the
+[learning path](documentation/learning-path-devkit-e8.md) for the one-time
+board preparation (SETOOLS, switches, J-Link).
 
 A successful run prints the Ethos-U configuration, output logits, and a pass
 result:
@@ -118,7 +135,8 @@ cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs --updat
 This resolves the packs and the active target and writes
 `cmsis-executorch.cbuild-mlops.yml`: the processor, NPU and Vela
 settings of the target, and the location of the AI layer. (`--packs` and
-`--update-rte` are only needed on a fresh checkout.)
+`--update-rte` are only needed on a fresh checkout.) Use `--active DevKit-E8`
+in this and the following commands to build for the Alif Ensemble E8 DevKit.
 
 #### 2. Create the AI layer
 
@@ -218,14 +236,22 @@ together. More information is available in
 | `ai_layer/` | Generated: component selection and the embedded model data |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
+| `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console) |
+| `.alif/` | SETOOLS configuration and debug stubs for the DevKit-E8 (from the Ensemble pack) |
 | `src/app_main.cpp` | Loads the model, runs inference, and prints the result |
 | `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading |
-| `documentation/` | The MLOps flow in detail; where the ExecuTorch pack comes from |
+| `documentation/` | The MLOps flow in detail; where the ExecuTorch pack comes from; the DevKit-E8 learning path |
 
 ## Known limitations
 
-- The supplied platform configuration targets Corstone-320 with Ethos-U85;
-  another target needs its corresponding platform integration.
+- The supplied platform configurations target Corstone-320 (FVP) and the Alif
+  Ensemble E8 DevKit, both with Ethos-U85; another target needs its
+  corresponding platform integration.
+- The `mlops:` node is solution-wide, so both targets share one exported
+  model. That is correct here because both have an Ethos-U85 with 256 MACs;
+  the Vela system configuration is the Corstone-320 one.
+- The DevKit-E8 layer has been verified to build and link (AC6). Running it on
+  the board still has to be confirmed on hardware.
 
 ## License
 

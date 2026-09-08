@@ -1,8 +1,8 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
-# A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP.
-# Three steps build it:
+# A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP
+# and the Alif Ensemble E8 DevKit (target-type DevKit-E8). Three steps build it:
 #
 #   cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85
 #   python create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
@@ -25,6 +25,12 @@ solution:
     - pack: ARM::CMSIS-NN
     - pack: ARM::CMSIS-Compiler
     - pack: ARM::Cortex_DFP
+    # BSP of the Corstone-320 FVP target. The layer lists it too; naming it
+    # here keeps the mlops: simulator target resolvable when another
+    # target-type is active.
+    - pack: ARM::SSE_320_BSP@1.0.0
+    # DFP + BSP of the Alif Ensemble E8 DevKit target.
+    - pack: AlifSemiconductor::Ensemble@^2.2.0-0
 
   target-types:
     # Corstone-320 with an Ethos-U85 NPU, simulated on the Arm FVP.
@@ -49,6 +55,25 @@ solution:
             model: ${workspaceFolder}/.vscode/fvp.sh
             config-file: board/Corstone-320/fvp_config.txt
             args: "--simlimit 60"
+
+    # Alif Ensemble E8 DevKit: Cortex-M55 high-performance core with the
+    # Ethos-U85 NPU, on real hardware through the on-board J-Link (JTAG).
+    # Program the debug stubs with SETOOLS once before the first debug session;
+    # see documentation/learning-path-devkit-e8.md.
+    - type: DevKit-E8
+      board: Alif Semiconductor::DevKit-E8
+      device: Alif Semiconductor::AE822FA0E5597LS0:M55_HP
+      variables:
+        - Board-Layer: $SolutionDir()$/board/DevKit-E8/Board-U85.clayer.yml
+        - AI-Layer: $SolutionDir()$/ai_layer/ai_layer.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: cmsis-executorch-simple.Debug
+          debugger:
+            name: J-Link Server
+            protocol: jtag        # as in the pack's DevKit-E8 examples
+            clock: 1000000
 
   build-types:
     - type: Debug
