@@ -140,6 +140,7 @@ def render(portable, quantized, cortex_m, pack_name, description) -> str:
         "    - component: Machine Learning:ExecuTorch:Runtime",
         "    - component: Machine Learning:ExecuTorch:Kernel Utils",
         "    - component: Machine Learning:ExecuTorch:Kernel Registration",
+        "    - component: Machine Learning:ExecuTorch:Extension Tensor",
         "    # Ethos-U NPU backend (the model is fully delegated to it).",
         "    - component: Machine Learning:ExecuTorch:Backend EthosU",
     ]
