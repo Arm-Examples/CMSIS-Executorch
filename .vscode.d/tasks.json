@@ -18,6 +18,33 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Setup Python virtual environment (uv)",
+            "type": "shell",
+            "command": "./setup_venv.sh",
+            "windows": {
+                "command": ".\\setup_venv.bat"
+            },
+            "linux": {
+                "command": "./setup_venv.sh"
+            },
+            "osx": {
+                "command": "./setup_venv.sh"
+            },
+            "args": ["--uv", "--python", "${input:setupPythonVersion}"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "setupPythonVersion",
+            "type": "promptString",
+            "description": "Python version for uv (>=3.10,<3.15), e.g. 3.12 or 3.12.10",
+            "default": "3.12"
         }
     ]
 }
