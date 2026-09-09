@@ -22,7 +22,8 @@ application.
 
 ## Prerequisites
 
-- Python `>=3.10,<3.15`.
+- Python `>=3.10,<3.15`, or [uv](https://docs.astral.sh/uv/getting-started/installation/)
+  to obtain Python automatically with the setup wrappers' `--uv` option.
 - [Keil Studio for VS Code](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) from the VS Code marketplace.
 - Tools listed in [`vcpkg-configuration.json`](./vcpkg-configuration.json).
 - Keil Studio manages the required license; the free Keil MDK Community edition can be used for evaluation.
@@ -45,9 +46,13 @@ command-line commands are required.
 
 1. Install [Keil Studio for VS Code](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) and [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) from the VS Code marketplace.
 2. Clone or download this repository, then open its folder in VS Code.
-3. Before using the example for the first time, select **Terminal > Run Task >
-   Setup Python virtual environment**. Wait for the task to create the `.venv`
-   environment and install the packages required to export the model.
+3. Before using the example for the first time, select **Terminal > Run Task**,
+   then **Setup Python virtual environment** to use the installed Python and pip,
+   or **Setup Python virtual environment (uv)** to use uv. The uv task prompts for
+   a Python version (default `3.12`) and requires uv on `PATH`; it can download
+   Python automatically. Wait for the task to create `.venv` and install the
+   packages required to export the model. To change an existing environment's
+   Python version, use the command-line setup with `--recreate` as described below.
 4. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically.
 
@@ -85,6 +90,44 @@ On Windows:
 The setup script creates `.venv/` and installs the packages required to
 quantize and export the model. It is safe to run again; use `--recreate` when
 you want a completely new environment.
+
+By default, setup uses Python's built-in `venv` and installs packages with pip.
+To use [uv](https://docs.astral.sh/uv/getting-started/installation/), install it
+on your `PATH`, then pass `--uv`. Add `--python VERSION` to select the Python
+version for the environment:
+
+```bash
+# Linux/macOS
+./setup_venv.sh --uv --python 3.12
+```
+
+```powershell
+# Windows
+.\setup_venv.bat --uv --python 3.12
+```
+
+If Python is already available, you can also invoke the Python script directly:
+
+```bash
+python setup_venv.py --uv --python 3.12
+```
+
+`--uv` creates the environment with `uv venv` and installs all packages with
+`uv pip`. `--python` requires `--uv` and accepts a major/minor version such as
+`3.12`, or an exact patch version such as `3.12.10`, within `>=3.10,<3.15`.
+With `--uv`, both wrappers use `uv run` to launch the setup script, so no
+preinstalled Python or working `python` command is needed. uv can download the
+requested interpreter if needed. Without `--python`, uv selects a supported
+Python version for the launcher, and a new environment uses that version.
+The launcher runs in an isolated environment so `--recreate` can safely replace
+`.venv`. Without `--uv`, the `PYTHON` environment variable overrides the wrapper's
+Python launcher as before.
+
+An existing usable `.venv` is reused. To change its Python version, add
+`--recreate`, for example `./setup_venv.sh --uv --python 3.12 --recreate`
+(or `.\setup_venv.bat --uv --python 3.12 --recreate` on Windows).
+These options can also be combined with `--executorch-ref REF` to install
+ExecuTorch from a Git ref. Run either wrapper with `--help` for all options.
 
 > [!Note]
 > On Windows, enable long-path support or keep the repository close to the drive
