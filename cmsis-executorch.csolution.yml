@@ -81,6 +81,17 @@ solution:
             clock: 4000000
             start-pname: M55_HP
 
+  misc:
+    # CMSIS-Toolbox 2.14.1 passes -mfpu=fpv5-sp-d16 to Clang for the Cortex-M85
+    # and M55, a single-precision FPU on cores with a double-precision one and MVE;
+    # LLVM crashes on some kernels with that combination. The later option
+    # wins, so name the M85's FPU explicitly (newer toolboxes leave it to -mcpu).
+    - for-compiler: CLANG
+      C-CPP:
+        - -mfpu=fp-armv8-fullfp16-d16
+      ASM:
+        - -mfpu=fp-armv8-fullfp16-d16
+
   build-types:
     - type: Debug
       debug: on
