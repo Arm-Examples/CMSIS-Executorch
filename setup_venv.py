@@ -112,9 +112,7 @@ def check_venv_python(python: Path, requested: tuple[int, ...] | None) -> None:
 
 def pip(python: Path, *args: str, uv: str | None = None, env: dict[str, str] | None = None) -> None:
     if uv:
-        # Match pip's selection across PyPI and the PyTorch nightly index:
-        # uv's default first-index strategy can hide the pinned nightly wheels.
-        cmd = [uv, "pip", *args, "--python", str(python), "--index-strategy", "unsafe-best-match"]
+        cmd = [uv, "pip", *args, "--python", str(python)]
     else:
         cmd = [str(python), "-m", "pip", *args]
     print(f"+ {' '.join(cmd)}", flush=True)
@@ -195,15 +193,10 @@ def main() -> int:
     if not uv:
         pip(python, "install", "--upgrade", "pip")
 
-    # Pass 1: everything that resolves from PyPI. Kept free of any index
-    # directive so pip cannot prefer a nightly torch over the pinned release.
+    # Pass 1: everything that resolves from PyPI.
     pip(python, "install", "-r", str(HERE / "requirements.txt"), uv=uv)
 
-    # Pass 2: executorch + torchao from the PyTorch nightly index (see the
-    # file header of requirements-executorch.txt).
-    pip(python, "install", "-r", str(HERE / "requirements-executorch.txt"), uv=uv)
-
-    # Pass 3: the TOSA serializer, without dependencies. See the header of
+    # Pass 2: the TOSA serializer, without dependencies. See the header of
     # requirements-arm-tosa.txt for why --no-deps is load-bearing.
     # CMAKE_POLICY_VERSION_MINIMUM keeps an sdist fallback building under CMake 4.
     env = dict(os.environ, CMAKE_POLICY_VERSION_MINIMUM="3.5")

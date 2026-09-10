@@ -1,15 +1,15 @@
-# Python packages for the model export that resolve from PyPI.
+# Python packages for the model export, all from PyPI. setup_venv.py installs
+# this file first and then requirements-arm-tosa.txt (which needs --no-deps).
 #
-# torch is pinned here rather than left to executorch: executorch deliberately
-# declares no torch dependency ("consumers bring their own" -- see
-# _base_dependencies() in executorch's setup.py), so the pin has to live on our
-# side. ExecuTorch 1.4 targets torch 2.13.0; see install_requirements.py on the
-# release/1.4 branch. Earlier torch releases are not compatible with 1.4.
+# executorch, torch and torchao must match: a .pte exported by one ExecuTorch
+# version only loads in the runtime of the same version, and that runtime is
+# the PyTorch::ExecuTorch@1.4.1 pack pinned in the csolution. ExecuTorch 1.4.1
+# targets torch 2.13.0 and torchao 0.18.0 (install_requirements.py on the
+# release/1.4 branch); prebuilt wheels exist for Linux, macOS and Windows,
+# Python 3.10 to 3.14.
+executorch==1.4.1
 torch==2.13.0
+torchao==0.18.0
 
 # Vela, the Ethos-U compiler. Same pin as executorch's `ethos_u` extra.
 ethos-u-vela==5.1.0
-
-# executorch and torchao come from the PyTorch nightly index and therefore live
-# in requirements-executorch.txt; the TOSA serializer needs --no-deps and lives
-# in requirements-arm-tosa.txt. setup_venv.py installs all three in order.

@@ -42,14 +42,14 @@ the first debug session, is the [getting-started README](../README.md).
 The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) can be optionally installed manually with:
 
 ```bash
-cpackget add PyTorch::ExecuTorch@1.4.0
+cpackget add PyTorch::ExecuTorch@1.4.1
 ```
 
 > [!Note]
 > The pack and Python exporter versions must match, as the generated `.pte`
-> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.4.0`.
-> The matching wheel is `executorch==1.4.0.dev20260728` from the PyTorch
-> nightly index, pinned in `requirements-executorch.txt`.
+> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.4.1`.
+> The matching wheel is `executorch==1.4.1` from PyPI, pinned in
+> `requirements.txt`.
 
 ## Quick start
 

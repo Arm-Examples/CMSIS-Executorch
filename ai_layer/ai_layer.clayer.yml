@@ -6,7 +6,7 @@ layer:
   description: TinyCNN int8 image classifier for Ethos-U85
 
   packs:
-    - pack: PyTorch::ExecuTorch
+    - pack: PyTorch::ExecuTorch@1.4.1
 
   define:
     - ET_LOG_ENABLED: 0

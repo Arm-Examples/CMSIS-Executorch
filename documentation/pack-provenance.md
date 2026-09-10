@@ -11,14 +11,14 @@ The pack is published as an asset of the matching ExecuTorch GitHub release,
 which is also what its `.pdsc` declares as its download location:
 
 ```xml
-<url>https://github.com/pytorch/executorch/releases/download/v1.4.0/</url>
+<url>https://github.com/pytorch/executorch/releases/download/v1.4.1/</url>
 ```
 
 So the normal acquisition routes work, and `cbuild setup ... --packs` takes
 care of it on a fresh clone. To install it by hand:
 
 ```bash
-cpackget add PyTorch::ExecuTorch@1.4.0
+cpackget add PyTorch::ExecuTorch@1.4.1
 ```
 
 The version is pinned exactly, in `cmsis-executorch.csolution.yml` and
@@ -26,10 +26,10 @@ The version is pinned exactly, in `cmsis-executorch.csolution.yml` and
 
 ```yaml
 packs:
-  - pack: PyTorch::ExecuTorch@1.4.0
+  - pack: PyTorch::ExecuTorch@1.4.1
 ```
 
-Both must agree. The pin is exact rather than a `@^1.4.0` range because the
+Both must agree. The pin is exact rather than a `@^1.4.1` range because the
 pack's C++ runtime and the Python exporter have to be the *same* ExecuTorch
 version — see [Moving to a new ExecuTorch version](#moving-to-a-new-executorch-version).
 
@@ -127,12 +127,10 @@ in order:
    build one yourself (above) if the version is not published.
 2. **Update both pins** — `PyTorch::ExecuTorch@<new>` in the csolution and in
    the cproject.
-3. **Update the Python pins**: `executorch` and `torchao` in
-   `requirements-executorch.txt`, `torch` in `requirements.txt`, following the
-   new release's `install_requirements.py`; `requirements-arm-tosa.txt` (the
-   TOSA serializer and its flatbuffers pin) only changes when the Arm backend
-   asks for it. The headers of the three files explain why the pins are split
-   the way they are.
+3. **Update the Python pins**: `executorch`, `torch` and `torchao` in
+   `requirements.txt`, following the new release's `install_requirements.py`;
+   `requirements-arm-tosa.txt` (the TOSA serializer and its flatbuffers pin)
+   only changes when the Arm backend's `requirements-arm-tosa.txt` does.
 4. **Rebuild the venv, the AI layer and the project:**
 
    ```bash
