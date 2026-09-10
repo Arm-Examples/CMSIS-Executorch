@@ -33,6 +33,15 @@ jobs:
       - name: Activate Arm tool license
         uses: ARM-software/cmsis-actions/armlm@v1
 
+      # The FVP loads the runner's libpython3.11, whose standard library is
+      # not where that build's prefix says; the model then dies at start-up
+      # with "Fatal Python error: init_fs_encoding". PYTHONHOME (set on the
+      # FVP step only) points it at a complete Python 3.11.
+      - name: Set up Python 3.11 for the FVP
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Cache packs
         uses: actions/cache@v6
         with:
@@ -60,6 +69,8 @@ jobs:
         run: cbuild ${SOLUTION}.csolution.yml --active ${TARGET}
 
       - name: Run on the FVP
+        env:
+          PYTHONHOME: ${{ env.pythonLocation }}
         run: |
           IMAGE=$(find out -name "${SOLUTION}.axf" -o -name "${SOLUTION}.elf" | head -1)
           echo "Running ${IMAGE}"
@@ -140,5 +151,6 @@ jobs:
           # flatbuffers must stay at 24.3.25: tosa-tools wants 25.2.10 and is
           # installed --no-deps precisely to stop that. See
           # requirements-arm-tosa.txt.
-          "${PY}" -m pip show flatbuffers | grep -q "Version: 24.3.25" \
+          # No grep -q: with pipefail, grep closing the pipe early fails the step.
+          "${PY}" -m pip show flatbuffers | grep "Version: 24.3.25" \
               || { echo "::error::flatbuffers pin regressed"; exit 1; }
