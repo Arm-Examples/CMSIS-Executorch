@@ -94,7 +94,8 @@ On Windows:
 
 The setup script creates `.venv/` and installs the packages required to
 quantize and export the model. It is safe to run again; use `--recreate` when
-you want a completely new environment.
+you want a completely new environment. The wrappers use `python3` (`python` on
+Windows); point them at another interpreter with `PYTHON=python3.12 ./setup_venv.sh`.
 
 > [!Note]
 > On Windows, enable long-path support or keep the repository close to the drive
@@ -209,7 +210,7 @@ together. More information is available in
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
 | `src/app_main.cpp` | Loads the model, runs inference, and prints the result |
-| `documentation/` | Detailed MLOps, pack, and cross-platform notes |
+| `documentation/` | The MLOps flow in detail; where the ExecuTorch pack comes from |
 
 ## Known limitations
 

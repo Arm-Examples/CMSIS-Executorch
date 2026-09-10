@@ -4,13 +4,9 @@
 # pinned in requirements.txt. setup_venv.py installs this file on its own.
 #
 # ExecuTorch 1.4.0 is not on PyPI yet (the newest published release is 1.3.1).
-# These wheels are cut from the same release/1.4 branch the vendored CMSIS pack
-# was built from, and are prebuilt for Linux, macOS and Windows.
-#
-# WHEN 1.4.0 IS PUBLISHED: delete the --index-url line and the torchao pin
-# below if torchao 0.18.0 has shipped too, and change the executorch line to
-#     executorch==1.4.0
-# then move it into requirements.txt. Nothing else needs to change.
+# These wheels are cut from the same release/1.4 branch as the
+# PyTorch::ExecuTorch@1.4.0 pack, and are prebuilt for Linux, macOS and Windows.
+# Once 1.4.0 is on PyPI, `executorch==1.4.0` can move into requirements.txt.
 --index-url https://download.pytorch.org/whl/nightly/cpu
 --extra-index-url https://pypi.org/simple
 executorch==1.4.0.dev20260728

@@ -44,6 +44,7 @@ resolves it for the active target and writes
 
 ```yaml
 cbuild-mlops:
+  generated-by: csolution version 2.14.1+p38-gf512b381
   description: TinyCNN int8 image classifier for Ethos-U85
   processor:
     type: Cortex-M85
@@ -56,9 +57,21 @@ cbuild-mlops:
     name: TinyCNN
   simulator:
     active: SSE-320-U85
-    model: FVP_Corstone_SSE-320
+    cbuild-run: out/cmsis-executorch+SSE-320-U85.cbuild-run.yml
+    output:
+      - file: out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
+        type: elf
+    model: ${workspaceFolder}/.vscode/fvp.sh
     config-file: board/Corstone-320/fvp_config.txt
 ```
+
+The SSE-320 device family pack declares no NPU, so `npu:` is written out in
+full here. A device pack that does (the Alif Ensemble pack, for one) supplies
+the NPU type, the MAC count and its own Vela configuration file, and the
+toolbox then also emits `npu.macs`, `vela.ini` and `--accelerator-config`.
+The `simulator:` section is what a test runner needs to execute the image
+on the FVP; the CMSIS-Toolbox from vcpkg (2.14.1) does not emit it yet, the
+Keil Studio extension 1.70.0 does.
 
 This is the hand-over point to the MLOps side: everything a model-export
 pipeline needs to know about the target is in this one file, and nothing in it
@@ -95,10 +108,9 @@ Everything else in the pack is never compiled, let alone linked.
 ## 3. `cbuild` builds the application
 
 `cbuild cmsis-executorch.csolution.yml --active SSE-320-U85` is a plain
-CMSIS build. The cproject knows nothing about the model: it lists the
-application source and the two layers, and the AI layer contributes both the
-component selection and the model data. There is no `executes:` node and no
-build-time Python.
+CMSIS build without any Python. The cproject knows nothing about the model: it
+lists the application source and the two layers, and the AI layer contributes
+both the component selection and the model data.
 
 Because the layer is complete before CMSIS-Toolbox resolves components, a model
 change that changes the operator set is just another run of step 2 followed by

@@ -1,9 +1,9 @@
 # Where the ExecuTorch CMSIS pack comes from
 
-The `PyTorch::ExecuTorch` pack used by this branch is **installed into your
-CMSIS pack root**, like any other pack — nothing about it is vendored into this
-repository. This page explains where it comes from, how to build one yourself,
-and how to move to a newer ExecuTorch version.
+The `PyTorch::ExecuTorch` pack is installed into your CMSIS pack root like
+any other pack; nothing of it lives in this repository. This page explains
+where it comes from, how to build one yourself, and how to move to a newer
+ExecuTorch version.
 
 ## Where it comes from
 
@@ -130,8 +130,8 @@ in order:
 3. **Update the Python pin** in `requirements-executorch.txt` to the matching
    `executorch` version, and check the new release's `install_requirements.py`
    for the `torch` and `torchao` versions it expects. Update
-   `requirements.txt` (torch) accordingly. See the README's
-   [Version pinning](../README.md#version-pinning) table for the current set.
+   `requirements.txt` (torch) accordingly. The headers of the three
+   `requirements*.txt` files explain why the pins are split the way they are.
 4. **Rebuild the venv, the AI layer and the project:**
 
    ```bash
@@ -145,4 +145,4 @@ in order:
    `ai_layer/ai_layer.clayer.yml`.
 
 Finally, update the version wherever it appears in prose: `README.md`
-(Prerequisites, Version pinning) and this page.
+(Prerequisites) and this page.
