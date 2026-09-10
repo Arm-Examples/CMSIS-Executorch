@@ -52,7 +52,12 @@ The example can be built and run entirely in Keil Studio for VS Code.
    repository ships a generated layer, so this step is only needed after
    changing the model or the target.)
 5. Use the CMSIS action buttons to build the application, then select **Run** or
-   **Debug**. Keil Studio starts the Corstone-320 FVP automatically.
+   **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
+   where Arm ships no FVP build, `.vscode/fvp.sh` runs the model in Docker:
+   Docker Desktop must be running, and the first Run or Debug builds the
+   container image (about 100 MB download). On Windows, set `model:` in the
+   csolution's target-set back to `FVP_Corstone_SSE-320` (the shim is a bash
+   script).
 
 A successful run prints the Ethos-U configuration, output logits, and a pass
 result:

@@ -40,9 +40,15 @@ solution:
             - project-context: cmsis-executorch.Debug
           debugger:
             name: Arm-FVP
-            model: FVP_Corstone_SSE-320
+            # The model is its own GDB server (plugins/GDBServer.so, MDK FVP
+            # models 11.32.23+). fvp.sh resolves that plugin when VS Code was
+            # not started from a `vcpkg activate` shell, line-buffers the
+            # model's stdout so the debug adapter sees the "Listening" banner,
+            # and on macOS runs the model in Docker (Arm ships no macOS build).
+            # On Windows point this straight at FVP_Corstone_SSE-320.exe.
+            model: ${workspaceFolder}/.vscode/fvp.sh
             config-file: board/Corstone-320/fvp_config.txt
-            args: "--simlimit 60 "
+            args: "--simlimit 60"
 
   build-types:
     - type: Debug

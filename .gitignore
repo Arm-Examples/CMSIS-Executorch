@@ -88,7 +88,13 @@ dkms.conf
 # Local support-ticket material (logs, screenshots); never part of the example.
 support-cases/
 
-# Editor / container config. The FVP run/debug wiring that lives in these
-# directories is carried by the Codespaces branch, not by this one.
-.vscode/
-.devcontainer/
+# Editor config. The CMSIS Solution extension regenerates tasks.json,
+# settings.json and cmsis.json; only the FVP run/debug wiring is kept: the
+# model shim + its Dockerfile, and launch.json, whose Arm-FVP launch config is
+# "manual" (see the comment in it). The leading negation overrides a global
+# excludes file that ignores every .vscode directory.
+!.vscode/
+.vscode/*
+!.vscode/fvp.sh
+!.vscode/fvp.Dockerfile
+!.vscode/launch.json
