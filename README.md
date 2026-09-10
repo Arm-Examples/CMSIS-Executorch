@@ -14,7 +14,7 @@ application.
 
 ## What the example demonstrates
 
-- Exporting an ExecuTorch model for Ethos-U using a Python virtual environment (without requiring Docker).
+- Exporting an ExecuTorch model for Ethos-U from a Python virtual environment.
 - The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
 - Managing the NPU and Vela configuration in the CMSIS solution project rather than duplicating it in the Python exporter.
 - A three-step flow with a clean hand-over from the CMSIS-Toolbox to an MLOps system: the toolbox describes the target in a `*.cbuild-mlops.yml` file, a script turns that into the AI layer, and the toolbox builds the application.
@@ -37,6 +37,8 @@ cpackget add PyTorch::ExecuTorch@1.4.0
 > [!Note]
 > The pack and Python exporter versions must match, as the generated `.pte`
 > format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.4.0`.
+> The matching wheel is `executorch==1.4.0.dev20260728` from the PyTorch
+> nightly index, pinned in `requirements-executorch.txt`.
 
 ## Quick start
 
@@ -112,13 +114,14 @@ version of an existing environment.
 #### 1. Generate the MLOps information
 
 ```bash
-cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs --update-rte
+cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs
 ```
 
 This resolves the packs and the active target and writes
 `cmsis-executorch.cbuild-mlops.yml`: the processor, NPU and Vela
-settings of the target, and the location of the AI layer. (`--packs` and
-`--update-rte` are only needed on a fresh checkout.)
+settings of the target, and the location of the AI layer. (`--packs`
+installs missing packs and is only needed on a fresh checkout; the layers'
+RTE configuration is committed, so no `--update-rte` is required.)
 
 #### 2. Create the AI layer
 
@@ -147,10 +150,14 @@ out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 #### 4. Run on the FVP
 
 ```bash
-FVP_Corstone_SSE-320 \
-    -f board/Corstone-320/fvp_config.txt \
+.vscode/fvp.sh \
+    -f board/Corstone-320/fvp_config.txt --simlimit 60 \
     -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
+
+`.vscode/fvp.sh` is the model command the Run and Debug buttons use too; on
+Linux and Windows `FVP_Corstone_SSE-320` can be called directly with the same
+arguments.
 
 ## How model generation works
 
@@ -193,9 +200,11 @@ changes the operator set needs nothing more than re-running steps 2 and 3.
 ## Adapting the example
 
 To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required. `get_calibration_inputs()` returns
-the samples the quantizer is calibrated with; give it representative data for
-a trained model. Then re-run `create_ai_layer.py` and build.
+model name or input handling as required: `INPUT_SHAPE` and
+`get_model(input_shape)` define the input, and
+`get_calibration_inputs(input_shape, calibration_samples)` returns the samples
+the quantizer is calibrated with; give it representative data for a trained
+model. Then re-run `create_ai_layer.py` and build.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
@@ -217,10 +226,13 @@ together. More information is available in
 | `create_ai_layer.py` | Exports the model for the target and writes the AI layer |
 | `ai_layer/` | Generated: component selection and the embedded model data |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
+| `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer) merged by the CMSIS Solution extension |
+| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile` | The FVP model command used by Run and Debug; runs the model in Docker on macOS |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
-| `src/app_main.cpp` | Loads the model, runs inference, and prints the result |
-| `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading |
-| `documentation/` | The MLOps flow in detail; where the ExecuTorch pack comes from |
+| `src/app_main.cpp` | Loads the model, runs inference, and prints the result; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
+| `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading (BSD-3-Clause, `src/LICENSE-ExecuTorch`) |
+| `documentation/mlops-flow.md` | The MLOps flow in detail |
+| `documentation/pack-provenance.md` | Where the ExecuTorch pack comes from, how to update it |
 
 ## Known limitations
 
@@ -230,7 +242,8 @@ together. More information is available in
 ## License
 
 The example code is licensed under Apache-2.0; see `LICENSE`. ExecuTorch and
-`src/arm_embedded_module.*`, which is derived from it, use a BSD-3-Clause license.
+`src/arm_embedded_module.*`, which is derived from it, use a BSD-3-Clause
+license; see `src/LICENSE-ExecuTorch`.
 
 ## References
 

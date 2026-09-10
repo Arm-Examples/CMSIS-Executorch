@@ -1,4 +1,4 @@
-# Python packages for the model export that resolve from PyPI (venv, no Docker).
+# Python packages for the model export that resolve from PyPI.
 #
 # torch is pinned here rather than left to executorch: executorch deliberately
 # declares no torch dependency ("consumers bring their own" -- see

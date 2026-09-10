@@ -127,11 +127,12 @@ in order:
    build one yourself (above) if the version is not published.
 2. **Update both pins** — `PyTorch::ExecuTorch@<new>` in the csolution and in
    the cproject.
-3. **Update the Python pin** in `requirements-executorch.txt` to the matching
-   `executorch` version, and check the new release's `install_requirements.py`
-   for the `torch` and `torchao` versions it expects. Update
-   `requirements.txt` (torch) accordingly. The headers of the three
-   `requirements*.txt` files explain why the pins are split the way they are.
+3. **Update the Python pins**: `executorch` and `torchao` in
+   `requirements-executorch.txt`, `torch` in `requirements.txt`, following the
+   new release's `install_requirements.py`; `requirements-arm-tosa.txt` (the
+   TOSA serializer and its flatbuffers pin) only changes when the Arm backend
+   asks for it. The headers of the three files explain why the pins are split
+   the way they are.
 4. **Rebuild the venv, the AI layer and the project:**
 
    ```bash
@@ -144,5 +145,6 @@ in order:
    A changed operator set simply shows up in the regenerated
    `ai_layer/ai_layer.clayer.yml`.
 
-Finally, update the version wherever it appears in prose: `README.md`
-(Prerequisites) and this page.
+Finally, update the version wherever it appears in prose: the README
+(Prerequisites and the pack-version note), the csolution header comment and
+this page.
