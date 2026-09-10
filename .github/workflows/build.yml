@@ -45,7 +45,7 @@ jobs:
       - name: Cache packs
         uses: actions/cache@v6
         with:
-          key: cmsis-packs
+          key: cmsis-packs-${{ hashFiles('*.csolution.yml') }}
           path: /home/runner/.cache/arm/packs
 
       # torch + executorch is a multi-gigabyte install and otherwise dominates
@@ -60,7 +60,7 @@ jobs:
         run: ./setup_venv.sh
 
       - name: Generate the MLOps information
-        run: cbuild setup ${SOLUTION}.csolution.yml --active ${TARGET} --packs --update-rte
+        run: cbuild setup ${SOLUTION}.csolution.yml --active ${TARGET} --packs
 
       - name: Create the AI layer
         run: python3 create_ai_layer.py ${SOLUTION}.cbuild-mlops.yml
