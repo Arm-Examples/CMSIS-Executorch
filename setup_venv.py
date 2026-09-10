@@ -147,7 +147,10 @@ def main() -> int:
         "--python",
         metavar="VERSION",
         type=python_version,
-        help="Python version for uv, e.g. 3.12 or 3.12.10 (needs --uv; default: this interpreter)",
+        help=(
+            "Python version for uv, e.g. 3.12 or 3.12.10 (needs --uv; default: the "
+            "interpreter running this script, or uv's own pick through the wrappers)"
+        ),
     )
     parser.add_argument(
         "--recreate",
