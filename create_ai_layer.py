@@ -113,21 +113,24 @@ def export_model(spec) -> bytes:
     from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
 
     sys.path.insert(0, str(HERE / "model"))
-    from model import get_example_inputs, get_model
+    from model import get_calibration_inputs, get_model
 
-    model, inputs = get_model(), get_example_inputs()
-    graph = torch.export.export(model, inputs).module()
+    model, samples = get_model(), get_calibration_inputs()
+    example = (samples[0],)
+    graph = torch.export.export(model, example).module()
 
     # Quantize the whole graph so the partitioner can move every node into the
     # Ethos-U delegate; only a float<->int8 boundary stays on the CPU.
     quantizer = EthosUQuantizer(spec)
     quantizer.set_global(get_symmetric_quantization_config(is_per_channel=True))
     prepared = prepare_pt2e(graph, quantizer)
-    prepared(*inputs)  # calibrate
+    with torch.no_grad():
+        for sample in samples:
+            prepared(sample)  # calibrate
     quantized = convert_pt2e(prepared)
 
     edge = to_edge_transform_and_lower(
-        torch.export.export(quantized, inputs),
+        torch.export.export(quantized, example),
         partitioner=[EthosUPartitioner(spec)],
         compile_config=EdgeCompileConfig(_check_ir_validity=False),
     )

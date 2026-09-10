@@ -69,8 +69,8 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8864 byte model
-Output: 10 element(s): 0.0082 0.0489 0.0489 -0.0489 0.0857 ...
+ExecuTorch Ethos-U85 example: 8832 byte model
+Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
 Test_result: PASS
 ```
 
@@ -193,8 +193,9 @@ changes the operator set needs nothing more than re-running steps 2 and 3.
 ## Adapting the example
 
 To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required. Then re-run `create_ai_layer.py` and
-build.
+model name or input handling as required. `get_calibration_inputs()` returns
+the samples the quantizer is calibrated with; give it representative data for
+a trained model. Then re-run `create_ai_layer.py` and build.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
