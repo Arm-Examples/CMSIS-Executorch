@@ -57,7 +57,7 @@ solution:
             args: "--simlimit 60"
 
     # Alif Ensemble E8 DevKit: Cortex-M55 high-performance core with the
-    # Ethos-U85 NPU, on real hardware through the on-board J-Link (JTAG).
+    # Ethos-U85 NPU, on real hardware through the on-board J-Link (SWD).
     # Program the debug stubs with SETOOLS once before the first debug session;
     # see documentation/learning-path-devkit-e8.md.
     - type: DevKit-E8
@@ -72,8 +72,14 @@ solution:
             - project-context: cmsis-executorch-simple.Debug
           debugger:
             name: J-Link Server
-            protocol: jtag        # as in the pack's DevKit-E8 examples
-            clock: 1000000
+            # SWD at 4 MHz is the pack's <debugProbe> setting for DevKit-E8.
+            # Alif's examples use JTAG at 1 MHz, but the generated "CMSIS Load"
+            # task then blocks on JLinkExe's interactive JTAG-chain prompt, and
+            # the DPv3 stays in SWD mode once anything has used SWD until the
+            # board is power-cycled, so JTAG connects fail with "TDO is constant high".
+            protocol: swd
+            clock: 4000000
+            start-pname: M55_HP
 
   build-types:
     - type: Debug

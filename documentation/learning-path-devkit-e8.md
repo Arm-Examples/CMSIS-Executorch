@@ -278,7 +278,8 @@ program holds the port.
    (bundled with Keil Studio) on the PRG USB port at **115200** baud, 8N1.
    Any terminal program works as well.
 2. In the CMSIS view, click **Debug** (or **Run**). Keil Studio starts the
-   J-Link GDB server (JTAG, 1 MHz, as in Alif's own DevKit-E8 examples), loads
+   J-Link GDB server (SWD, 4 MHz, the probe settings the pack's board
+   description lists), loads
    the image into MRAM and stops at `main`. Continue with F5.
 3. The console shows the Ethos-U banner, the model size, the output logits
    and the pass marker:
