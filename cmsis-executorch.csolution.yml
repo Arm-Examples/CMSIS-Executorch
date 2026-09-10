@@ -69,7 +69,7 @@ solution:
       target-set:
         - set:
           images:
-            - project-context: cmsis-executorch-simple.Debug
+            - project-context: cmsis-executorch.Debug
           debugger:
             name: J-Link Server
             # SWD at 4 MHz is the pack's <debugProbe> setting for DevKit-E8.
@@ -96,12 +96,18 @@ solution:
   mlops:
     description: TinyCNN int8 image classifier for Ethos-U85
     npu:
-      type: Ethos-U85
+      type: Ethos-U85 # explicit: the Ensemble pack lists an Ethos-U55 first
     vela:
-      system: Ethos_U85_SYS_DRAM_Mid # system-config from the Vela config
-      memory: Shared_Sram # memory-mode from the Vela config
+      # With the Ensemble pack in the solution, cbuild setup copies its Vela
+      # configuration to .cmsis/ensemble_vela.ini and emits it, together with
+      # --accelerator-config ethos-u85-256, for both targets. These names
+      # come from that file (the FVP's Ethos_U85_SYS_DRAM_Mid is not in it).
+      system: Ethos_U85_SRAM_MRAM
+      memory: Shared_Sram
     model:
       clayer: $AI-Layer$
       name: TinyCNN
+    hardware:
+      target: DevKit-E8 # named explicitly: the released 2.14.1 detects no hardware target
     simulator:
       target: SSE-320-U85

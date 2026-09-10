@@ -43,7 +43,7 @@ int8, delegates it to the Ethos-U85 and embeds the resulting ExecuTorch
 program into a CMSIS-based firmware image. The firmware runs one inference on
 the NPU and prints the output logits on the serial console.
 
-Everything is driven by the CMSIS solution `cmsis-executorch-simple.csolution.yml`:
+Everything is driven by the CMSIS solution `cmsis-executorch.csolution.yml`:
 
 - The **`mlops:` node** describes the NPU and its Vela settings. `cbuild setup`
   turns it into a `*.cbuild-mlops.yml` file.
@@ -201,7 +201,7 @@ plays no role here.
    `ARM::SSE_320_BSP`. From a terminal, the same happens with:
 
    ```bash
-   cbuild setup cmsis-executorch-simple.csolution.yml --active DevKit-E8 --packs --update-rte
+   cbuild setup cmsis-executorch.csolution.yml --active DevKit-E8 --packs --update-rte
    ```
 
 4. In the CMSIS view, open **Manage Solution** and select the target-type
@@ -227,7 +227,7 @@ step are the **Build** button of the CMSIS view; the middle step is a task.
 
 1. **Generate the MLOps information.** Click **Build** once (or run
    `cbuild setup`). This resolves the target and writes
-   `cmsis-executorch-simple.cbuild-mlops.yml`. With the shipped AI layer the
+   `cmsis-executorch.cbuild-mlops.yml`. With the shipped AI layer the
    build already succeeds here.
 2. **Create the AI layer** (only after changing the model or the `mlops:`
    node). Run **Terminal > Run Task > Create AI layer**. The script exports
@@ -238,12 +238,12 @@ step are the **Build** button of the CMSIS view; the middle step is a task.
 From a terminal:
 
 ```bash
-cbuild setup cmsis-executorch-simple.csolution.yml --active DevKit-E8
-python3 create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml   # optional
-cbuild cmsis-executorch-simple.csolution.yml --active DevKit-E8
+cbuild setup cmsis-executorch.csolution.yml --active DevKit-E8
+python3 create_ai_layer.py cmsis-executorch.cbuild-mlops.yml   # optional
+cbuild cmsis-executorch.csolution.yml --active DevKit-E8
 ```
 
-The image is `out/cmsis-executorch-simple/DevKit-E8/Debug/cmsis-executorch-simple.axf`.
+The image is `out/cmsis-executorch/DevKit-E8/Debug/cmsis-executorch.axf`.
 A successful build reports a program size close to this:
 
 ```text
@@ -316,8 +316,8 @@ the file to open.
   none for an operator. Anything the Ethos-U backend cannot delegate stays on
   the Cortex-M55 as a portable kernel.
 - **The MLOps information**: the `mlops:` node in
-  `cmsis-executorch-simple.csolution.yml` and its resolved form in
-  `cmsis-executorch-simple.cbuild-mlops.yml`. The Vela options
+  `cmsis-executorch.csolution.yml` and its resolved form in
+  `cmsis-executorch.cbuild-mlops.yml`. The Vela options
   (`--system-config`, `--memory-mode`) are passed straight to ExecuTorch's
   `EthosUCompileSpec`, so the NPU configuration lives in one place. The node
   is solution-wide: both target-types share one exported model, which works

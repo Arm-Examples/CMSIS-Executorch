@@ -86,7 +86,7 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8832 byte model
+ExecuTorch Ethos-U85 example: 8896 byte model
 Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
 Test_result: PASS
 ```
@@ -180,18 +180,21 @@ mlops:
   npu:
     type: Ethos-U85
   vela:
-    system: Ethos_U85_SYS_DRAM_Mid
+    system: Ethos_U85_SRAM_MRAM
     memory: Shared_Sram
   model:
     clayer: $AI-Layer$
     name: TinyCNN
 ```
 
-`cbuild setup --active SSE-320-U85` resolves it into
+`cbuild setup --active DevKit-E8` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. `create_ai_layer.py` reads those options and passes them to
-ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
-duplicated in Python. The script then writes:
+and Vela options. With the Ensemble pack in the solution, the toolbox also
+copies the pack's Vela configuration to `.cmsis/ensemble_vela.ini` and adds
+`--accelerator-config ethos-u85-256`, for both targets; the system
+configuration named above comes from that file. `create_ai_layer.py` reads
+those options and passes them to ExecuTorch's `EthosUCompileSpec`, so the
+target configuration is never duplicated in Python. The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
@@ -249,9 +252,8 @@ together. More information is available in
   corresponding platform integration.
 - The `mlops:` node is solution-wide, so both targets share one exported
   model. That is correct here because both have an Ethos-U85 with 256 MACs;
-  the Vela system configuration is the Corstone-320 one.
-- The DevKit-E8 layer has been verified to build and link (AC6). Running it on
-  the board still has to be confirmed on hardware.
+  the Vela system configuration is the Ensemble pack's, which the FVP runs
+  just as well.
 
 ## License
 

@@ -29,7 +29,7 @@ solution:
     npu:
       type: Ethos-U85
     vela:
-      system: Ethos_U85_SYS_DRAM_Mid   # system-config from the Vela config
+      system: Ethos_U85_SRAM_MRAM      # system-config from the Ensemble pack's Vela config
       memory: Shared_Sram              # memory-mode from the Vela config
     model:
       clayer: $AI-Layer$
