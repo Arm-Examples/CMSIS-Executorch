@@ -54,45 +54,12 @@ def check_host_python() -> None:
         )
 
 
-def warn_windows_long_paths() -> None:
-    """Warn before pip fails halfway through a multi-GB torch install.
-
-    torch unpacks paths long enough to exceed the legacy 260-character MAX_PATH,
-    which surfaces as an opaque failure deep inside pip rather than as a path
-    error. Nothing here is fatal: the install often succeeds anyway if the
-    workspace sits near the drive root.
-    """
-    if os.name != "nt":
-        return
-    try:
-        import winreg
-
-        with winreg.OpenKey(
-            winreg.HKEY_LOCAL_MACHINE,
-            r"SYSTEM\CurrentControlSet\Control\FileSystem",
-        ) as key:
-            enabled, _ = winreg.QueryValueEx(key, "LongPathsEnabled")
-    except OSError:
-        return  # Key missing or unreadable; not worth failing over.
-
-    if not enabled:
-        print(
-            "warning: Windows long paths are disabled. Installing torch into a\n"
-            "         deeply nested workspace may fail with a confusing pip error.\n"
-            "         Enable them (elevated PowerShell) with:\n"
-            '           New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" \\\n'
-            '             -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force\n'
-            "         ...or clone this repository closer to the drive root.\n",
-            file=sys.stderr,
-        )
-
-
 def venv_is_usable(venv_dir: Path) -> bool:
     """True if the venv exists and its interpreter still runs.
 
-    /workspaces persists across devcontainer rebuilds, so an existing .venv can
-    reference the previous image's interpreter: the directory is there but the
-    symlinks and lib/pythonX.Y paths are stale.
+    A venv outlives the interpreter it was created from (a Python upgrade, a
+    removed pyenv version): the directory is there but the symlinks and
+    lib/pythonX.Y paths are stale.
     """
     python = venv_python(venv_dir)
     if not python.is_file():
@@ -116,39 +83,18 @@ def pip(python: Path, *args: str, env: dict[str, str] | None = None) -> None:
 
 
 def smoke_test(python: Path) -> None:
-    """Import the module the export flow actually needs.
-
-    A torch/executorch version mismatch in this venv (a stray torch upgrade, a
-    nightly that moved on) would otherwise only surface later, at export time,
-    as an AttributeError deep inside this import.
-    """
-    script = """
-import sys
-
-try:
-    import executorch.backends.arm.quantizer.quantization_annotator  # noqa: F401
-except Exception as exc:
-    from importlib.metadata import version
-
+    """Import the module the export needs; a torch/executorch mismatch fails here."""
     try:
-        import torch
-
-        torch_version = torch.__version__
-    except Exception:
-        torch_version = "not installed"
-    try:
-        et_version = version("executorch")
-    except Exception:
-        et_version = "not installed"
-    sys.exit(
-        "error: the executorch Arm quantizer failed to import "
-        f"(torch {torch_version}, executorch {et_version}):\\n"
-        f"  {type(exc).__name__}: {exc}\\n"
-        "The torch and executorch versions in this venv are likely mismatched. "
-        "Recreate it with: python setup_venv.py --recreate"
-    )
-"""
-    subprocess.run([str(python), "-c", script], check=True)
+        subprocess.run(
+            [str(python), "-c", "import executorch.backends.arm.quantizer.quantization_annotator"],
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        sys.exit(
+            "error: the executorch Arm quantizer does not import; the torch and "
+            "executorch versions in .venv are probably mismatched.\n"
+            "Recreate it with: python setup_venv.py --recreate"
+        )
 
 
 def main() -> int:
@@ -161,7 +107,6 @@ def main() -> int:
     args = parser.parse_args()
 
     check_host_python()
-    warn_windows_long_paths()
 
     if args.recreate and VENV_DIR.exists():
         print(f"Removing {VENV_DIR}")
