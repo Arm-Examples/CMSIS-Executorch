@@ -8,12 +8,12 @@ propagate that information.
 
 ```mermaid
 flowchart TD
-    A["cmsis-executorch.csolution.yml<br/><b>mlops:</b> node"] -->|"1. cbuild setup --active SSE-320-U85"| B["cmsis-executorch.cbuild-mlops.yml<br/>npu, vela.options, model.clayer"]
+    A["cmsis-executorch.csolution.yml<br/><b>mlops:</b> node"] -->|"1. cbuild setup --active &lt;target&gt;"| B["cmsis-executorch.cbuild-mlops.yml<br/>npu, vela.options, model.clayer"]
     B -->|"2. create_ai_layer.py"| C["EthosUCompileSpec<br/>quantize, delegate, Vela"]
     D["model/model.py<br/>TinyCNN"] --> C
     C --> E["ai_layer/model_pte.c<br/>the program as a C array"]
     C --> F["ai_layer/ai_layer.clayer.yml<br/>component selection"]
-    E --> G["3. cbuild --active SSE-320-U85"]
+    E --> G["3. cbuild --active &lt;target&gt;"]
     F --> G
     G --> H["cmsis-executorch.axf"]
 ```
@@ -103,13 +103,15 @@ for an MLOps system. It reads the file and:
 
 | File | Content |
 |------|---------|
-| `ai_layer/ai_layer.clayer.yml` | runtime, Ethos-U backend and the operator components the program uses |
+| `ai_layer/ai_layer.clayer.yml` | runtime, kernel utilities and registration, Ethos-U backend and the operator components the program uses |
 | `ai_layer/model_pte.c` / `.h` | the program as a 16-byte-aligned C array, `model_pte` / `model_pte_size` |
 | `ai_layer/model.pte` | the program itself, for inspection (not committed) |
 
-For a fully delegated model the component list is short: the runtime, the
-Ethos-U backend, and the int8 boundary `quantize` / `dequantize` kernels.
-Everything else in the pack is never compiled, let alone linked.
+The clayer and the C array are committed, so a checkout builds without
+Python. For a fully delegated model the component list is short: `Runtime`,
+`Kernel Utils`, `Kernel Registration`, `Backend EthosU`, and the int8 boundary
+`Quantized quantize` / `Quantized dequantize` operators. Everything else in
+the pack is never compiled, let alone linked.
 
 ## 3. `cbuild` builds the application
 

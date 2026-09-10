@@ -10,7 +10,7 @@
 #
 # The `mlops:` node below makes `cbuild setup` emit the *.cbuild-mlops.yml;
 # create_ai_layer.py reads the NPU and Vela settings from it, exports the model
-# from PyTorch in a venv (no Docker) and writes the AI layer.
+# from PyTorch in the project's venv and writes the AI layer.
 solution:
   created-for: CMSIS-Toolbox@2.14.1
   cdefault:
