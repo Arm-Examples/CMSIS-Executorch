@@ -5,7 +5,7 @@
 # server, in the latter case with
 #
 #   -D --plugin $AVH_FVP_PLUGINS/GDBServer.so -C GDBServer.port=3333 \
-#      -f board/Corstone-320/fvp_config.txt -a <application>.elf
+#      -f board/Corstone-320/fvp_config.txt --simlimit 60 -a <application>.hex
 #
 # It does two things the bare model command cannot:
 #
@@ -15,7 +15,8 @@
 #   * runs the model in Docker on macOS, where Arm publishes no FVP build, with
 #     the GDB port forwarded to the host so arm-none-eabi-gdb can reach it.
 #
-# On Linux and Windows (git-bash/MSYS) it just execs the real model.
+# On Linux it just execs the real model. On Windows, where the extension cannot
+# run a bash script, point the csolution's `model:` at FVP_Corstone_SSE-320.exe.
 set -euo pipefail
 
 MODEL="${FVP_MODEL:-FVP_Corstone_SSE-320}"
