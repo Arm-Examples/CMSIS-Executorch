@@ -1,9 +1,9 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
-# CI for the pack-based MLOps flow: the three-step build (cbuild setup,
-# create_ai_layer.py, cbuild) followed by an FVP run.
-name: Build and Run (pack-based MLOps)
+# CI for the three-step flow (cbuild setup, create_ai_layer.py, cbuild)
+# followed by an FVP run.
+name: Build and Run
 
 on:
   workflow_dispatch:
@@ -124,9 +124,9 @@ jobs:
               PY=.venv/bin/python
           fi
           "${PY}" -c "import executorch.backends.arm.quantizer.quantization_annotator; print('arm quantizer OK')"
-          # Usage error only (no cbuild-mlops.yml without cbuild): checks that
-          # the script starts under this interpreter.
-          "${PY}" create_ai_layer.py 2>&1 | grep -q "usage:" && echo "create_ai_layer.py OK"
+          # No cbuild-mlops.yml without cbuild; importing the script checks
+          # that it parses under this interpreter.
+          "${PY}" -c "import create_ai_layer; print('create_ai_layer.py OK')"
 
       - name: Report resolved versions
         shell: bash
