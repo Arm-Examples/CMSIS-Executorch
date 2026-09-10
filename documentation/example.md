@@ -20,7 +20,7 @@ embedded application.
 | `DevKit-E8` | Alif Ensemble E8 DevKit (Cortex-M55 HP core + Ethos-U85) | On-board J-Link, UART console |
 
 The zero-to-running setup for the DevKit-E8, from installing Keil Studio to
-the first debug session, is the [hackathon README](../README.md).
+the first debug session, is the [getting-started README](../README.md).
 
 ## What the example demonstrates
 
@@ -75,7 +75,7 @@ The example can be built and run entirely in Keil Studio for VS Code.
    script).
 
 For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
-**Manage Solution** and follow the [hackathon README](../README.md) for the
+**Manage Solution** and follow the [getting-started README](../README.md) for the
 one-time board preparation (SETOOLS, switches, J-Link).
 
 A successful run prints the Ethos-U configuration, output logits, and a pass

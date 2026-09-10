@@ -34,6 +34,9 @@ solution:
     model:
       clayer: $AI-Layer$
       name: TinyCNN
+    hardware:
+      target: DevKit-E8       # <target-type>[@<target-set>] of the board;
+                              # named explicitly, 2.14.1 detects none
     simulator:
       target: SSE-320-U85     # <target-type>[@<target-set>] of the FVP
 ```

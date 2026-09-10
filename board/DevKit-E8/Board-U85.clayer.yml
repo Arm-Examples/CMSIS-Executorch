@@ -30,8 +30,9 @@ layer:
     - CMSIS_target_header: \"DevKit-E8.h\"
     - ETHOSU85
     # The runner's memory pools (src/app_main.cpp) do not fit the 1 MB DTCM
-    # that the Alif linker scripts use for .bss. Place them in the bulk SRAM0
-    # (4 MB at 0x02000000, NPU-accessible) via the section named here, and
+    # that the Alif linker scripts use for .bss. Place them in the bulk SRAM
+    # at 0x02000000 (NPU-accessible; SRAM0+SRAM1 combined, 8 MB, with the AC6
+    # script, SRAM0 alone, 4 MB, with the GNU one) via the section named here, and
     # size them for that region; the linker scripts in this layer route the
     # section there.
     - APP_POOL_SECTION: \".bss.ai_pool\"

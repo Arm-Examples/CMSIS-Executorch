@@ -120,7 +120,7 @@ jobs:
           path: /home/runner/.cache/arm/packs
 
       - name: Generate the MLOps information
-        run: cbuild setup ${SOLUTION}.csolution.yml --active DevKit-E8 --packs --update-rte
+        run: cbuild setup ${SOLUTION}.csolution.yml --active DevKit-E8 --packs
 
       - name: Build
         run: cbuild ${SOLUTION}.csolution.yml --active DevKit-E8

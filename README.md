@@ -1,7 +1,7 @@
 # ExecuTorch on Ethos-U85: hackathon guide
 
-Branch `hackathon` of the Arm ExecuTorch example. One CMSIS solution runs a
-tiny int8 CNN on the Ethos-U85 of the **Alif Ensemble E8 DevKit** (Cortex-M55
+The Arm ExecuTorch example, on its `hackathon` branch with the Alif board
+added. One CMSIS solution runs a tiny int8 CNN on the Ethos-U85 of the **Alif Ensemble E8 DevKit** (Cortex-M55
 HP core) and on the **Corstone-320 FVP**; you switch between them by
 target-type. The model is exported from PyTorch in three steps: the
 CMSIS-Toolbox describes the target, `create_ai_layer.py` turns that into the
@@ -12,13 +12,15 @@ itself is in [documentation/example.md](documentation/example.md).
 ## 1. Host tools
 
 1. Install [VS Code](https://code.visualstudio.com/).
-2. Install the extensions **Keil Studio Pack** (`Arm.keil-studio-pack`) and
-   **Python** (`ms-python.python`). Sign in with an Arm account when Keil
-   Studio asks; the free Keil MDK Community license is enough.
+2. Install the extensions **Keil Studio Pack** (`Arm.keil-studio-pack`, which
+   brings the CMSIS Solution extension 1.70.0 or newer that the project's
+   task drop-ins need) and **Python** (`ms-python.python`). Sign in with an
+   Arm account when Keil Studio asks; the free Keil MDK Community license is
+   enough.
 3. Nothing else by hand: when you open the project, the Arm Tools Environment
    Manager offers to install the tools pinned in `vcpkg-configuration.json`
-   (CMSIS-Toolbox, Arm Compiler 6, GCC, CMake, Ninja, the Corstone-320 FVP).
-   Accept.
+   (CMSIS-Toolbox, Arm Compiler 6, GCC, CMake, Ninja, and on Linux and
+   Windows the Corstone-320 FVP; macOS runs it in Docker, see step 8). Accept.
 4. Optional: the **CMSIS Developer Assistant** extension lets an AI agent
    (Claude Code or GitHub Copilot Chat) build, flash and debug the board
    through an MCP server. Install it, install one of the agents, run
@@ -77,8 +79,10 @@ In the CMSIS view open **Manage Solution**, choose the target-type
 
 The repository ships a generated AI layer, so no Python is needed to build.
 To change the model, run **Terminal > Run Task > Setup Python virtual
-environment** once (several GB of PyTorch, takes a while), edit
-`model/model.py`, and run the task **Create AI layer** before building.
+environment** once (several GB of PyTorch, takes a while; the **(uv)**
+variant of the task uses uv and can download the Python version it asks
+for), edit `model/model.py`, and run the task **Create AI layer** before
+building.
 
 ## 5. Prepare the board once
 
@@ -86,7 +90,7 @@ The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
 debugger needs that table to point at a debug stub.
 
 1. SW4 to **SEUART**, PRG USB attached.
-2. **Terminal > Run Task > Alif: Install M55_HP debug stubs**. Choose COM port
+2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**. Choose COM port
    discovery (`-d`) the first time; SETOOLS remembers the port. The task
    copies the configuration and stub from `.alif/` into the SETOOLS tree and
    runs `app-gen-toc` and `app-write-mram`.
@@ -96,7 +100,8 @@ Repeat this after another project has reprogrammed the table.
 
 ## 6. Build, run, debug
 
-1. Open the **Serial Monitor** panel on the PRG USB port, 115200 baud.
+1. With SW4 on **UART4**, open the **Serial Monitor** panel on the PRG USB
+   port, 115200 baud.
 2. In the CMSIS view click **Build**, then **Debug** (or **Run**). Keil Studio
    starts the J-Link GDB server over SWD, loads the image into MRAM and stops
    at `main`; continue with F5. The console shows:
@@ -134,8 +139,6 @@ target-set to `FVP_Corstone_SSE-320`.
   before the switch was moved. Set `UART4` and reopen the port.
 - **`app-write-mram` gets no answer:** press reset while it waits, check SW4
   is on `SEUART`, close any terminal holding the port.
-- **`L6815U: Out of memory` when linking on macOS:** Arm Compiler's linker is
-  a 32-bit binary there; build with `cbuild ... --toolchain CLANG` (or GCC).
 - **"torch is not installed":** run the task **Setup Python virtual
   environment** first; it is only needed to regenerate the AI layer.
 - After **Apply**, the extension adds a J-Link entry to `.vscode/launch.json`
@@ -149,3 +152,5 @@ target-set to `FVP_Corstone_SSE-320`.
   memory map and RTE configuration.
 - [documentation/mlops-flow.md](documentation/mlops-flow.md): the `mlops:`
   node and `*.cbuild-mlops.yml` in detail.
+- [documentation/pack-provenance.md](documentation/pack-provenance.md): where
+  the `PyTorch::ExecuTorch` pack comes from and how to move to a new version.
