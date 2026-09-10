@@ -219,6 +219,7 @@ together. More information is available in
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
 | `src/app_main.cpp` | Loads the model, runs inference, and prints the result |
+| `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading |
 | `documentation/` | The MLOps flow in detail; where the ExecuTorch pack comes from |
 
 ## Known limitations
@@ -228,7 +229,8 @@ together. More information is available in
 
 ## License
 
-The example code is licensed under Apache-2.0; see `LICENSE`. ExecuTorch uses a BSD-3-Clause license.
+The example code is licensed under Apache-2.0; see `LICENSE`. ExecuTorch and
+`src/arm_embedded_module.*`, which is derived from it, use a BSD-3-Clause license.
 
 ## References
 

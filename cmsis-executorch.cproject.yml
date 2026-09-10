@@ -26,6 +26,10 @@ project:
     - group: App
       files:
         - file: ./src/app_main.cpp
+        # EmbeddedModule: ExecuTorch's Module class without the POSIX file
+        # loading, so it builds for bare metal (BSD-3-Clause, from Meta/Arm).
+        - file: ./src/arm_embedded_module.cpp
+        - file: ./src/arm_embedded_module.hpp
 
   layers:
     - layer: $Board-Layer$
