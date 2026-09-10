@@ -18,9 +18,9 @@ solution:
 
   packs:
     # Pinned exactly: the pack's C++ runtime and the Python exporter pinned in
-    # requirements-executorch.txt must be the same ExecuTorch version, or the
-    # .pte fails to load. `cbuild --packs` fetches it from the public index.
-    - pack: PyTorch::ExecuTorch@1.4.0
+    # requirements.txt must be the same ExecuTorch version, or the .pte fails
+    # to load. `cbuild setup --packs` fetches it from the public index.
+    - pack: PyTorch::ExecuTorch@1.4.1
     - pack: ARM::CMSIS
     - pack: ARM::CMSIS-NN
     - pack: ARM::CMSIS-Compiler

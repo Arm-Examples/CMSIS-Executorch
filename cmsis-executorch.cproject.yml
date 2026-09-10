@@ -7,7 +7,7 @@
 # the Board layer brings the board bring-up.
 project:
   packs:
-    - pack: PyTorch::ExecuTorch@1.4.0
+    - pack: PyTorch::ExecuTorch@1.4.1
     - pack: ARM::CMSIS
 
   misc:
