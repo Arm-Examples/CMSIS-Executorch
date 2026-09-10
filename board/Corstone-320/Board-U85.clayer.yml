@@ -16,7 +16,7 @@ layer:
         - STDIN
         - STDOUT
         - STDERR
-        - Heap: 786432
+        - Heap: 98304 # __HEAP_SIZE in regions_SSE-320.h
 
   define:
     - CMSIS_target_header: \"Corstone-320.h\"
