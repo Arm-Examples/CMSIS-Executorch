@@ -27,7 +27,8 @@ project:
       files:
         - file: ./src/app_main.cpp
         # EmbeddedModule: ExecuTorch's Module class without the POSIX file
-        # loading, so it builds for bare metal (BSD-3-Clause, from Meta/Arm).
+        # loading, so it builds for bare metal (BSD-3-Clause, see
+        # src/LICENSE-ExecuTorch).
         - file: ./src/arm_embedded_module.cpp
         - file: ./src/arm_embedded_module.hpp
 
