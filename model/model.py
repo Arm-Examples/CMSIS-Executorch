@@ -1,6 +1,6 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-"""The example model: a tiny int8 CNN classifier for Ethos-U85.
+"""The example model: a tiny CNN classifier, quantized to int8 for Ethos-U85 by create_ai_layer.py.
 
 Small enough to export in seconds and fully partition onto the NPU, but real
 enough to exercise conv / relu / pool / linear through Vela. Input is a single
