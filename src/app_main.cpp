@@ -55,8 +55,8 @@ namespace {
 constexpr size_t kMethodPoolSize = APP_METHOD_POOL_SIZE;
 constexpr size_t kTempPoolSize = APP_TEMP_POOL_SIZE;
 
-APP_POOL_ATTRIBUTES alignas(16) uint8_t g_method_pool[kMethodPoolSize];
-APP_POOL_ATTRIBUTES alignas(16) uint8_t g_temp_pool[kTempPoolSize];
+alignas(16) uint8_t g_method_pool[kMethodPoolSize] APP_POOL_ATTRIBUTES;
+alignas(16) uint8_t g_temp_pool[kTempPoolSize] APP_POOL_ATTRIBUTES;
 
 }  // namespace
 
