@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -76,8 +77,46 @@ def venv_is_usable(venv_dir: Path) -> bool:
     return True
 
 
-def pip(python: Path, *args: str, env: dict[str, str] | None = None) -> None:
-    cmd = [str(python), "-m", "pip", *args]
+def python_version(value: str) -> tuple[int, ...]:
+    """Accept a supported major.minor version, optionally with a patch version."""
+    if not re.fullmatch(r"[0-9]+\.[0-9]+(?:\.[0-9]+)?", value):
+        raise argparse.ArgumentTypeError("expected a Python version such as 3.12 or 3.12.10")
+    version = tuple(int(n) for n in value.split("."))
+    if not (MIN_PYTHON <= version[:2] < MAX_PYTHON_EXCLUSIVE):
+        raise argparse.ArgumentTypeError("ExecuTorch needs Python >=3.10,<3.15")
+    return version
+
+
+def check_venv_python(python: Path, requested: tuple[int, ...] | None) -> None:
+    """The venv's interpreter must be supported and, with --python, the one asked for."""
+    result = subprocess.run(
+        [str(python), "-c", "import sys; print('.'.join(map(str, sys.version_info[:3])))"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    have = result.stdout.strip()
+    version = tuple(int(n) for n in have.split("."))
+    if not (MIN_PYTHON <= version[:2] < MAX_PYTHON_EXCLUSIVE):
+        sys.exit(
+            f"error: {python} uses Python {have}; ExecuTorch needs >=3.10,<3.15. "
+            "Re-run with --recreate and a supported Python version."
+        )
+    if requested and version[: len(requested)] != requested:
+        want = ".".join(map(str, requested))
+        sys.exit(
+            f"error: .venv uses Python {have}, but --python {want} was requested. "
+            "Re-run with --recreate to change the environment's Python version."
+        )
+
+
+def pip(python: Path, *args: str, uv: str | None = None, env: dict[str, str] | None = None) -> None:
+    if uv:
+        # Match pip's selection across PyPI and the PyTorch nightly index:
+        # uv's default first-index strategy can hide the pinned nightly wheels.
+        cmd = [uv, "pip", *args, "--python", str(python), "--index-strategy", "unsafe-best-match"]
+    else:
+        cmd = [str(python), "-m", "pip", *args]
     print(f"+ {' '.join(cmd)}", flush=True)
     subprocess.run(cmd, check=True, env=env)
 
@@ -100,13 +139,33 @@ def smoke_test(python: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--uv",
+        action="store_true",
+        help="create the environment with `uv venv` and install with `uv pip` (needs uv on PATH)",
+    )
+    parser.add_argument(
+        "--python",
+        metavar="VERSION",
+        type=python_version,
+        help="Python version for uv, e.g. 3.12 or 3.12.10 (needs --uv; default: this interpreter)",
+    )
+    parser.add_argument(
         "--recreate",
         action="store_true",
         help="delete and rebuild .venv even if it looks usable",
     )
     args = parser.parse_args()
 
-    check_host_python()
+    if args.python and not args.uv:
+        parser.error("--python requires --uv")
+    uv = shutil.which("uv") if args.uv else None
+    if args.uv and not uv:
+        parser.error(
+            "--uv requires uv on PATH; install it from "
+            "https://docs.astral.sh/uv/getting-started/installation/"
+        )
+    if not args.python:
+        check_host_python()
 
     if args.recreate and VENV_DIR.exists():
         print(f"Removing {VENV_DIR}")
@@ -118,29 +177,40 @@ def main() -> int:
 
     if not VENV_DIR.exists():
         print(f"Creating venv at {VENV_DIR}")
-        venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(VENV_DIR)
+        if uv:
+            # The wrapper may run this script in uv's temporary isolated
+            # environment: request a version, not a path inside that environment.
+            requested = ".".join(map(str, args.python or sys.version_info[:3]))
+            cmd = [uv, "venv", "--python", requested, str(VENV_DIR)]
+            print(f"+ {' '.join(cmd)}", flush=True)
+            subprocess.run(cmd, check=True)
+        else:
+            venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(VENV_DIR)
 
     python = venv_python(VENV_DIR)
-    pip(python, "install", "--upgrade", "pip")
+    check_venv_python(python, args.python)
+    if not uv:
+        pip(python, "install", "--upgrade", "pip")
 
     # Pass 1: everything that resolves from PyPI. Kept free of any index
     # directive so pip cannot prefer a nightly torch over the pinned release.
-    pip(python, "install", "-r", str(HERE / "requirements.txt"))
+    pip(python, "install", "-r", str(HERE / "requirements.txt"), uv=uv)
 
     # Pass 2: executorch + torchao from the PyTorch nightly index (see the
     # file header of requirements-executorch.txt).
-    pip(python, "install", "-r", str(HERE / "requirements-executorch.txt"))
+    pip(python, "install", "-r", str(HERE / "requirements-executorch.txt"), uv=uv)
 
     # Pass 3: the TOSA serializer, without dependencies. See the header of
-    # requirements-arm-tosa.txt for why --no-dependencies is load-bearing.
+    # requirements-arm-tosa.txt for why --no-deps is load-bearing.
     # CMAKE_POLICY_VERSION_MINIMUM keeps an sdist fallback building under CMake 4.
     env = dict(os.environ, CMAKE_POLICY_VERSION_MINIMUM="3.5")
     pip(
         python,
         "install",
-        "--no-dependencies",
+        "--no-deps",
         "-r",
         str(HERE / "requirements-arm-tosa.txt"),
+        uv=uv,
         env=env,
     )
 

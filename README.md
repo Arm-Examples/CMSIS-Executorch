@@ -46,7 +46,9 @@ The example can be built and run entirely in Keil Studio for VS Code.
 2. Clone or download this repository, then open its folder in VS Code.
 3. Before using the example for the first time, select **Terminal > Run Task >
    Setup Python virtual environment**. Wait for the task to create the `.venv`
-   environment and install the packages required to export the model.
+   environment and install the packages required to export the model. (The
+   **(uv)** variant of the task uses [uv](https://docs.astral.sh/uv/) instead
+   of pip and can download the Python version it asks for.)
 4. Select **Terminal > Run Task > Create AI layer**. This exports the model for
    the NPU of the active target and writes the `ai_layer/` directory. (The
    repository ships a generated layer, so this step is only needed after
@@ -96,6 +98,12 @@ The setup script creates `.venv/` and installs the packages required to
 quantize and export the model. It is safe to run again; use `--recreate` when
 you want a completely new environment. The wrappers use `python3` (`python` on
 Windows); point them at another interpreter with `PYTHON=python3.12 ./setup_venv.sh`.
+
+With [uv](https://docs.astral.sh/uv/getting-started/installation/) on `PATH`,
+`./setup_venv.sh --uv --python 3.12` (or `.\setup_venv.bat ...`) creates the
+environment with `uv venv` for that Python version, downloading the interpreter
+if needed, and installs with `uv pip`. Add `--recreate` to change the Python
+version of an existing environment.
 
 > [!Note]
 > On Windows, enable long-path support or keep the repository close to the drive
