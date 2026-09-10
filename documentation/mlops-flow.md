@@ -70,8 +70,7 @@ full here. A device pack that does (the Alif Ensemble pack, for one) supplies
 the NPU type, the MAC count and its own Vela configuration file, and the
 toolbox then also emits `npu.macs`, `vela.ini` and `--accelerator-config`.
 The `simulator:` section is what a test runner needs to execute the image
-on the FVP; the CMSIS-Toolbox from vcpkg (2.14.1) does not emit it yet, the
-Keil Studio extension 1.70.0 does.
+on the FVP.
 
 This is the hand-over point to the MLOps side: everything a model-export
 pipeline needs to know about the target is in this one file, and nothing in it
