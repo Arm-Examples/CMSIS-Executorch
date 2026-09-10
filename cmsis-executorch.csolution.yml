@@ -62,15 +62,22 @@ solution:
   # `cbuild setup ... --active SSE-320-U85`. Retarget the NPU here and
   # create_ai_layer.py picks it up on its next run.
   # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
+  #
+  # Needs CMSIS-Toolbox 2.14.1+p88 or newer (Keil Studio csolution extension
+  # 1.70.1 or newer): the simulator target is detected from the Arm-FVP
+  # target-set, and the extra keys under model: are passed through to
+  # create_ai_layer.py. Older toolboxes reject the extra keys.
   mlops:
     description: TinyCNN int8 image classifier for Ethos-U85
     npu:
-      type: Ethos-U85
+      type: Ethos-U85 # explicit: the SSE-320 device pack declares no NPU
     vela:
       system: Ethos_U85_SYS_DRAM_Mid # system-config from the Vela config
       memory: Shared_Sram # memory-mode from the Vela config
     model:
       clayer: $AI-Layer$
       name: TinyCNN
-    simulator:
-      target: SSE-320-U85
+      # Model parameters for create_ai_layer.py: the NCHW input shape and the
+      # number of samples the quantizer is calibrated with.
+      input-shape: 1x3x16x16
+      calibration-samples: 2

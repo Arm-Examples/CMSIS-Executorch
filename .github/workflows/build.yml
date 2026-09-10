@@ -5,12 +5,12 @@
 # followed by an FVP run.
 name: Build and Run
 
+# This branch needs CMSIS-Toolbox 2.14.1+p88 or newer (extra keys under the
+# mlops: model: node); the 2.14.1 from vcpkg rejects them. Manual runs only
+# until a newer toolbox is on vcpkg, then restore push/pull_request for
+# branches: [mlops-latest].
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
 
 env:
   SOLUTION: cmsis-executorch

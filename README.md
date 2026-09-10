@@ -4,7 +4,9 @@ This example shows how to deploy and run an
 [ExecuTorch](https://github.com/pytorch/executorch) model on an Arm Ethos-U NPU.
 The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/)
 provides the source code components to build the ExecuTorch runtime, required operators, and Ethos-U backend.
-The build process uses the [CMSIS-Toolbox 2.14.1](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
+The build process uses the [CMSIS-Toolbox](https://open-cmsis-pack.github.io/cmsis-toolbox/)
+2.14.1+p88 or higher, as bundled with the Keil Studio csolution extension 1.70.1
+or higher; see [How model generation works](#how-model-generation-works).
 
 This example application targets the Arm Corstone-320 reference platform with
 an Ethos-U85 NPU. It demonstrates the same overall workflow used for other
@@ -167,13 +169,21 @@ mlops:
   model:
     clayer: $AI-Layer$
     name: TinyCNN
+    input-shape: 1x3x16x16
+    calibration-samples: 2
 ```
 
 `cbuild setup --active SSE-320-U85` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. `create_ai_layer.py` reads those options and passes them to
-ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
-duplicated in Python. The script then writes:
+and Vela options, and the FVP target-set as the `simulator:` to test on.
+`create_ai_layer.py` reads those options and passes them to ExecuTorch's
+`EthosUCompileSpec`, so the target configuration is never duplicated in
+Python. The two extra keys under `model:` are parameters of the model itself;
+the toolbox passes them through and the script hands them to `model/model.py`.
+This needs CMSIS-Toolbox 2.14.1+p88 or newer; an older toolbox stops at
+`error csolution: schema check failed, verify syntax` on those two lines (the
+`main` branch of this repository works with the released 2.14.1). The script
+then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.

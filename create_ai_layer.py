@@ -15,7 +15,9 @@ The *.cbuild-mlops.yml is what CMSIS-Toolbox generates from the `mlops:` node
 of the csolution. This script reads the NPU and Vela settings from it, exports
 the PyTorch model in model/model.py for that NPU (quantize, delegate to
 Ethos-U, compile with Vela) and writes the complete AI layer into the
-directory of the clayer named under `model.clayer`:
+directory of the clayer named under `model.clayer`. The extra keys of the
+`model:` node (input-shape, calibration-samples) are model parameters that
+CMSIS-Toolbox 2.14.1+p88 passes through to this script:
 
     ai_layer.clayer.yml   runtime, Ethos-U backend and the operator components
                           the exported program actually uses
@@ -104,7 +106,22 @@ def compile_spec(mlops: dict, mlops_dir: Path):
     return EthosUCompileSpec(**kwargs)
 
 
-def export_model(spec) -> bytes:
+def model_params(mlops: dict) -> dict:
+    """The extra keys of the model: node, as keyword arguments for model/model.py."""
+    params = {}
+    for key, value in mlops["model"].items():
+        if key == "input-shape":
+            params["input_shape"] = tuple(int(d) for d in re.split(r"[x,]", str(value)))
+        elif key == "calibration-samples":
+            params["calibration_samples"] = int(value)
+        elif key not in ("clayer", "name"):
+            print(f"[ai_layer] warning: ignoring unknown model key {key!r}", file=sys.stderr)
+    if params:
+        print(f"[ai_layer] model parameters: {params}")
+    return params
+
+
+def export_model(spec, params: dict) -> bytes:
     """Quantize model/model.py, delegate it to the Ethos-U and return the .pte."""
     import torch
     from executorch.backends.arm.ethosu import EthosUPartitioner
@@ -115,7 +132,8 @@ def export_model(spec) -> bytes:
     sys.path.insert(0, str(HERE / "model"))
     from model import get_calibration_inputs, get_model
 
-    model, samples = get_model(), get_calibration_inputs()
+    model = get_model(**{k: v for k, v in params.items() if k == "input_shape"})
+    samples = get_calibration_inputs(**params)
     example = (samples[0],)
     graph = torch.export.export(model, example).module()
 
@@ -228,7 +246,7 @@ def main() -> None:
     layer_file = mlops_file.parent / mlops["model"]["clayer"]
     layer_dir = layer_file.parent
 
-    pte = export_model(compile_spec(mlops, mlops_file.parent))
+    pte = export_model(compile_spec(mlops, mlops_file.parent), model_params(mlops))
     runtime, operators = components(pte, executorch_pack(mlops_file))
 
     layer_dir.mkdir(parents=True, exist_ok=True)

@@ -34,9 +34,14 @@ solution:
     model:
       clayer: $AI-Layer$
       name: TinyCNN
-    simulator:
-      target: SSE-320-U85
+      input-shape: 1x3x16x16           # passed through to create_ai_layer.py
+      calibration-samples: 2
 ```
+
+The `simulator:` (and, for a board, the `hardware:`) target is detected from
+the target-sets by CMSIS-Toolbox 2.14.1+p88 and newer, and the extra keys
+under `model:` are passed through; the released 2.14.1 needs the target named
+explicitly (`simulator: target: SSE-320-U85`) and rejects the extra keys.
 
 `cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85`
 resolves it for the active target and writes
@@ -44,7 +49,7 @@ resolves it for the active target and writes
 
 ```yaml
 cbuild-mlops:
-  generated-by: csolution version 2.14.1+p38-gf512b381
+  generated-by: csolution version 2.14.1+p88-g94cb0c5e
   description: TinyCNN int8 image classifier for Ethos-U85
   processor:
     type: Cortex-M85
@@ -55,6 +60,8 @@ cbuild-mlops:
   model:
     clayer: ai_layer/ai_layer.clayer.yml
     name: TinyCNN
+    calibration-samples: 2
+    input-shape: 1x3x16x16
   simulator:
     active: SSE-320-U85
     cbuild-run: out/cmsis-executorch+SSE-320-U85.cbuild-run.yml
