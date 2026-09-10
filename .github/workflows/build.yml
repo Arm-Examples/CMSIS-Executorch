@@ -101,12 +101,17 @@ jobs:
             out/**/*.elf
             ai_layer/
 
-  # The same solution for the Alif Ensemble E8 DevKit (target-type DevKit-E8).
-  # Build only: the hardware is not in CI. The shipped ai_layer/ is used, so no
-  # venv is needed.
+  # The same solution for the Alif Ensemble E8 DevKit (target-type DevKit-E8),
+  # once per toolchain. Build only: the hardware is not in CI. The shipped
+  # ai_layer/ is used, so no venv is needed.
   build-devkit-e8:
-    name: Build for the Alif Ensemble E8 DevKit
+    name: Build for the Alif Ensemble E8 DevKit (${{ matrix.toolchain }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [AC6, GCC, CLANG]
 
     steps:
       - name: Checkout repo
@@ -128,13 +133,13 @@ jobs:
         run: cbuild setup ${SOLUTION}.csolution.yml --active DevKit-E8 --packs
 
       - name: Build
-        run: cbuild ${SOLUTION}.csolution.yml --active DevKit-E8
+        run: cbuild ${SOLUTION}.csolution.yml --active DevKit-E8 --toolchain ${{ matrix.toolchain }}
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: devkit-e8-build
+          name: devkit-e8-${{ matrix.toolchain }}
           path: |
             out/**/*.axf
             out/**/*.hex
