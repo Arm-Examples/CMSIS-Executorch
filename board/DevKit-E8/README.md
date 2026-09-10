@@ -49,4 +49,4 @@ same connector.
 Program the debug stubs into the device's ATOC with Alif SETOOLS once:
 **Terminal > Run Task > Alif: Install M55_HP debug stubs**. The task needs
 the VS Code setting `alif.setools.root` and SW4 in position SEUART. See
-[the learning path](../../documentation/learning-path-devkit-e8.md).
+[the hackathon README](../../README.md).

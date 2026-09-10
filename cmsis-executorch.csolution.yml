@@ -59,7 +59,7 @@ solution:
     # Alif Ensemble E8 DevKit: Cortex-M55 high-performance core with the
     # Ethos-U85 NPU, on real hardware through the on-board J-Link (SWD).
     # Program the debug stubs with SETOOLS once before the first debug session;
-    # see documentation/learning-path-devkit-e8.md.
+    # see README.md.
     - type: DevKit-E8
       board: Alif Semiconductor::DevKit-E8
       device: Alif Semiconductor::AE822FA0E5597LS0:M55_HP

@@ -38,23 +38,30 @@ solution:
       target: SSE-320-U85
 ```
 
-`cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85`
-resolves it for the active target and writes
-`cmsis-executorch.cbuild-mlops.yml`:
+`cbuild setup cmsis-executorch.csolution.yml --active DevKit-E8`
+resolves it and writes `cmsis-executorch.cbuild-mlops.yml`:
 
 ```yaml
 cbuild-mlops:
   generated-by: csolution version 2.14.1+p38-gf512b381
   description: TinyCNN int8 image classifier for Ethos-U85
   processor:
-    type: Cortex-M85
+    type: Cortex-M55
   npu:
     type: Ethos-U85
+    macs: 256
   vela:
-    options: --system-config Ethos_U85_SYS_DRAM_Mid --memory-mode Shared_Sram
+    ini: .cmsis/ensemble_vela.ini
+    options: --accelerator-config ethos-u85-256 --system-config Ethos_U85_SRAM_MRAM --memory-mode Shared_Sram
   model:
     clayer: ai_layer/ai_layer.clayer.yml
     name: TinyCNN
+  hardware:
+    active: DevKit-E8
+    cbuild-run: out/cmsis-executorch+DevKit-E8.cbuild-run.yml
+    output:
+      - file: out/cmsis-executorch/DevKit-E8/Debug/cmsis-executorch.axf
+        type: elf
   simulator:
     active: SSE-320-U85
     cbuild-run: out/cmsis-executorch+SSE-320-U85.cbuild-run.yml
@@ -65,12 +72,11 @@ cbuild-mlops:
     config-file: board/Corstone-320/fvp_config.txt
 ```
 
-The SSE-320 device family pack declares no NPU, so `npu:` is written out in
-full here. A device pack that does (the Alif Ensemble pack, for one) supplies
-the NPU type, the MAC count and its own Vela configuration file, and the
-toolbox then also emits `npu.macs`, `vela.ini` and `--accelerator-config`.
-The `simulator:` section is what a test runner needs to execute the image
-on the FVP.
+The Ensemble device family pack declares the NPUs of the device and ships a
+Vela configuration file, so the toolbox fills in `npu.macs`, copies the file
+to `.cmsis/ensemble_vela.ini` and adds `--accelerator-config`. The
+`hardware:` and `simulator:` sections are what a test runner needs to load
+the image on the board or to execute it on the FVP.
 
 This is the hand-over point to the MLOps side: everything a model-export
 pipeline needs to know about the target is in this one file, and nothing in it

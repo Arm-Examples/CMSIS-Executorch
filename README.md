@@ -1,269 +1,151 @@
-# ExecuTorch on Ethos-U
+# ExecuTorch on Ethos-U85: hackathon guide
 
-This example shows how to deploy and run an
-[ExecuTorch](https://github.com/pytorch/executorch) model on an Arm Ethos-U NPU.
-The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/)
-provides the source code components to build the ExecuTorch runtime, required operators, and Ethos-U backend.
-The build process uses the [CMSIS-Toolbox 2.14.1](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
+Branch `hackathon` of the Arm ExecuTorch example. One CMSIS solution runs a
+tiny int8 CNN on the Ethos-U85 of the **Alif Ensemble E8 DevKit** (Cortex-M55
+HP core) and on the **Corstone-320 FVP**; you switch between them by
+target-type. The model is exported from PyTorch in three steps: the
+CMSIS-Toolbox describes the target, `create_ai_layer.py` turns that into the
+AI layer, the toolbox builds the application. This page takes you from an
+empty machine to a debug session on the board. Everything about the example
+itself is in [documentation/example.md](documentation/example.md).
 
-This example application targets the Arm Corstone-320 reference platform with
-an Ethos-U85 NPU, simulated on the Arm FVP, and the
-[Alif Ensemble E8 DevKit](https://alifsemi.com/support/kits/ensemble-e8devkit/),
-real hardware with the same NPU. It demonstrates the same overall workflow used
-for other Ethos-U systems: export and quantize a PyTorch model, delegate it to
-Ethos-U, select only the required runtime components, and build it into an
-embedded application.
+## 1. Host tools
 
-| Target-type | Hardware | Run/debug through |
-|-------------|----------|-------------------|
-| `SSE-320-U85` | Corstone-320 (Cortex-M85 + Ethos-U85), FVP | `FVP_Corstone_SSE-320` |
-| `DevKit-E8` | Alif Ensemble E8 DevKit (Cortex-M55 HP core + Ethos-U85) | On-board J-Link, UART console |
+1. Install [VS Code](https://code.visualstudio.com/).
+2. Install the extensions **Keil Studio Pack** (`Arm.keil-studio-pack`) and
+   **Python** (`ms-python.python`). Sign in with an Arm account when Keil
+   Studio asks; the free Keil MDK Community license is enough.
+3. Nothing else by hand: when you open the project, the Arm Tools Environment
+   Manager offers to install the tools pinned in `vcpkg-configuration.json`
+   (CMSIS-Toolbox, Arm Compiler 6, GCC, CMake, Ninja, the Corstone-320 FVP).
+   Accept.
+4. Optional: the **CMSIS Developer Assistant** extension lets an AI agent
+   (Claude Code or GitHub Copilot Chat) build, flash and debug the board
+   through an MCP server. Install it, install one of the agents, run
+   **CMSIS Developer Assistant: Configure Agents and Skills** from the command
+   palette and pick at least the `cmsis-debug-live` and `cmsis-help` skills.
 
-The step-by-step setup for the DevKit-E8, from installing Keil Studio to
-exploring the demo, is in the
-[learning path](documentation/learning-path-devkit-e8.md).
+## 2. Alif and SEGGER tools (board only)
 
-## What the example demonstrates
+1. **Alif SETOOLS** V1.110.000 or later from the
+   [Alif software and tools page](https://alifsemi.com/support/software-tools/ensemble/)
+   (login required). Unpack it; on Linux and macOS make the tools executable
+   and install the Python packages its README lists. Add the root directory
+   (the one with `app-gen-toc` and `app-write-mram`) to your VS Code user
+   settings:
 
-- Exporting an ExecuTorch model for Ethos-U using a Python virtual environment (without requiring Docker).
-- The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
-- Managing the NPU and Vela configuration in the CMSIS solution project rather than duplicating it in the Python exporter.
-- A three-step flow with a clean hand-over from the CMSIS-Toolbox to an MLOps system: the toolbox describes the target in a `*.cbuild-mlops.yml` file, a script turns that into the AI layer, and the toolbox builds the application.
-- Running the finished application on a Corstone-320 FVP simulation model or on
-  the Alif Ensemble E8 DevKit, switching between them by target-type only.
+   ```json
+   "alif.setools.root": "/absolute/path/to/setools"
+   ```
 
-## Prerequisites
+2. **SEGGER J-Link Software** V8.42 or later from
+   [segger.com](https://www.segger.com/downloads/jlink/). The board has an
+   on-board J-Link.
 
-- Python `>=3.10,<3.15`.
-- [Keil Studio for VS Code](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) from the VS Code marketplace.
-- Tools listed in [`vcpkg-configuration.json`](./vcpkg-configuration.json).
-- Keil Studio manages the required license; the free Keil MDK Community edition can be used for evaluation.
-- [Python extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
+## 3. Board
 
-The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) can be optionally installed manually with:
+- Connect a USB-C cable to **PRG USB** (the connector in the corner). It
+  powers the board and carries the J-Link and a USB-to-UART bridge. Leave
+  **MCU USB** unconnected.
+- Jumpers at their defaults: **JP5 on 1-2**, **JP7 on 3-4**. Never move
+  jumpers with power applied.
+- **SW4** selects what the UART bridge is connected to:
 
-```bash
-cpackget add PyTorch::ExecuTorch@1.4.0
-```
+  | SW4 | Connected to | Used for |
+  |-----|--------------|----------|
+  | `SEUART` (default) | Secure Enclave UART | SETOOLS (step 5) |
+  | `UART4` | Application UART4, 115200 8N1 | The example's console (step 6) |
 
-> [!Note]
-> The pack and Python exporter versions must match, as the generated `.pte`
-> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.4.0`.
+- With the board attached, run these once: in the SETOOLS directory
+  `updateSystemPackage -d` (SW4 on `SEUART`; picks the serial port, checks the
+  system firmware, offers to make the E8 the default target: answer yes), and
+  J-Link Commander (`JLinkExe`, `JLink.exe` on Windows), which updates the
+  on-board J-Link firmware and installs its serial-port drivers.
 
-## Quick start
-
-The example can be built and run entirely in Keil Studio for VS Code.
-
-1. Install [Keil Studio for VS Code](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) and [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) from the VS Code marketplace.
-2. Clone or download this repository, then open its folder in VS Code.
-3. Before using the example for the first time, select **Terminal > Run Task >
-   Setup Python virtual environment**. Wait for the task to create the `.venv`
-   environment and install the packages required to export the model. (The
-   **(uv)** variant of the task uses [uv](https://docs.astral.sh/uv/) instead
-   of pip and can download the Python version it asks for.)
-4. Select **Terminal > Run Task > Create AI layer**. This exports the model for
-   the NPU of the active target and writes the `ai_layer/` directory. (The
-   repository ships a generated layer, so this step is only needed after
-   changing the model or the target.)
-5. Use the CMSIS action buttons to build the application, then select **Run** or
-   **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
-   where Arm ships no FVP build, `.vscode/fvp.sh` runs the model in Docker:
-   Docker Desktop must be running, and the first Run or Debug builds the
-   container image (about 100 MB download). On Windows, set `model:` in the
-   csolution's target-set back to `FVP_Corstone_SSE-320` (the shim is a bash
-   script).
-
-For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
-**Manage Solution** and follow the
-[learning path](documentation/learning-path-devkit-e8.md) for the one-time
-board preparation (SETOOLS, switches, J-Link).
-
-A successful run prints the Ethos-U configuration, output logits, and a pass
-result:
-
-```text
-Ethos-U version info:
-    Arch:       v2.0.0
-    MACs/cc:    256
-    Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8896 byte model
-Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
-Test_result: PASS
-```
-
-### Command-line build
-
-The same workflow from the VS Code Terminal (or any shell with the tools from
-`vcpkg-configuration.json` on the path) is three commands plus the one-time
-venv setup.
-
-#### 0. Create the Python environment (once)
-
-On Linux or macOS:
+## 4. Project
 
 ```bash
-./setup_venv.sh
+git clone https://github.com/Arm-Examples/CMSIS-Executorch.git
+cd CMSIS-Executorch
+git checkout hackathon
 ```
 
-On Windows:
+Open the folder in VS Code and accept the tool activation and the pack
+installation (`PyTorch::ExecuTorch`, `AlifSemiconductor::Ensemble`, CMSIS).
+In the CMSIS view open **Manage Solution**, choose the target-type
+**DevKit-E8** (or **SSE-320-U85** for the FVP) and click **Apply**.
 
-```powershell
-.\setup_venv.bat
-```
+The repository ships a generated AI layer, so no Python is needed to build.
+To change the model, run **Terminal > Run Task > Setup Python virtual
+environment** once (several GB of PyTorch, takes a while), edit
+`model/model.py`, and run the task **Create AI layer** before building.
 
-The setup script creates `.venv/` and installs the packages required to
-quantize and export the model. It is safe to run again; use `--recreate` when
-you want a completely new environment. The wrappers use `python3` (`python` on
-Windows); point them at another interpreter with `PYTHON=python3.12 ./setup_venv.sh`.
+## 5. Prepare the board once
 
-With [uv](https://docs.astral.sh/uv/getting-started/installation/) on `PATH`,
-`./setup_venv.sh --uv --python 3.12` (or `.\setup_venv.bat ...`) creates the
-environment with `uv venv` for that Python version, downloading the interpreter
-if needed, and installs with `uv pip`. Add `--recreate` to change the Python
-version of an existing environment.
+The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
+debugger needs that table to point at a debug stub.
 
-> [!Note]
-> On Windows, enable long-path support or keep the repository close to the drive
-> root. PyTorch packages can otherwise exceed the legacy 260-character path limit.
+1. SW4 to **SEUART**, PRG USB attached.
+2. **Terminal > Run Task > Alif: Install M55_HP debug stubs**. Choose COM port
+   discovery (`-d`) the first time; SETOOLS remembers the port. The task
+   copies the configuration and stub from `.alif/` into the SETOOLS tree and
+   runs `app-gen-toc` and `app-write-mram`.
+3. SW4 to **UART4**.
 
-#### 1. Generate the MLOps information
+Repeat this after another project has reprogrammed the table.
 
-```bash
-cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs --update-rte
-```
+## 6. Build, run, debug
 
-This resolves the packs and the active target and writes
-`cmsis-executorch.cbuild-mlops.yml`: the processor, NPU and Vela
-settings of the target, and the location of the AI layer. (`--packs` and
-`--update-rte` are only needed on a fresh checkout.) Use `--active DevKit-E8`
-in this and the following commands to build for the Alif Ensemble E8 DevKit.
+1. Open the **Serial Monitor** panel on the PRG USB port, 115200 baud.
+2. In the CMSIS view click **Build**, then **Debug** (or **Run**). Keil Studio
+   starts the J-Link GDB server over SWD, loads the image into MRAM and stops
+   at `main`; continue with F5. The console shows:
 
-#### 2. Create the AI layer
+   ```text
+   Ethos-U version info:
+       Arch:       v2.0.0
+       MACs/cc:    256
+       Cmd stream: v1
+   ExecuTorch Ethos-U85 example: 8896 byte model
+   Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
+   Test_result: PASS
+   ```
 
-```bash
-python3 create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
-```
+3. Set a breakpoint after `module.forward(input)` in `src/app_main.cpp` and
+   inspect the output tensor, or ask the CMSIS Developer Assistant to do it:
+   "Build for the DevKit-E8, load it, break after the inference and show me
+   the output logits."
 
-This is the MLOps step. The script reads the NPU and Vela settings from the
-file, quantizes and exports `model/model.py` for that NPU, and writes the
-complete AI layer into `ai_layer/`: the component selection and the model as a
-C array. It runs itself in `.venv` when started with another interpreter (use
-`python` on Windows).
+**FVP instead of the board:** choose the **SSE-320-U85** target-type and click
+**Run** or **Debug**; the same output appears in the terminal. On macOS the
+FVP runs in Docker (Docker Desktop must be running; the first run builds the
+image, about 100 MB). On Windows set `model:` in the csolution's SSE-320-U85
+target-set to `FVP_Corstone_SSE-320`.
 
-#### 3. Build the application
+## 7. If something does not work
 
-```bash
-cbuild cmsis-executorch.csolution.yml --active SSE-320-U85
-```
+- **J-Link connects but never stops at `main`:** the table of contents does
+  not point at the debug stub. Repeat step 5.
+- **Debug hangs at "Connecting":** the target-set was switched to
+  `protocol: jtag`. Keep SWD: the generated load task blocks on JLinkExe's
+  JTAG-chain prompt, and the device stays in SWD mode after any SWD use
+  until it is power-cycled.
+- **No console output:** SW4 is still on `SEUART`, or the port was opened
+  before the switch was moved. Set `UART4` and reopen the port.
+- **`app-write-mram` gets no answer:** press reset while it waits, check SW4
+  is on `SEUART`, close any terminal holding the port.
+- **`L6815U: Out of memory` when linking on macOS:** Arm Compiler's linker is
+  a 32-bit binary there; build with `cbuild ... --toolchain CLANG` (or GCC).
+- **"torch is not installed":** run the task **Setup Python virtual
+  environment** first; it is only needed to regenerate the AI layer.
+- After **Apply**, the extension adds a J-Link entry to `.vscode/launch.json`
+  next to the committed FVP entry. That is expected.
 
-A plain CMSIS build; no Python is involved. The resulting image is:
+## Read on
 
-```text
-out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
-```
-
-#### 4. Run on the FVP
-
-```bash
-FVP_Corstone_SSE-320 \
-    -f board/Corstone-320/fvp_config.txt \
-    -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
-```
-
-## How model generation works
-
-The target is described by the `mlops:` node in
-`cmsis-executorch.csolution.yml`:
-
-```yaml
-mlops:
-  npu:
-    type: Ethos-U85
-  vela:
-    system: Ethos_U85_SRAM_MRAM
-    memory: Shared_Sram
-  model:
-    clayer: $AI-Layer$
-    name: TinyCNN
-```
-
-`cbuild setup --active DevKit-E8` resolves it into
-`cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. With the Ensemble pack in the solution, the toolbox also
-copies the pack's Vela configuration to `.cmsis/ensemble_vela.ini` and adds
-`--accelerator-config ethos-u85-256`, for both targets; the system
-configuration named above comes from that file. `create_ai_layer.py` reads
-those options and passes them to ExecuTorch's `EthosUCompileSpec`, so the
-target configuration is never duplicated in Python. The script then writes:
-
-- `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
-- `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
-- `ai_layer/model.pte`: the program itself, for inspection.
-
-See [the MLOps flow](documentation/mlops-flow.md) for a detailed walkthrough.
-
-## Component selection
-
-The [ExecuTorch CMSIS Pack](https://www.keil.arm.com/packs/executorch-pytorch/)
-provides the runtime, backends, and individual operators as selectable CMSIS
-components. `create_ai_layer.py` examines the exported program and writes
-`ai_layer/ai_layer.clayer.yml` so only the required components are linked.
-Because the layer is complete before the build starts, a model change that
-changes the operator set needs nothing more than re-running steps 2 and 3.
-
-## Adapting the example
-
-To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required. `get_calibration_inputs()` returns
-the samples the quantizer is calibrated with; give it representative data for
-a trained model. Then re-run `create_ai_layer.py` and build.
-
-To target another Ethos-U configuration, update the target and `mlops:`
-settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically. Moving to a different
-board or reference platform also requires the corresponding device pack, board
-support, memory layout, and FVP configuration.
-
-When updating ExecuTorch, update the CMSIS pack and Python package versions
-together. More information is available in
-[pack provenance](documentation/pack-provenance.md).
-
-## Project layout
-
-| Path | Purpose |
-|------|---------|
-| `cmsis-executorch.csolution.yml` | Solution, target, and MLOps configuration |
-| `cmsis-executorch.cproject.yml` | Application project: sources plus the Board and AI layers |
-| `model/model.py` | Example TinyCNN model |
-| `create_ai_layer.py` | Exports the model for the target and writes the AI layer |
-| `ai_layer/` | Generated: component selection and the embedded model data |
-| `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
-| `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
-| `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console) |
-| `.alif/` | SETOOLS configuration and debug stubs for the DevKit-E8 (from the Ensemble pack) |
-| `src/app_main.cpp` | Loads the model, runs inference, and prints the result |
-| `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading |
-| `documentation/` | The MLOps flow in detail; where the ExecuTorch pack comes from; the DevKit-E8 learning path |
-
-## Known limitations
-
-- The supplied platform configurations target Corstone-320 (FVP) and the Alif
-  Ensemble E8 DevKit, both with Ethos-U85; another target needs its
-  corresponding platform integration.
-- The `mlops:` node is solution-wide, so both targets share one exported
-  model. That is correct here because both have an Ethos-U85 with 256 MACs;
-  the Vela system configuration is the Ensemble pack's, which the FVP runs
-  just as well.
-
-## License
-
-The example code is licensed under Apache-2.0; see `LICENSE`. ExecuTorch and
-`src/arm_embedded_module.*`, which is derived from it, use a BSD-3-Clause license.
-
-## References
-
-- [PyTorch ExecuTorch CMSIS Pack](https://www.keil.arm.com/packs/executorch-pytorch/)
-- [ExecuTorch](https://github.com/pytorch/executorch)
-- [ExecuTorch Arm Ethos-U backend](https://docs.pytorch.org/executorch/main/backends-arm-ethos-u.html)
-- [CMSIS-Toolbox MLOps information](https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information)
-- [Arm CMSIS documentation](https://arm-software.github.io/CMSIS_6/latest/index.html)
+- [documentation/example.md](documentation/example.md): the example, the
+  command-line flow, how the model is generated.
+- [board/DevKit-E8/README.md](board/DevKit-E8/README.md): the board layer,
+  memory map and RTE configuration.
+- [documentation/mlops-flow.md](documentation/mlops-flow.md): the `mlops:`
+  node and `*.cbuild-mlops.yml` in detail.
