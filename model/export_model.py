@@ -25,7 +25,7 @@ from pathlib import Path
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from model import get_example_inputs, get_model  # noqa: E402
+from model import get_quantized_inputs, get_model  # noqa: E402
 
 
 def _load_mlops(path: Path) -> dict:
@@ -143,7 +143,10 @@ def main() -> None:
     compile_spec = EthosUCompileSpec(**compile_spec_kwargs)
 
     model = get_model()
-    example_inputs = get_example_inputs()
+    calibration_inputs = get_quantized_inputs()
+    if not calibration_inputs:
+        raise ValueError("Quantization calibration requires at least one sample")
+    example_inputs = (calibration_inputs[0],)
 
     exported = torch.export.export(model, example_inputs)
     _strip_guards_fn(exported.graph_module)
@@ -155,7 +158,9 @@ def main() -> None:
     quantizer = EthosUQuantizer(compile_spec)
     quantizer.set_global(get_symmetric_quantization_config(is_per_channel=True))
     prepared = prepare_pt2e(graph_module, quantizer)
-    prepared(*example_inputs)  # calibrate
+    with torch.no_grad():
+        for sample in calibration_inputs:
+            prepared(sample)  # accumulate calibration statistics
     quantized = convert_pt2e(prepared)
 
     quantized_exported = torch.export.export(quantized, example_inputs)

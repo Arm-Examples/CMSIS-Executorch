@@ -59,8 +59,8 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8864 byte model
-Output: 10 element(s): 0.0187 -0.0204 -0.0645 0.0034 0.0187 ...
+ExecuTorch Ethos-U85 example: 8832 byte model
+Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
 Test_result: PASS
 ```
 

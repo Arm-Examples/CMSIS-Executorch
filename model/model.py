@@ -31,8 +31,17 @@ class TinyCNN(nn.Module):
 
 
 def get_model() -> nn.Module:
+    # Fixed seed: the example uses untrained (random) weights, and a fixed seed
+    # keeps the generated AI layer identical from one export to the next.
+    torch.manual_seed(0)
     return TinyCNN().eval()
 
 
 def get_example_inputs() -> tuple[torch.Tensor, ...]:
     return (torch.randn(1, 3, 16, 16),)
+
+def get_quantized_inputs() -> list[torch.Tensor]:
+    """Return floating-point samples for quantization calibration."""
+    # Replace these synthetic samples with representative, preprocessed data
+    # when calibrating a trained model.
+    return [torch.ones(1, 3, 16, 16) - 0.5,-torch.ones(1, 3, 16, 16) + 0.5]
