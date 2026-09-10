@@ -7,9 +7,11 @@ __pycache__/
 # generated AI layer; the C array in ai_layer/model_pte.c is what gets built.
 *.pte
 
-# CMSIS-Toolbox build outputs
+# CMSIS-Toolbox build outputs. The per-context RTE/_<build>_<target>/ folders
+# are generated; the layers' RTE/ configuration files are sources.
 out/
 tmp/
+RTE/_*/
 .cmsis/
 *.cbuild-idx.yml
 *.cbuild-pack.yml
