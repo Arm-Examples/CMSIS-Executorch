@@ -22,22 +22,18 @@
 #include "ethosu_driver.h"
 #include "app_mem_regions.h"
 
-#define ITCM_BASE APP_ITCM_BASE
-#define ITCM_SIZE APP_HP_ITCM_SIZE
-#define DTCM_BASE APP_DTCM_BASE
-#define DTCM_SIZE APP_HP_DTCM_SIZE
-#define MRAM_BASE APP_MRAM_HP_BASE
-#define MRAM_SIZE APP_MRAM_HP_SIZE
-
 typedef struct {
     uint32_t start_addr;  // Base address of a block
     uint32_t end_addr;    // End address of a block (inclusive)
 } mem_block_t;
 
+// Regions the NPU reaches without going through the data cache (the device
+// header already defines ITCM_BASE/DTCM_BASE; app_mem_regions.h has the
+// application view used here).
 const mem_block_t non_cached_memory[] = {
-    {ITCM_BASE, ITCM_BASE + ITCM_SIZE - 1},
-    {DTCM_BASE, DTCM_BASE + DTCM_SIZE - 1},
-    {MRAM_BASE, MRAM_BASE + MRAM_SIZE - 1}
+    {APP_ITCM_BASE, APP_ITCM_BASE + APP_HP_ITCM_SIZE - 1},
+    {APP_DTCM_BASE, APP_DTCM_BASE + APP_HP_DTCM_SIZE - 1},
+    {APP_MRAM_HP_BASE, APP_MRAM_HP_BASE + APP_MRAM_HP_SIZE - 1}
 };
 
 /**
