@@ -21,8 +21,8 @@ care of it on a fresh clone. To install it by hand:
 cpackget add PyTorch::ExecuTorch@1.4.0
 ```
 
-The version is pinned exactly, in `cmsis-executorch-simple.csolution.yml` and
-`cmsis-executorch-simple.cproject.yml`:
+The version is pinned exactly, in `cmsis-executorch.csolution.yml` and
+`cmsis-executorch.cproject.yml`:
 
 ```yaml
 packs:
@@ -36,7 +36,7 @@ version — see [Moving to a new ExecuTorch version](#moving-to-a-new-executorch
 `create_ai_layer.py` reads the installed pack's `.pdsc` out of the pack root
 (`$CMSIS_PACK_ROOT`, or cpackget's default) to find out which operator
 components exist. It reads the version `cbuild setup` resolved, taken from
-`cmsis-executorch-simple.cbuild-pack.yml`, so a pack root holding several
+`cmsis-executorch.cbuild-pack.yml`, so a pack root holding several
 ExecuTorch versions cannot make it read the wrong one.
 
 ## What is in the pack
@@ -136,9 +136,9 @@ in order:
 
    ```bash
    ./setup_venv.sh --recreate
-   cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85 --packs
-   python3 create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
-   cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85
+   cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs
+   python3 create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
+   cbuild cmsis-executorch.csolution.yml --active SSE-320-U85
    ```
 
    A changed operator set simply shows up in the regenerated

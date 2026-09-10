@@ -1,6 +1,6 @@
 # The MLOps flow
 
-The `mlops:` node in `cmsis-executorch-simple.csolution.yml` is the central
+The `mlops:` node in `cmsis-executorch.csolution.yml` is the central
 definition of the Ethos-U target for this example. It follows the CMSIS-Toolbox
 [MLOps information](https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information)
 specification. This document explains how the three build steps use and
@@ -8,14 +8,14 @@ propagate that information.
 
 ```mermaid
 flowchart TD
-    A["cmsis-executorch-simple.csolution.yml<br/><b>mlops:</b> node"] -->|"1. cbuild setup --active SSE-320-U85"| B["cmsis-executorch-simple.cbuild-mlops.yml<br/>npu, vela.options, model.clayer"]
+    A["cmsis-executorch.csolution.yml<br/><b>mlops:</b> node"] -->|"1. cbuild setup --active SSE-320-U85"| B["cmsis-executorch.cbuild-mlops.yml<br/>npu, vela.options, model.clayer"]
     B -->|"2. create_ai_layer.py"| C["EthosUCompileSpec<br/>quantize, delegate, Vela"]
     D["model/model.py<br/>TinyCNN"] --> C
     C --> E["ai_layer/model_pte.c<br/>the program as a C array"]
     C --> F["ai_layer/ai_layer.clayer.yml<br/>component selection"]
     E --> G["3. cbuild --active SSE-320-U85"]
     F --> G
-    G --> H["cmsis-executorch-simple.axf"]
+    G --> H["cmsis-executorch.axf"]
 ```
 
 ## 1. `cbuild setup` turns the csolution into `*.cbuild-mlops.yml`
@@ -38,9 +38,9 @@ solution:
       target: SSE-320-U85
 ```
 
-`cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85`
+`cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85`
 resolves it for the active target and writes
-`cmsis-executorch-simple.cbuild-mlops.yml`:
+`cmsis-executorch.cbuild-mlops.yml`:
 
 ```yaml
 cbuild-mlops:
@@ -69,7 +69,7 @@ the flow also works on a checkout without a generated layer.
 
 ## 2. `create_ai_layer.py` turns `*.cbuild-mlops.yml` into the AI layer
 
-`python create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml` stands in
+`python create_ai_layer.py cmsis-executorch.cbuild-mlops.yml` stands in
 for an MLOps system. It reads the file and:
 
 1. builds ExecuTorch's `EthosUCompileSpec` from `npu:` and `vela:` -- the
@@ -94,7 +94,7 @@ Everything else in the pack is never compiled, let alone linked.
 
 ## 3. `cbuild` builds the application
 
-`cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85` is a plain
+`cbuild cmsis-executorch.csolution.yml --active SSE-320-U85` is a plain
 CMSIS build. The cproject knows nothing about the model: it lists the
 application source and the two layers, and the AI layer contributes both the
 component selection and the model data. There is no `executes:` node and no

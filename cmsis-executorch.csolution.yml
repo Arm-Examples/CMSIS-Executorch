@@ -4,9 +4,9 @@
 # A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP.
 # Three steps build it:
 #
-#   cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85
-#   python create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
-#   cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85
+#   cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85
+#   python create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
+#   cbuild cmsis-executorch.csolution.yml --active SSE-320-U85
 #
 # The `mlops:` node below makes `cbuild setup` emit the *.cbuild-mlops.yml;
 # create_ai_layer.py reads the NPU and Vela settings from it, exports the model
@@ -37,7 +37,7 @@ solution:
       target-set:
         - set:
           images:
-            - project-context: cmsis-executorch-simple.Debug
+            - project-context: cmsis-executorch.Debug
           debugger:
             name: Arm-FVP
             model: FVP_Corstone_SSE-320
@@ -50,9 +50,9 @@ solution:
       optimize: debug
 
   projects:
-    - project: ./cmsis-executorch-simple.cproject.yml
+    - project: ./cmsis-executorch.cproject.yml
 
-  # MLOps information: exported to cmsis-executorch-simple.cbuild-mlops.yml by
+  # MLOps information: exported to cmsis-executorch.cbuild-mlops.yml by
   # `cbuild setup ... --active SSE-320-U85`. Retarget the NPU here and
   # create_ai_layer.py picks it up on its next run.
   # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information

@@ -98,18 +98,18 @@ you want a completely new environment.
 #### 1. Generate the MLOps information
 
 ```bash
-cbuild setup cmsis-executorch-simple.csolution.yml --active SSE-320-U85 --packs --update-rte
+cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs --update-rte
 ```
 
 This resolves the packs and the active target and writes
-`cmsis-executorch-simple.cbuild-mlops.yml`: the processor, NPU and Vela
+`cmsis-executorch.cbuild-mlops.yml`: the processor, NPU and Vela
 settings of the target, and the location of the AI layer. (`--packs` and
 `--update-rte` are only needed on a fresh checkout.)
 
 #### 2. Create the AI layer
 
 ```bash
-python3 create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
+python3 create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
 ```
 
 This is the MLOps step. The script reads the NPU and Vela settings from the
@@ -121,13 +121,13 @@ C array. It runs itself in `.venv` when started with another interpreter (use
 #### 3. Build the application
 
 ```bash
-cbuild cmsis-executorch-simple.csolution.yml --active SSE-320-U85
+cbuild cmsis-executorch.csolution.yml --active SSE-320-U85
 ```
 
 A plain CMSIS build; no Python is involved. The resulting image is:
 
 ```text
-out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.axf
+out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
 #### 4. Run on the FVP
@@ -135,13 +135,13 @@ out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.axf
 ```bash
 FVP_Corstone_SSE-320 \
     -f board/Corstone-320/fvp_config.txt \
-    -a out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.axf
+    -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
 ## How model generation works
 
 The target is described by the `mlops:` node in
-`cmsis-executorch-simple.csolution.yml`:
+`cmsis-executorch.csolution.yml`:
 
 ```yaml
 mlops:
@@ -156,7 +156,7 @@ mlops:
 ```
 
 `cbuild setup --active SSE-320-U85` resolves it into
-`cmsis-executorch-simple.cbuild-mlops.yml`, which contains the processor, NPU
+`cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
 and Vela options. `create_ai_layer.py` reads those options and passes them to
 ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
 duplicated in Python. The script then writes:
@@ -196,8 +196,8 @@ together. More information is available in
 
 | Path | Purpose |
 |------|---------|
-| `cmsis-executorch-simple.csolution.yml` | Solution, target, and MLOps configuration |
-| `cmsis-executorch-simple.cproject.yml` | Application project: sources plus the Board and AI layers |
+| `cmsis-executorch.csolution.yml` | Solution, target, and MLOps configuration |
+| `cmsis-executorch.cproject.yml` | Application project: sources plus the Board and AI layers |
 | `model/model.py` | Example TinyCNN model |
 | `create_ai_layer.py` | Exports the model for the target and writes the AI layer |
 | `ai_layer/` | Generated: component selection and the embedded model data |

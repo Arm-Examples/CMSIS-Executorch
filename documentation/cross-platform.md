@@ -51,7 +51,7 @@ when the venv has not been created yet. This is what lets the README, the CI
 workflow and the VS Code task all use the same plain command:
 
 ```bash
-python3 create_ai_layer.py cmsis-executorch-simple.cbuild-mlops.yml
+python3 create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
 ```
 
 The build itself (`cbuild setup`, `cbuild`) is CMSIS-Toolbox only and needs no
@@ -81,7 +81,7 @@ command line all work as they do elsewhere.
 
 ```powershell
 FVP_Corstone_SSE-320 -f board/Corstone-320/fvp_config.txt `
-    -a out/cmsis-executorch-simple/SSE-320-U85/Debug/cmsis-executorch-simple.axf
+    -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
 ## CI coverage
