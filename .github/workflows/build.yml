@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # CI for the three-step flow (cbuild setup, create_ai_layer.py, cbuild)
-# followed by an FVP run.
+# followed by an FVP run, with each of the three toolchains.
 name: Build and Run
 
 # This branch needs CMSIS-Toolbox 2.14.1+p88 or newer (extra keys under the
@@ -17,11 +17,16 @@ env:
   TARGET: SSE-320-U85
 
 jobs:
-  # Full build plus an FVP run. Linux only: the FVP needs an Arm user-based
-  # license, so matrixing this across hosts is not cheap.
+  # Full build plus an FVP run, once per toolchain. Linux only: the FVP needs
+  # an Arm user-based license, so matrixing this across hosts is not cheap.
   build-and-run:
-    name: Build and run on Corstone-320
+    name: Build and run on Corstone-320 (${{ matrix.toolchain }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [AC6, GCC, CLANG]
 
     steps:
       - name: Checkout repo
@@ -66,7 +71,7 @@ jobs:
         run: python3 create_ai_layer.py ${SOLUTION}.cbuild-mlops.yml
 
       - name: Build
-        run: cbuild ${SOLUTION}.csolution.yml --active ${TARGET}
+        run: cbuild ${SOLUTION}.csolution.yml --active ${TARGET} --toolchain ${{ matrix.toolchain }}
 
       - name: Run on the FVP
         env:
@@ -89,7 +94,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: corstone-320-build
+          name: corstone-320-${{ matrix.toolchain }}
           path: |
             fvp_stdout.log
             out/**/*.axf
