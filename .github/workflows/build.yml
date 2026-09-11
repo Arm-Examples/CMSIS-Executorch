@@ -149,7 +149,7 @@ jobs:
   # license needed, so this is cheap to matrix. Without this job, Windows
   # support regresses on the first refactor and nobody notices.
   venv-cross-platform:
-    name: Model export venv (${{ matrix.os }})
+    name: Export environment check, import only (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -196,8 +196,8 @@ jobs:
               PY=.venv/bin/python
           fi
           "${PY}" -m pip list | grep -iE "torch|executorch|vela|tosa|flatbuffers"
-          # flatbuffers must stay at 24.3.25: tosa-tools wants 25.2.10 and is
-          # installed --no-deps precisely to stop that. See
+          # flatbuffers must stay at 24.3.25 (the Arm backend's pin): tosa-tools
+          # wants 25.2.10 and is installed --no-deps precisely to stop that. See
           # requirements-arm-tosa.txt.
           # No grep -q: with pipefail, grep closing the pipe early fails the step.
           "${PY}" -m pip show flatbuffers | grep "Version: 24.3.25" \

@@ -41,20 +41,25 @@ SYMBOL = "model_pte"
 
 
 def run_in_venv() -> None:
-    """Re-run under .venv when torch is not importable from this interpreter."""
-    try:
-        import torch  # noqa: F401
-    except ImportError:
-        venv = HERE / ".venv"
-        python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-        # sys.prefix is the venv directory when running inside it (comparing
-        # interpreter paths does not work: venv symlinks resolve to the base).
-        if not python.is_file() or Path(sys.prefix).resolve() == venv.resolve():
-            sys.exit(
-                f"torch is not installed for {sys.executable}.\n"
-                "Create the venv first: ./setup_venv.sh (Linux/macOS) or setup_venv.bat (Windows)"
-            )
-        sys.exit(subprocess.run([str(python), __file__, *sys.argv[1:]]).returncode)
+    """Re-run under the project's .venv unless this interpreter already is it.
+
+    Deciding by "does torch import" is not enough: a torch installed for the
+    host interpreter would keep the export outside the environment with the
+    pinned executorch. sys.prefix is the venv directory when running inside it
+    (comparing interpreter paths does not work: venv symlinks resolve to the
+    base interpreter).
+    """
+    venv = HERE / ".venv"
+    if Path(sys.prefix).resolve() == venv.resolve():
+        return
+    python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    if not python.is_file():
+        sys.exit(
+            f"{venv} does not exist.\n"
+            "Create it first: ./setup_venv.sh (Linux/macOS) or setup_venv.bat (Windows)"
+        )
+    print(f"[ai_layer] running in {python}", flush=True)
+    sys.exit(subprocess.run([str(python), __file__, *sys.argv[1:]]).returncode)
 
 
 def pack_root() -> Path:
@@ -117,7 +122,10 @@ def compile_spec(mlops: dict, mlops_dir: Path):
         "memory_mode": option("memory-mode"),
     }
     if vela.get("ini"):
-        kwargs["config_ini"] = str(mlops_dir / vela["ini"])
+        # ExecuTorch stores the path in the compile spec, and the spec ends up
+        # in the .pte. A path relative to the working directory keeps the
+        # program identical between checkouts; Vela resolves it from there.
+        kwargs["config_ini"] = os.path.relpath(mlops_dir / vela["ini"])
     print(f"[ai_layer] Vela: {kwargs}")
     return EthosUCompileSpec(**kwargs)
 
