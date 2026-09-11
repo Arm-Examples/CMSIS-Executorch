@@ -23,7 +23,7 @@ csolution debugs it through the on-board J-Link (`J-Link Server`, SWD at
 
 | Region | Address | Used for |
 |--------|---------|----------|
-| MRAM (HP application region) | `0x80200000`, 2 MB | Code, constants, the embedded `.pte` model |
+| MRAM (HP application region) | `0x80200000`, 2 MB | Constants, the embedded `.pte` model; with AC6 also the code, which executes in place. With GCC and Clang the startup code executes from MRAM and copies the rest of the code to ITCM (`linker_gnu_mram.ld.src`) |
 | DTCM (SRAM3) | `0x20000000` (core alias; `0x50800000` global), 1 MB | `.data`/`.bss`, 96 kB heap, 32 kB stack |
 | SRAM0/SRAM1 (bulk) | `0x02000000`, 8 MB combined (`SRAM0_SRAM1_COMBINED` in `app_mem_regions.h`; the GNU script uses SRAM0 alone, 4 MB) | `.bss.ai_pool`: the runner's 1 MB method pool and 2 MB temp pool (NPU scratch) |
 
@@ -33,8 +33,8 @@ consumed by `src/app_main.cpp`.
 
 ## RTE configuration
 
-Unlike the Corstone-320 layer, `RTE/` is committed for this layer (see
-`.gitignore`): Alif's stdio retarget refuses to build unless UART4 is in
+`RTE/` is committed for this layer, as for the Corstone-320 one; here it
+matters: Alif's stdio retarget refuses to build unless UART4 is in
 polling mode (`RTE_UART4_BLOCKING_MODE_ENABLE 1` in `RTE_Device.h`), and the
 Conductor-generated `pins.h`/`board_defs.h` differ from the pack defaults. The
 files are the pack's own DevKit-E8 layer configuration.

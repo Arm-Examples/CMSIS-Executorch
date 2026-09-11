@@ -129,8 +129,12 @@ target-set to `FVP_Corstone_SSE-320`.
 
 ## 7. If something does not work
 
-- **J-Link connects but never stops at `main`:** the table of contents does
-  not point at the debug stub. Repeat step 5.
+- **J-Link connects but never stops at `main`:** either the table of contents
+  does not point at the debug stub (repeat step 5), or the image cannot boot.
+  Look before reprogramming: in the debugger, read the vector table at
+  `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
+  lockup at reset, which an image linked to run from ITCM produces when the
+  code that copies it there is itself in ITCM.
 - **Debug hangs at "Connecting":** the target-set was switched to
   `protocol: jtag`. Keep SWD: the generated load task blocks on JLinkExe's
   JTAG-chain prompt, and the device stays in SWD mode after any SWD use

@@ -43,16 +43,23 @@
         },
         {
             "label": "Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)",
-            "detail": "Programs the ATOC/MRAM stubs with Alif SETOOLS so J-Link can load and debug the M55_HP core. Set SW4 to SEUART, set 'alif.setools.root' in your VS Code settings.",
+            "detail": "Programs the ATOC/MRAM stubs with Alif SETOOLS so J-Link can load and debug the M55_HP core. Overwrites build/config/M55_HP_mram_cfg.json and build/images/M55_HP_mram_stub.bin in the SETOOLS tree, then runs app-gen-toc and app-write-mram; stops at the first failing step. Set SW4 to SEUART, set 'alif.setools.root' in your VS Code settings.",
             "type": "shell",
             "command": [
-                "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json';",
-                "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin';",
-                "cd '${config:alif.setools.root}';",
-                "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json';",
-                "./app-write-mram -p ${input:discoverCOM};"
+                "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json' &&",
+                "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin' &&",
+                "cd '${config:alif.setools.root}' &&",
+                "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json' &&",
+                "./app-write-mram -p ${input:discoverCOM}"
             ],
             "windows": {
+                "command": [
+                    "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json'; if (-not $?) { exit 1 };",
+                    "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin'; if (-not $?) { exit 1 };",
+                    "cd '${config:alif.setools.root}'; if (-not $?) { exit 1 };",
+                    "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json'; if (-not $?) { exit 1 };",
+                    "./app-write-mram -p ${input:discoverCOM}"
+                ],
                 "options": {
                     "shell": {
                         "executable": "powershell.exe",

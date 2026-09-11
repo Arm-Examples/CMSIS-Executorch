@@ -69,19 +69,23 @@ SECTIONS
       *(.ARM.extab* .gnu.linkonce.armextab.*)
   }
 
+  /* Everything that runs before the copy table has moved .code.at_itcm into
+     ITCM must execute from MRAM. With -ffunction-sections (the default of the
+     CMSIS-Toolbox for GCC and Clang) Reset_Handler lives in
+     .text.Reset_Handler, so the selectors must include .text.* as well;
+     the pack's original script only names .text and links the reset vector
+     into ITCM before anything has copied it there. */
   .startup.at_mram : ALIGN(2048)
   {
     KEEP(*(.vectors))
 
-    *startup*(.text .rodata*)
-    *system*(.text .rodata*)
-    *sys_*(.text .rodata*)
-    *pm*(.text .rodata*)
-    *tgu*(.text .rodata*)
-    *mpu*(.text .rodata*)
-    *sau_tcm_ns_setup*(.text .rodata*)
-
-    *lv_*(.text .rodata*)
+    *startup*(.text .text.* .rodata .rodata*)
+    *system*(.text .text.* .rodata .rodata*)
+    *sys_*(.text .text.* .rodata .rodata*)
+    *pm*(.text .text.* .rodata .rodata*)
+    *tgu*(.text .text.* .rodata .rodata*)
+    *mpu*(.text .text.* .rodata .rodata*)
+    *sau_tcm_ns_setup*(.text .text.* .rodata .rodata*)
 
     . = ALIGN(16);
   } > MRAM
@@ -151,6 +155,10 @@ SECTIONS
   .code.at_itcm : ALIGN(8)
   {
     *(.text*)
+    /* Clang's libc++ places its operator new/delete overrides in an orphan
+       section; without this line lld gives it a load segment of its own that
+       the copy table does not cover. */
+    *(__lcxx_override)
     . = ALIGN(16);
   } > ITCM AT > MRAM
 
@@ -221,6 +229,11 @@ SECTIONS
     . = . + __HEAP_SIZE;
     . = ALIGN(8);
     __HeapLimit = .;
+    /* picolibc (the LLVM embedded toolchain's C library) takes the heap from
+       __heap_start/__heap_end; without them malloc() fails and the Ethos-U
+       driver cannot create its semaphore. newlib uses end/__HeapLimit. */
+    __heap_start = __end__;
+    __heap_end = __HeapLimit;
   } > DTCM
 
   .stack (ORIGIN(DTCM) + LENGTH(DTCM) - __STACK_SIZE) (NOLOAD) : ALIGN(8)
@@ -239,7 +252,13 @@ SECTIONS
     KEEP(*(.fini))
 
     . = ALIGN(4);
-    /* preinit data */
+    /* preinit data. picolibc (the LLVM embedded toolchain's C library) runs
+       static initializers from __bothinit_array_start to __bothinit_array_end,
+       covering .preinit_array and .init_array; without these two symbols its
+       __libc_init_array sees an empty range and no C++ static object is
+       constructed (the ExecuTorch backend registration among them). newlib
+       uses the __preinit_array_* / __init_array_* pairs. */
+    PROVIDE_HIDDEN (__bothinit_array_start = .);
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP(*(.preinit_array))
     PROVIDE_HIDDEN (__preinit_array_end = .);
@@ -250,6 +269,7 @@ SECTIONS
     KEEP(*(SORT(.init_array.*)))
     KEEP(*(.init_array))
     PROVIDE_HIDDEN (__init_array_end = .);
+    PROVIDE_HIDDEN (__bothinit_array_end = .);
 
     . = ALIGN(4);
     /* finit data */
