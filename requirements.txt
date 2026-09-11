@@ -6,7 +6,7 @@
 # the PyTorch::ExecuTorch@1.4.1 pack pinned in the csolution. ExecuTorch 1.4.1
 # targets torch 2.13.0 and torchao 0.18.0 (install_requirements.py on the
 # release/1.4 branch); prebuilt wheels exist for Linux, macOS and Windows,
-# Python 3.10 to 3.14.
+# Python 3.10 to 3.14 (the export venv stays below 3.14: see requirements-arm-tosa.txt).
 executorch==1.4.1
 torch==2.13.0
 torchao==0.18.0

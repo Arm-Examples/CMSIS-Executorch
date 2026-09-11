@@ -12,7 +12,8 @@
 # therefore reports these four unmet requirements on purpose; the export path
 # uses none of them. Installing executorch[ethos_u] instead has the same problem.
 #
-# tosa-tools provides the `tosa_serializer` module.
+# tosa-tools provides the `tosa_serializer` module. 2026.5.0 ships wheels for
+# CPython 3.10 to 3.13 only; setup_venv.py refuses 3.14 for that reason.
 ml_dtypes == 0.5.1
 flatbuffers == 24.3.25
 tosa-tools == 2026.5.0
