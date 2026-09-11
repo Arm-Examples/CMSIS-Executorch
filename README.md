@@ -24,7 +24,7 @@ application.
 
 ## Prerequisites
 
-- Python `>=3.10,<3.15`.
+- Python `>=3.10,<3.14` (tosa-tools 2026.5.0 has no 3.14 wheels).
 - [Keil Studio for VS Code](https://marketplace.visualstudio.com/items?itemName=Arm.keil-studio-pack) from the VS Code marketplace.
 - Tools listed in [`vcpkg-configuration.json`](./vcpkg-configuration.json).
 - Keil Studio manages the required license; the free Keil MDK Community edition can be used for evaluation.

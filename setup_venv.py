@@ -22,11 +22,14 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 VENV_DIR = HERE / ".venv"
 
-# ExecuTorch 1.4 declares requires-python = ">=3.10,<3.15" in its pyproject.toml.
-# Check it up front: without this, an unsupported interpreter fails much later
-# with a resolver error that says nothing about the Python version.
+# ExecuTorch 1.4 declares requires-python = ">=3.10,<3.15" in its pyproject.toml,
+# but the tosa-tools 2026.5.0 it pins for the Arm backend (see
+# requirements-arm-tosa.txt) only ships wheels up to CPython 3.13, so on 3.14
+# pip reports "No matching distribution found for tosa-tools==2026.5.0".
+# Check the version up front: without this, an unsupported interpreter fails
+# much later with a resolver error that says nothing about the Python version.
 MIN_PYTHON = (3, 10)
-MAX_PYTHON_EXCLUSIVE = (3, 15)
+MAX_PYTHON_EXCLUSIVE = (3, 14)
 
 
 def venv_python(venv_dir: Path) -> Path:
@@ -83,7 +86,7 @@ def python_version(value: str) -> tuple[int, ...]:
         raise argparse.ArgumentTypeError("expected a Python version such as 3.12 or 3.12.10")
     version = tuple(int(n) for n in value.split("."))
     if not (MIN_PYTHON <= version[:2] < MAX_PYTHON_EXCLUSIVE):
-        raise argparse.ArgumentTypeError("ExecuTorch needs Python >=3.10,<3.15")
+        raise argparse.ArgumentTypeError("ExecuTorch needs Python >=3.10,<3.14")
     return version
 
 
@@ -99,7 +102,7 @@ def check_venv_python(python: Path, requested: tuple[int, ...] | None) -> None:
     version = tuple(int(n) for n in have.split("."))
     if not (MIN_PYTHON <= version[:2] < MAX_PYTHON_EXCLUSIVE):
         sys.exit(
-            f"error: {python} uses Python {have}; ExecuTorch needs >=3.10,<3.15. "
+            f"error: {python} uses Python {have}; ExecuTorch needs >=3.10,<3.14. "
             "Re-run with --recreate and a supported Python version."
         )
     if requested and version[: len(requested)] != requested:
