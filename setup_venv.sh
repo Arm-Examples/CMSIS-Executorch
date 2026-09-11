@@ -10,7 +10,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 use_uv=false
-uv_python='>=3.10,<3.15'
+uv_python='>=3.10,<3.14'
 previous=''
 for arg in "$@"; do
     if [[ "$previous" == --python ]]; then
