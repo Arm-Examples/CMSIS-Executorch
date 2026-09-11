@@ -31,10 +31,10 @@
             "label": "Create AI layer",
             "detail": "Export model/model.py for the NPU in cmsis-executorch.cbuild-mlops.yml and write ai_layer/ (run a CMSIS build or 'cbuild setup' first)",
             "type": "shell",
-            "command": "python3",
+            "command": "${workspaceFolder}/.venv/bin/python",
             "args": ["create_ai_layer.py", "cmsis-executorch.cbuild-mlops.yml"],
             "windows": {
-                "command": "python"
+                "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
             },
             "options": {
                 "cwd": "${workspaceFolder}"
