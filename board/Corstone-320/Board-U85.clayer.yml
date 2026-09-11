@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Corstone-320 (SSE-320) board bring-up for the Ethos-U85 NPU, trimmed to what
-# a headless ExecuTorch inference runner needs: device startup, a UART-backed
-# stdout, and the Ethos-U driver. Audio/video vStreams and VIO are omitted.
+# a headless ExecuTorch inference runner needs: device startup, stdout over
+# semihosting, and the Ethos-U driver. Audio/video vStreams and VIO are omitted.
 layer:
   type: Board
   description: Corstone-320 board setup for headless Ethos-U85 inference
