@@ -191,8 +191,18 @@ Python. The two extra keys under `model:` are parameters of the model itself;
 the toolbox passes them through and the script hands them to `model/model.py`.
 This needs CMSIS-Toolbox 2.14.1+p88 or newer; an older toolbox stops at
 `error csolution: schema check failed, verify syntax` on those two lines (the
-`main` branch of this repository works with the released 2.14.1). The script
-then writes:
+`main` branch of this repository works with the released 2.14.1). The vcpkg
+registry has no such toolbox yet, so on the command line put the one bundled
+with the Keil Studio csolution extension 1.70.1 or newer first on `PATH`, for
+example on macOS:
+
+```bash
+export PATH=~/.vscode/extensions/arm.cmsis-csolution-1.70.1-*/tools/cmsis-toolbox/bin:$PATH
+csolution --version   # must print 2.14.1+p88 or newer
+```
+
+Inside VS Code the extension uses its bundled toolbox automatically. The
+script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
