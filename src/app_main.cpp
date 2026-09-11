@@ -107,7 +107,7 @@ extern "C" int app_main(void) {
   }
 
   printf("Test_result: PASS\n");
-  printf("\x04");  // EOT stops the FVP (uart0.shutdown_on_eot); a board just sees a 0x04
+  printf("\x04");  // EOT: ends the FVP run (semihosting exit); a board just sees a 0x04
   fflush(stdout);
   return 0;
 }

@@ -35,7 +35,9 @@ class TinyCNN(nn.Module):
 
 def get_model(input_shape: tuple[int, ...] = INPUT_SHAPE) -> nn.Module:
     # Fixed seed: the example uses untrained (random) weights, and a fixed seed
-    # keeps the generated AI layer identical from one export to the next.
+    # keeps the exported program identical from one export to the next (the
+    # C array also embeds the Vela options, so the same working directory is
+    # part of that guarantee).
     torch.manual_seed(0)
     return TinyCNN(input_shape).eval()
 

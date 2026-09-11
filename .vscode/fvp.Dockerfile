@@ -2,8 +2,9 @@
 #
 # The image is the Linux build of the very same release the rest of the project
 # pins in vcpkg-configuration.json (arm:models/arm/avh-fvp), so the model, the
-# Ethos-U85 plugin and plugins/GDBServer.so are bit-identical to what a Linux or
-# Windows developer gets from vcpkg. .vscode/fvp.sh builds it on first use.
+# Ethos-U85 plugin and plugins/GDBServer.so are the same release and
+# configuration a Linux or Windows developer gets from vcpkg (the binaries
+# differ per host). .vscode/fvp.sh builds it on first use.
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive

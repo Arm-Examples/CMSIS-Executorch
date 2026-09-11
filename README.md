@@ -52,9 +52,11 @@ The example can be built and run entirely in Keil Studio for VS Code.
    **(uv)** variant of the task uses [uv](https://docs.astral.sh/uv/) instead
    of pip and can download the Python version it asks for.)
 4. Select **Terminal > Run Task > Create AI layer**. This exports the model for
-   the NPU of the active target and writes the `ai_layer/` directory. (The
+   the NPU of the active target and writes the `ai_layer/` directory. It reads
+   `cmsis-executorch.cbuild-mlops.yml`, which the extension writes when the
+   solution is loaded or built (`cbuild setup` on the command line). The
    repository ships a generated layer, so this step is only needed after
-   changing the model or the target.)
+   changing the model or the target.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
    where Arm ships no FVP build, `.vscode/fvp.sh` runs the model in Docker:
@@ -204,7 +206,10 @@ model name or input handling as required: `INPUT_SHAPE` and
 `get_model(input_shape)` define the input, and
 `get_calibration_inputs(input_shape, calibration_samples)` returns the samples
 the quantizer is calibrated with; give it representative data for a trained
-model. Then re-run `create_ai_layer.py` and build.
+model. The runner in `src/app_main.cpp` builds its input tensor with the same
+fixed shape and prints the output as ten floats, so a model with another input
+shape or output needs matching changes there. Then re-run `create_ai_layer.py`
+and build.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
