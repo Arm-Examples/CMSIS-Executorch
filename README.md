@@ -153,7 +153,8 @@ Repeat this after another project has reprogrammed the table.
    A face with guidance takes 78 ms: eight `dit_step` calls of 8.5 ms on the
    NPU and a 3 ms decode. The same face appears on the LCD, scaled to
    384 x 384 in the centre of the screen; it is bit for bit the image the FVP
-   produces (same CRC).
+   produces. (The CRC depends on the exported program, which can differ
+   slightly between the machines that run **Create AI layer**.)
 3. Press the **SW2 joystick** to the left for a new face (the next seed; class
    and guidance follow from it), to the right to generate faces back to back
    until you press right again. Each one is reported on the console.

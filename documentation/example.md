@@ -128,10 +128,14 @@ Result files in out: written
 Test_result: PASS
 ```
 
-The CRC is deterministic for a given program and toolchain: the same image
-comes out of every run, and the DevKit-E8 produces the identical image. It
-matches the host's fake-quant rendering of the same seed at 48.4 dB PSNR and
-the float model at 44.0 dB (`--compare`, see step 5 below). On the DevKit-E8
+The CRC identifies the exported program's image: AC6, GCC and Clang builds,
+the FVP and the DevKit-E8 all produce the same image from the same program.
+The program itself can differ in a few quantization parameters from one host
+to the next, because the calibration runs in floating point: the export
+behind this listing (macOS) gives CRC 6b938c66, CI's export on Linux gives
+3f8a2b1e. Either way the image matches the host's fake-quant rendering of the
+same seed at about 48.5 dB PSNR, and the float model at 44 dB (`--compare`,
+see step 5 below). On the DevKit-E8
 the face takes 78 ms at 400 MHz: 8.5 ms per `dit_step` (27.1 M NPU cycles for
 the eight calls, NPU active 95%, MAC array active 39%) and 3 ms for `decode`
 (1.3 M cycles).
