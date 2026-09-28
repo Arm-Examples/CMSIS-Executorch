@@ -34,7 +34,7 @@ the board. Everything about the example itself is in
 
 ## 2. Alif and SEGGER tools (board only)
 
-1. **Alif SETOOLS** V1.110.000 or later from the
+1. **Alif SETOOLS** V1.110.00 or later (V1.112.00 is current) from the
    [Alif software and tools page](https://alifsemi.com/support/software-tools/ensemble/)
    (login required). Unpack it; on Linux and macOS make the tools executable
    and install the Python packages its README lists. Add the root directory
@@ -104,8 +104,13 @@ debugger needs that table to point at a debug stub.
 1. SW4 to **SEUART**, PRG USB attached.
 2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**. Choose COM port
    discovery (`-d`) the first time; SETOOLS remembers the port. The task
+   selects the DevKit-E8's part in SETOOLS (`tools-config -p 'E8
+   (AE822FA0E5597LS0) ...' -r A0`: the part goes into the table of contents,
+   and the Secure Enclave does not boot a table built for another part),
    copies the configuration and stub from `.alif/` into the SETOOLS tree and
-   runs `app-gen-toc` and `app-write-mram`.
+   runs `app-gen-toc` and `app-write-mram`. If `app-write-mram` reports a
+   different revision of the board, answer `y`: only the part number decides
+   whether the table boots.
 3. SW4 to **UART4**.
 
 Repeat this after another project has reprogrammed the table.
@@ -182,7 +187,8 @@ target-set to `FVP_Corstone_SSE-320`.
 ## 7. If something does not work
 
 - **J-Link connects but never stops at `main`:** either the table of contents
-  does not point at the debug stub (repeat step 5), or the image cannot boot.
+  does not point at the debug stub or was built for another part, which the
+  Secure Enclave skips (repeat step 5), or the image cannot boot.
   Look before reprogramming: in the debugger, read the vector table at
   `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
   lockup at reset, which an image linked to run from ITCM produces when the
@@ -193,6 +199,15 @@ target-set to `FVP_Corstone_SSE-320`.
   until it is power-cycled.
 - **No console output:** SW4 is still on `SEUART`, or the port was opened
   before the switch was moved. Set `UART4` and reopen the port.
+- **Every SETOOLS tool prints `Revision is invalid!`:** SETOOLS stores the
+  selected part and revision in `utils/global-cfg.db`, and a
+  `tools-config -p` without `-r` (another project switching to an E7 or the
+  AppKit-E8, for example) keeps a revision the new part does not have. From
+  then on even `tools-config` refuses to run. The stub task of step 5 writes
+  the DevKit's part and revision into that file before it calls
+  `tools-config`, so it recovers by itself; for SETOOLS commands of your own,
+  set `"Part#"` to `"E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM"` and
+  `"Revision"` to `"A0"` there.
 - **`app-write-mram` gets no answer:** press reset while it waits, check SW4
   is on `SEUART`, close any terminal holding the port.
 - **The build cannot find `ai_layer/model_pte.c`:** the model data is not
