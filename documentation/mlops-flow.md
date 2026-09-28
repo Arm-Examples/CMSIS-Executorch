@@ -86,8 +86,11 @@ This is the hand-over point to the MLOps side: everything a model-export
 pipeline needs to know about the target is in this one file, and nothing in it
 is specific to this example's Python code.
 
-`cbuild setup` writes the file even when the AI layer does not exist yet, so
-the flow also works on a checkout without a generated layer.
+`cbuild setup` writes the file even when the AI layer does not exist yet.
+Here the clayer and its headers are committed but the 14 MB `model_pte.c` is
+not, and csolution refuses a layer whose files are missing: on a fresh
+checkout, `touch ai_layer/model_pte.c` first (CI does the same);
+`create_ai_layer.py` replaces the placeholder.
 
 ## 2. `create_ai_layer.py` turns `*.cbuild-mlops.yml` into the AI layer
 

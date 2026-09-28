@@ -56,8 +56,13 @@ jobs:
       - name: Create model-export venv and fetch the checkpoints
         run: ./setup_venv.sh
 
+      # The committed AI layer lists ai_layer/model_pte.c, which only step 2
+      # generates, and csolution refuses a layer whose files are missing. An
+      # empty placeholder lets step 1 run; create_ai_layer.py overwrites it.
       - name: Generate the MLOps information
-        run: cbuild setup ${SOLUTION}.csolution.yml --active ${TARGET} --packs
+        run: |
+          touch ai_layer/model_pte.c
+          cbuild setup ${SOLUTION}.csolution.yml --active ${TARGET} --packs
 
       - name: Create the AI layer
         run: python3 create_ai_layer.py ${SOLUTION}.cbuild-mlops.yml

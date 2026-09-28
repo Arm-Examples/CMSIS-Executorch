@@ -194,8 +194,14 @@ version of an existing environment.
 #### 1. Generate the MLOps information
 
 ```bash
+touch ai_layer/model_pte.c        # fresh checkout only, see below
 cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs
 ```
+
+The committed AI layer lists `ai_layer/model_pte.c`, which only step 2
+generates, and csolution refuses a layer whose files are missing; on a fresh
+checkout an empty placeholder stands in until `create_ai_layer.py` writes the
+real file.
 
 This resolves the packs and the active target and writes
 `cmsis-executorch.cbuild-mlops.yml`: the processor, NPU and Vela
