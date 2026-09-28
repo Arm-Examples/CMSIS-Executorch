@@ -6,21 +6,44 @@
 #
 # Runs on Linux, macOS and Windows. The thin wrappers setup_venv.sh and
 # setup_venv.bat just delegate here; everything OS-specific lives in this file.
-"""Create (or repair) the .venv used to export the model."""
+"""Create (or repair) the .venv used to export the model, and fetch the model checkpoints."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import re
 import shutil
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 import venv
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 VENV_DIR = HERE / ".venv"
+
+# The pico-faces checkpoints model/model.py loads (https://github.com/cpldcpu/pico-faces,
+# MIT license, see model/LICENSE-pico-faces). They are downloaded from a pinned
+# upstream commit and verified by SHA-256 into model/pico_faces/<variant>/, or read
+# from $PICO_FACES_DIR/checkpoints/<variant>/ when that variable points at a clone.
+PICO_FACES_REPO = "cpldcpu/pico-faces"
+PICO_FACES_COMMIT = "ee15d9d183d8428efaeb3078edf47669cfc23994"  # 2026-09-12, adds the LICENSE
+PICO_FACES_DIR = HERE / "model" / "pico_faces"
+PICO_FACES_FILES: dict[str, dict[str, str]] = {
+    "m3_long_cfg": {
+        "dit_qat.pt": "d645192896db72e71905d65d465e9c08384502336f9d02811d476743efac651a",
+        "vae_final.pt": "273d0d1b1784dec8d122642fd6dc028fc1427763f4b0fcbfdb86853621e46646",
+        "latent_stats.npz": "3cb07560a18a3e7a4b448e99c4ff00cf531cf51fe8d0ce2e97ab00f2b4113470",
+    },
+    "m3_decD_deep_full": {
+        "dit_qat.pt": "430ca1ef03c52008e46e477ecdbbcf47d61b8588ebee1556e955bfe52c1905e3",
+        "vae_final.pt": "3dcd8e09a8717f5011373c77a64e18bd83cfa493a7a6cda6a79d56d7034ef3db",
+        "latent_stats.npz": "3cb07560a18a3e7a4b448e99c4ff00cf531cf51fe8d0ce2e97ab00f2b4113470",
+    },
+}
 
 # ExecuTorch 1.4 declares requires-python = ">=3.10,<3.15" in its pyproject.toml,
 # but the tosa-tools 2026.5.0 it pins for the Arm backend (see
@@ -137,6 +160,62 @@ def smoke_test(python: Path) -> None:
         )
 
 
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def download(url: str, dest: Path) -> None:
+    """Fetch url into dest with urllib; fall back to curl when the interpreter has
+    no usable root certificates (the python.org macOS build until its
+    "Install Certificates" step has been run)."""
+    try:
+        with urllib.request.urlopen(url) as response, dest.open("wb") as out:
+            shutil.copyfileobj(response, out)
+        return
+    except urllib.error.URLError as exc:
+        if "CERTIFICATE_VERIFY_FAILED" not in str(exc) or shutil.which("curl") is None:
+            raise
+        print("  (urllib has no root certificates; using curl)", flush=True)
+    subprocess.run(["curl", "-fsSL", "--retry", "3", "-o", str(dest), url], check=True)
+
+
+def fetch_checkpoints(variant: str) -> None:
+    """Download the pico-faces checkpoints of `variant` into model/pico_faces/<variant>/.
+
+    Files already present with the expected SHA-256 are kept; a download with
+    another hash fails the setup.
+    """
+    if os.environ.get("PICO_FACES_DIR"):
+        print(f"PICO_FACES_DIR is set ({os.environ['PICO_FACES_DIR']}); not downloading checkpoints.")
+        return
+
+    target = PICO_FACES_DIR / variant
+    target.mkdir(parents=True, exist_ok=True)
+    base = f"https://raw.githubusercontent.com/{PICO_FACES_REPO}/{PICO_FACES_COMMIT}/checkpoints/{variant}/"
+    for name, expected in PICO_FACES_FILES[variant].items():
+        path = target / name
+        if path.is_file() and sha256(path) == expected:
+            print(f"checkpoint ok: {path.relative_to(HERE)}")
+            continue
+        url = base + name
+        print(f"downloading {url}", flush=True)
+        tmp = path.with_suffix(path.suffix + ".part")
+        download(url, tmp)
+        actual = sha256(tmp)
+        if actual != expected:
+            tmp.unlink(missing_ok=True)
+            sys.exit(
+                f"error: {name} from {url} has SHA-256 {actual}, expected {expected}.\n"
+                "The pinned upstream file changed or the download was corrupted."
+            )
+        tmp.replace(path)
+        print(f"checkpoint ok: {path.relative_to(HERE)} ({path.stat().st_size / 1e6:.1f} MB)")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -158,7 +237,27 @@ def main() -> int:
         action="store_true",
         help="delete and rebuild .venv even if it looks usable",
     )
+    parser.add_argument(
+        "--variant",
+        default=os.environ.get("PICO_FACES_VARIANT", "m3_long_cfg"),
+        choices=sorted(PICO_FACES_FILES),
+        help="pico-faces model variant whose checkpoints to download (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--skip-download",
+        action="store_true",
+        help="do not download the pico-faces checkpoints",
+    )
+    parser.add_argument(
+        "--download-only",
+        action="store_true",
+        help="only download the checkpoints; leave the venv alone",
+    )
     args = parser.parse_args()
+
+    if args.download_only:
+        fetch_checkpoints(args.variant)
+        return 0
 
     if args.python and not args.uv:
         parser.error("--python requires --uv")
@@ -214,6 +313,9 @@ def main() -> int:
     )
 
     smoke_test(python)
+
+    if not args.skip_download:
+        fetch_checkpoints(args.variant)
 
     print()
     print(f"venv ready: {VENV_DIR}")

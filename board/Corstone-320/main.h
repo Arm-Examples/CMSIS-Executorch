@@ -26,6 +26,7 @@ extern "C" {
 /* Prototypes */
 extern int app_main (void);
 extern int stdio_init (void);
+extern void stdio_exit (int status);
 
 #if defined(ETHOSU_ARCH)
 extern void ethos_setup (void);

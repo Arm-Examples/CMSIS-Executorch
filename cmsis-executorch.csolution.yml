@@ -1,8 +1,9 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
-# A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP
-# and the Alif Ensemble E8 DevKit (target-type DevKit-E8). Three steps build it:
+# pico-faces (a latent diffusion transformer that generates 128x128 faces) on
+# the Ethos-U85 with ExecuTorch, for the Corstone-320 (SSE-320) FVP and the
+# Alif Ensemble E8 DevKit (target-type DevKit-E8). Three steps build it:
 #
 #   cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85
 #   python create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
@@ -12,7 +13,7 @@
 # create_ai_layer.py reads the NPU and Vela settings from it, exports the model
 # from PyTorch in the project's venv and writes the AI layer.
 solution:
-  created-for: CMSIS-Toolbox@2.14.1
+  created-for: CMSIS-Toolbox@2.15.0
   cdefault:
   compiler: AC6
 
@@ -20,7 +21,7 @@ solution:
     # Pinned exactly: the pack's C++ runtime and the Python exporter pinned in
     # requirements.txt must be the same ExecuTorch version, or the .pte fails
     # to load. `cbuild setup --packs` fetches it from the public index.
-    - pack: PyTorch::ExecuTorch@1.4.1
+    - pack: PyTorch::ExecuTorch@1.5.1
     - pack: ARM::CMSIS
     - pack: ARM::CMSIS-NN
     - pack: ARM::CMSIS-Compiler
@@ -81,17 +82,6 @@ solution:
             clock: 4000000
             start-pname: M55_HP
 
-  misc:
-    # CMSIS-Toolbox 2.14.1 passes -mfpu=fpv5-sp-d16 to Clang for the Cortex-M85
-    # and M55, a single-precision FPU on cores with a double-precision one and MVE;
-    # LLVM crashes on some kernels with that combination. The later option
-    # wins, so name the M85's FPU explicitly (newer toolboxes leave it to -mcpu).
-    - for-compiler: CLANG
-      C-CPP:
-        - -mfpu=fp-armv8-fullfp16-d16
-      ASM:
-        - -mfpu=fp-armv8-fullfp16-d16
-
   build-types:
     - type: Debug
       debug: on
@@ -105,7 +95,7 @@ solution:
   # create_ai_layer.py picks it up on its next run.
   # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
   mlops:
-    description: TinyCNN int8 image classifier for Ethos-U85
+    description: pico-faces rectified-flow face generator for Ethos-U85
     npu:
       type: Ethos-U85 # explicit: the Ensemble pack lists an Ethos-U55 first
     vela:
@@ -117,8 +107,8 @@ solution:
       memory: Shared_Sram
     model:
       clayer: $AI-Layer$
-      name: TinyCNN
+      name: PicoFaces
     hardware:
-      target: DevKit-E8 # named explicitly: the released 2.14.1 detects no hardware target
+      target: DevKit-E8 # the target-type of the board
     simulator:
       target: SSE-320-U85

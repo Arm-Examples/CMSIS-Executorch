@@ -30,7 +30,7 @@
 //   <o> RTSS HP Region size [bytes] <0x0-0x00580000:8>
 //   <i> Defines size of RTSS HP application memory region.
 //   <i> Default: 0x00200000
-#define APP_MRAM_HP_SIZE       0x00200000
+#define APP_MRAM_HP_SIZE       0x00370000   // 3.4375 MB: HP code region extended over the former MRAM_USER area for the ~2.8 MB model
 // </h>
 
 // <h>MRAM User Configuration
@@ -38,11 +38,11 @@
 // <h> MRAM User Region
 //   <o> User Base address <0x80000000-0x8057FFFF:8>
 //   <i> Defines base address of MRAM user region
-#define APP_MRAM_USER_BASE   0x80400000
+#define APP_MRAM_USER_BASE   0x80570000   // was 0x80400000; the HP code region ends here
 
 //   <o> User Region size [bytes] <0x0-0x00580000:8>
 //   <i> Defines size of MRAM user region
-#define APP_MRAM_USER_SIZE    0x00180000   // 1.5 MB
+#define APP_MRAM_USER_SIZE    0x00008000   // 32 kB, ends at 0x80578000 below the ATOC package (~0x8057C000); non-zero keeps mpu.c's regions well-formed
 
 // Application executable MRAM region (before USER area)
 #define APP_CODE_MRAM_SIZE  (APP_MRAM_USER_BASE - APP_MRAM_HP_BASE)
@@ -52,7 +52,7 @@
 // =======================
 //   <q>Combine SRAM0 & SRAM1
 //   <i> Combines SRAM0 and SRAM1 into single memory region
-#define SRAM0_SRAM1_COMBINED        1
+#define SRAM0_SRAM1_COMBINED        0   // SRAM1 follows SRAM0, but the Ethos-U85 cannot reach it: keep NPU buffers in SRAM0
 // <h> SRAM
 //   <o> Base address <0x02000000-0x027FFFFF:8>
 //   <i> Defines base address of SRAM memory region.
@@ -65,6 +65,10 @@
 //   <q>No zero initialize
 //   <i> Excludes SRAM0 region from zero initialization.
 #define APP_SRAM_NOINIT        1
+//   <o> Offset of the application pools <0x0-0x00400000:8>
+//   <i> The ATOC loads the A32 boot stub (a32_stub_0.bin) to 0x02000000; the
+//   <i> ExecuTorch pools (.bss.ai_pool) and the LCD frame buffer start above it.
+#define APP_SRAM_POOL_OFFSET   0x00010000
 // </h>
 
 // <h> SRAM0

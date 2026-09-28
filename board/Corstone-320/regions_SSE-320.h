@@ -118,7 +118,7 @@
 //   <i> keeps its method table and planned buffers on the heap.
 //   <o0> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 //   <o1> Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
-#define __STACK_SIZE  0x00001000
+#define __STACK_SIZE  0x00008000
 #define __HEAP_SIZE   0x00018000
 // </h>
 

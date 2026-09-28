@@ -3,13 +3,23 @@
 #
 # executorch, torch and torchao must match: a .pte exported by one ExecuTorch
 # version only loads in the runtime of the same version, and that runtime is
-# the PyTorch::ExecuTorch@1.4.1 pack pinned in the csolution. ExecuTorch 1.4.1
-# targets torch 2.13.0 and torchao 0.18.0 (install_requirements.py on the
-# release/1.4 branch); prebuilt wheels exist for Linux, macOS and Windows,
-# Python 3.10 to 3.14 (the export venv stays below 3.14: see requirements-arm-tosa.txt).
-executorch==1.4.1
-torch==2.13.0
+# the PyTorch::ExecuTorch@1.5.1 pack pinned in the csolution. ExecuTorch 1.5.1
+# targets torch 2.14.0 and torchao 0.18.0 (torch_pin.py and
+# install_requirements.py of the v1.5.1 tag); prebuilt wheels exist for Linux,
+# macOS and Windows, Python 3.10 to 3.14 (the export venv stays below 3.14: see
+# requirements-arm-tosa.txt).
+executorch==1.5.1
+torch==2.14.0
 torchao==0.18.0
 
 # Vela, the Ethos-U compiler. Same pin as executorch's `ethos_u` extra.
 ethos-u-vela==5.1.0
+
+# Used directly by create_ai_layer.py and model/model.py (the cbuild-mlops.yml
+# reader, the checkpoint and calibration code). executorch pulls both in as
+# well; listing them keeps the dependency explicit.
+numpy
+pyyaml
+
+# Host-side checks only: model/verify_export.py reads and writes PNGs.
+pillow
