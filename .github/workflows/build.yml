@@ -33,6 +33,11 @@ jobs:
       - name: Install tools
         uses: ARM-software/cmsis-actions/vcpkg@v1
 
+      # cbuild setup of CMSIS-Toolbox 2.15 configures the CMake project, which
+      # probes the solution's compiler (AC6).
+      - name: Activate Arm tool license
+        uses: ARM-software/cmsis-actions/armlm@v1
+
       - name: Cache packs
         uses: actions/cache@v6
         with:
