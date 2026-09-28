@@ -29,7 +29,7 @@
         },
         {
             "label": "Create AI layer",
-            "detail": "Export model/model.py for the NPU in cmsis-executorch.cbuild-mlops.yml and write ai_layer/ (run a CMSIS build or 'cbuild setup' first)",
+            "detail": "Export model/model.py (pico-faces) for the NPU in cmsis-executorch.cbuild-mlops.yml and write ai_layer/ (run a CMSIS build or 'cbuild setup' first; takes a few minutes)",
             "type": "shell",
             "command": "python3",
             "args": ["create_ai_layer.py", "cmsis-executorch.cbuild-mlops.yml"],
@@ -43,12 +43,14 @@
         },
         {
             "label": "Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)",
-            "detail": "Programs the ATOC/MRAM stubs with Alif SETOOLS so J-Link can load and debug the M55_HP core. Overwrites build/config/M55_HP_mram_cfg.json and build/images/M55_HP_mram_stub.bin in the SETOOLS tree, then runs app-gen-toc and app-write-mram; stops at the first failing step. Set SW4 to SEUART, set 'alif.setools.root' in your VS Code settings.",
+            "detail": "Programs the ATOC/MRAM stubs with Alif SETOOLS so J-Link can load and debug the M55_HP core. Selects the DevKit-E8's part in SETOOLS first (E8 AE822FA0E5597LS0, revision A0): app-gen-toc writes it into the ATOC, and the Secure Enclave does not boot an ATOC built for another part. The part and revision are written into SETOOLS' utils/global-cfg.db before tools-config runs, because tools-config refuses to start while another project's 'tools-config -p' without '-r' has left a revision the part does not have ('Revision is invalid!'). Overwrites build/config/M55_HP_mram_cfg.json and build/images/M55_HP_mram_stub.bin in the SETOOLS tree, then runs app-gen-toc and app-write-mram; stops at the first failing step. Set SW4 to SEUART, set 'alif.setools.root' in your VS Code settings.",
             "type": "shell",
             "command": [
                 "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json' &&",
                 "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin' &&",
                 "cd '${config:alif.setools.root}' &&",
+                "sed -i.bak -E -e 's|(\"Part#\": *\")[^\"]*|\\1E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM|' -e 's|(\"Revision\": *\")[^\"]*|\\1A0|' utils/global-cfg.db &&",
+                "./tools-config -p 'E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM' -r A0 &&",
                 "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json' &&",
                 "./app-write-mram -p ${input:discoverCOM}"
             ],
@@ -57,6 +59,8 @@
                     "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json'; if (-not $?) { exit 1 };",
                     "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin'; if (-not $?) { exit 1 };",
                     "cd '${config:alif.setools.root}'; if (-not $?) { exit 1 };",
+                    "(Get-Content utils/global-cfg.db -Raw) -replace '(\\x22Part#\\x22:\\s*\\x22)[^\\x22]*', '$1E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM' -replace '(\\x22Revision\\x22:\\s*\\x22)[^\\x22]*', '$1A0' | Set-Content utils/global-cfg.db -NoNewline; if (-not $?) { exit 1 };",
+                    "./tools-config -p 'E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM' -r A0; if (-not $?) { exit 1 };",
                     "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json'; if (-not $?) { exit 1 };",
                     "./app-write-mram -p ${input:discoverCOM}"
                 ],
@@ -112,7 +116,7 @@
         {
             "id": "setupPythonVersion",
             "type": "promptString",
-            "description": "Python version for uv (>=3.10,<3.15), e.g. 3.12 or 3.12.10",
+            "description": "Python version for uv (>=3.10,<3.14), e.g. 3.12 or 3.12.10",
             "default": "3.12"
         }
     ]

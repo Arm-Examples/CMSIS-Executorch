@@ -9,7 +9,7 @@ REM and setup_venv.sh differ. With --uv, uv supplies the interpreter, e.g.
 REM   setup_venv.bat --uv --python 3.12
 setlocal
 set "SETUP_USE_UV="
-set "SETUP_UV_PYTHON=>=3.10,<3.15"
+set "SETUP_UV_PYTHON=>=3.10,<3.14"
 REM SHIFT only changes numbered arguments; %* still forwards the original list.
 :scan_args
 if "%~1"=="" goto launch

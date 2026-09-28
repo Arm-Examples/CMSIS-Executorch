@@ -21,23 +21,67 @@ directory of the clayer named under `model.clayer`:
                           backend and the operator components the exported
                           program actually uses
     model_pte.c / .h      the ExecuTorch program as a C array
+    model_params.h        constants of the model for the application (optional)
     model.pte             the program itself, for inspection
 
+model/model.py describes the model through a small contract:
+
+    get_model(), get_calibration_inputs()   one method, "forward" (the simple case)
+    get_methods()                           several methods, each with its module,
+                                            example inputs, quantization and
+                                            calibration data (see Method below)
+    get_params()                            constants written to model_params.h
+
+Every method is quantized, calibrated on its data and delegated to the Ethos-U.
+The script prints, per method, how many Ethos-U delegates the graph has and
+which operators remain on the CPU. Set AI_LAYER_STRICT=1 to fail when a method
+is not a single delegate, AI_LAYER_VERBOSE=1 for the backend's partitioning
+diagnostics, AI_LAYER_DUMP=<dir> to keep the TOSA and Vela artefacts, and
+AI_LAYER_VELA_FLAGS for extra Vela options (e.g. --verbose-performance).
+
 The script runs itself in the solution's .venv (see setup_venv.py) when it is
-started with an interpreter that has no torch.
+started with another interpreter.
 """
 
 from __future__ import annotations
 
+import logging
+import operator
 import os
 import re
 import subprocess
 import sys
+import time
+from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable, Iterable
 
 HERE = Path(__file__).resolve().parent
 PACK = "PyTorch::ExecuTorch"
 SYMBOL = "model_pte"
+PARAMS_HEADER = "model_params.h"
+# The float <-> integer boundary of a fully delegated method stays on the CPU.
+BOUNDARY_OPS = {
+    "quantized_decomposed::quantize_per_tensor",
+    "quantized_decomposed::dequantize_per_tensor",
+}
+
+
+@dataclass(frozen=True)
+class Method:
+    """One method of the exported program (model.get_methods() returns these).
+
+    calibration yields input tuples for the quantizer's observers; without it
+    the example inputs are used. quantization is "a8w8" (int8 activations and
+    weights) or "a16w8" (int16 activations, int8 weights).
+    """
+
+    name: str
+    module: Any
+    example_inputs: tuple
+    calibration: Callable[[], Iterable[tuple]] | None = None
+    quantization: str = "a8w8"
 
 
 def run_in_venv() -> None:
@@ -72,27 +116,27 @@ def pack_root() -> Path:
 
 
 def executorch_version(mlops_file: Path) -> str:
-    """The ExecuTorch pack version cbuild setup resolved, from <solution>.cbuild-pack.yml.
+    """The ExecuTorch pack version cbuild setup resolved for the csolution.
 
-    The file is a lock file that keeps earlier resolutions, so an unversioned
-    selector can still point at an older pack; the entry selected by the
-    csolution's exact pin (PyTorch::ExecuTorch@<version>) is the one in use.
+    <solution>.cbuild-pack.yml is a lock file that keeps earlier resolutions:
+    after a pack update, an AI layer generated for the previous version still
+    selects that one. The entry selected by the csolution's own pack entry
+    (PyTorch::ExecuTorch@<version>) is the one in use.
     """
     import yaml
 
+    solution = mlops_file.with_name(mlops_file.name.replace(".cbuild-mlops.yml", ".csolution.yml"))
+    wanted = [
+        entry["pack"]
+        for entry in yaml.safe_load(solution.read_text())["solution"].get("packs", [])
+        if entry["pack"].partition("@")[0] == PACK
+    ]
     pack_file = mlops_file.with_name(mlops_file.name.replace(".cbuild-mlops.yml", ".cbuild-pack.yml"))
-    fallback = None
     for entry in yaml.safe_load(pack_file.read_text())["cbuild-pack"]["resolved-packs"]:
         name, _, version = entry["resolved-pack"].partition("@")
-        selectors = entry.get("selected-by-pack", [])
-        if name != PACK or not selectors:
-            continue
-        if f"{PACK}@{version}" in selectors:
+        if name == PACK and set(wanted) & set(entry.get("selected-by-pack", [])):
             return version
-        fallback = fallback or version
-    if fallback:
-        return fallback
-    sys.exit(f"{pack_file}: {PACK} is not among the resolved packs")
+    sys.exit(f"{pack_file}: no {PACK} resolved for {wanted or 'the csolution'}; run cbuild setup first")
 
 
 def executorch_pack(version: str) -> Path:
@@ -126,45 +170,191 @@ def compile_spec(mlops: dict, mlops_dir: Path):
         # in the .pte. A path relative to the working directory keeps the
         # program identical between checkouts; Vela resolves it from there.
         kwargs["config_ini"] = os.path.relpath(mlops_dir / vela["ini"])
+    if flags := os.environ.get("AI_LAYER_VELA_FLAGS", "").split():
+        kwargs["extra_flags"] = flags
     print(f"[ai_layer] Vela: {kwargs}")
-    return EthosUCompileSpec(**kwargs)
+    spec = EthosUCompileSpec(**kwargs)
+    if dump := os.environ.get("AI_LAYER_DUMP"):
+        spec.dump_intermediate_artifacts_to(dump)
+    return spec
 
 
-def export_model(spec) -> bytes:
-    """Quantize model/model.py, delegate it to the Ethos-U and return the .pte."""
+def compile_spec_from_file(mlops_file: str | Path):
+    """compile_spec() for a *.cbuild-mlops.yml (used by model/verify_export.py)."""
+    import yaml
+
+    path = Path(mlops_file).resolve()
+    return compile_spec(yaml.safe_load(path.read_text())["cbuild-mlops"], path.parent)
+
+
+def default_compile_spec():
+    """An Ethos-U85-256 spec with Vela's built-in system config, for host checks
+    that run without a *.cbuild-mlops.yml (the quantizer only needs the NPU)."""
+    return compile_spec(
+        {"npu": {"type": "Ethos-U85", "macs": 256},
+         "vela": {"options": "--system-config Ethos_U85_SYS_DRAM_Mid --memory-mode Shared_Sram"}},
+        HERE,
+    )
+
+
+# ----------------------------------------------------------------------------
+# The model contract
+
+
+def load_model_module():
+    sys.path.insert(0, str(HERE / "model"))
+    import model
+
+    return model
+
+
+def methods(model) -> list[Method]:
+    """model.get_methods(), or "forward" from get_model() and get_calibration_inputs()."""
+    if hasattr(model, "get_methods"):
+        return list(model.get_methods())
+    samples = model.get_calibration_inputs()
+    return [Method("forward", model.get_model(), (samples[0],), lambda: [(s,) for s in samples])]
+
+
+def quant_config(kind: str):
+    from executorch.backends.arm.quantizer import (
+        get_symmetric_a16w8_quantization_config,
+        get_symmetric_quantization_config,
+    )
+
+    if kind == "a8w8":
+        return get_symmetric_quantization_config(is_per_channel=True)
+    if kind == "a16w8":
+        return get_symmetric_a16w8_quantization_config(is_per_channel=True)
+    sys.exit(f"unknown quantization {kind!r}: expected a8w8 or a16w8")
+
+
+def strip_guards_fn(gm) -> None:
+    """Drop the dead `_guards_fn` call_module that torch.export emits for some
+    models; the Arm annotation passes iterate over every module unconditionally."""
+    changed = False
+    for node in list(gm.graph.nodes):
+        if node.op == "call_module" and str(node.target) == "_guards_fn":
+            gm.graph.erase_node(node)
+            changed = True
+    if changed:
+        gm.graph.eliminate_dead_code()
+        gm.recompile()
+
+
+def calibrate(prepared, method: Method) -> None:
+    """Run the observers over the method's calibration data (or its example inputs)."""
     import torch
-    from executorch.backends.arm.ethosu import EthosUPartitioner
-    from executorch.backends.arm.quantizer import EthosUQuantizer, get_symmetric_quantization_config
-    from executorch.exir import EdgeCompileConfig, ExecutorchBackendConfig, to_edge_transform_and_lower
+
+    batches = method.calibration() if method.calibration else [method.example_inputs]
+    count, t0 = 0, time.time()
+    with torch.no_grad():
+        for inputs in batches:
+            prepared(*inputs)
+            count += 1
+    print(f"[ai_layer] {method.name}: calibrated on {count} input set(s) in {time.time() - t0:.1f} s")
+
+
+def quantize_method(method: Method, spec):
+    """The method's module with quantize/dequantize nodes (the fake-quant graph)."""
+    import torch
+    from executorch.backends.arm.quantizer import EthosUQuantizer
     from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
 
-    sys.path.insert(0, str(HERE / "model"))
-    from model import get_calibration_inputs, get_model
-
-    model, samples = get_model(), get_calibration_inputs()
-    example = (samples[0],)
-    graph = torch.export.export(model, example).module()
-
+    graph = torch.export.export(method.module, method.example_inputs).module()
+    strip_guards_fn(graph)
     # Quantize the whole graph so the partitioner can move every node into the
-    # Ethos-U delegate; only a float<->int8 boundary stays on the CPU.
+    # Ethos-U delegate; only the float <-> integer boundary stays on the CPU.
     quantizer = EthosUQuantizer(spec)
-    quantizer.set_global(get_symmetric_quantization_config(is_per_channel=True))
+    quantizer.set_global(quant_config(method.quantization))
     prepared = prepare_pt2e(graph, quantizer)
-    with torch.no_grad():
-        for sample in samples:
-            prepared(sample)  # calibrate
-    quantized = convert_pt2e(prepared)
+    calibrate(prepared, method)
+    return convert_pt2e(prepared)
+
+
+# ----------------------------------------------------------------------------
+# Export
+
+
+def op_name(target) -> str | None:
+    """`aten::mul.Tensor` for an edge or aten op object; None for graph plumbing."""
+    if target is operator.getitem:
+        return None
+    name = getattr(target, "name", None)
+    if callable(name):
+        try:
+            return name()
+        except Exception:
+            pass
+    text = str(target)
+    if found := re.search(r"schema = ([a-z_0-9]+::[\w.]+)", text):
+        return found.group(1)
+    if found := re.match(r"^([a-z_0-9]+::[\w.]+)$", text):
+        return found.group(1)
+    return None
+
+
+def count_ops(graph_module) -> tuple[int, Counter]:
+    delegates, cpu_ops = 0, Counter()
+    for node in graph_module.graph.nodes:
+        if node.op != "call_function":
+            continue
+        if "executorch_call_delegate" in str(node.target):
+            delegates += 1
+        elif name := op_name(node.target):
+            cpu_ops[name] += 1
+    return delegates, cpu_ops
+
+
+def report_partitioning(edge, name: str) -> set[str]:
+    """Print the delegate count and CPU operators of one method; return the CPU ops."""
+    delegates, cpu_ops = count_ops(edge.exported_program(name).graph_module)
+    ops = ", ".join(f"{op} x{n}" if n > 1 else op for op, n in cpu_ops.most_common()) or "none"
+    print(f"[ai_layer] {name}: {delegates} Ethos-U delegate(s); CPU operators: {ops}")
+    stray = {re.sub(r"\.\w+$", "", op) for op in cpu_ops} - BOUNDARY_OPS
+    if delegates != 1 or stray:
+        message = (
+            f"[ai_layer] warning: {name} is not a single Ethos-U delegate "
+            f"({delegates} delegate(s), CPU operators beyond the quantize/dequantize "
+            f"boundary: {sorted(stray) or 'none'}); set AI_LAYER_VERBOSE=1 for the reasons"
+        )
+        if os.environ.get("AI_LAYER_STRICT"):
+            sys.exit(message)
+        print(message, file=sys.stderr)
+    return set(cpu_ops)
+
+
+def export_model(spec, model) -> tuple[bytes, set[str]]:
+    """Quantize, delegate and serialize every method; return the .pte and the CPU operators."""
+    import torch
+    from executorch.backends.arm.ethosu import EthosUPartitioner
+    from executorch.exir import EdgeCompileConfig, ExecutorchBackendConfig, to_edge_transform_and_lower
+
+    programs = {}
+    for method in methods(model):
+        print(f"[ai_layer] {method.name}: quantization {method.quantization}")
+        programs[method.name] = torch.export.export(quantize_method(method, spec), method.example_inputs)
 
     edge = to_edge_transform_and_lower(
-        torch.export.export(quantized, example),
-        partitioner=[EthosUPartitioner(spec)],
+        programs,
+        partitioner={name: [EthosUPartitioner(spec)] for name in programs},
         compile_config=EdgeCompileConfig(_check_ir_validity=False),
     )
+    cpu_ops: set[str] = set()
+    for name in programs:
+        cpu_ops |= report_partitioning(edge, name)
+
     program = edge.to_executorch(ExecutorchBackendConfig(extract_delegate_segments=False))
-    return bytes(program.buffer)
+    for name in programs:  # operators to_executorch adds (copies, for example) need components too
+        cpu_ops |= set(count_ops(program.exported_program(name).graph_module)[1])
+    return bytes(program.buffer), cpu_ops
 
 
-def components(pte: bytes, pack: Path) -> tuple[list[str], list[str]]:
+# ----------------------------------------------------------------------------
+# The generated layer
+
+
+def components(pte: bytes, pack: Path, cpu_ops: set[str]) -> tuple[list[str], list[str]]:
     """Runtime, kernel utils and registration, backend, plus one operator component per operator the .pte uses.
 
     The pack's "Extension Tensor" is not selected: its tensor_ptr_maker.cpp
@@ -175,9 +365,14 @@ def components(pte: bytes, pack: Path) -> tuple[list[str], list[str]]:
     available = set(re.findall(r'Csub="([^"]+)"', pdsc.read_text()))
     family = {"aten": "Portable", "quantized_decomposed": "Quantized", "cortex_m": "Cortex-M"}
 
+    found = {(ns.decode(), op.decode()) for ns, op in re.findall(rb"(aten|quantized_decomposed|cortex_m)::(\w+)", pte)}
+    for name in cpu_ops:
+        ns, _, op = name.partition("::")
+        if ns in family:
+            found.add((ns, op.split(".")[0]))
+
     selected, unknown = set(), []
-    for ns, op in sorted(set(re.findall(rb"(aten|quantized_decomposed|cortex_m)::(\w+)", pte))):
-        ns, op = ns.decode(), op.decode()
+    for ns, op in sorted(found):
         candidates = [
             f"{family[ns]} {op}",
             f"{family[ns]} {re.sub(r'_(per_tensor|per_channel|byte|copy)$', '', op)}",
@@ -193,10 +388,14 @@ def components(pte: bytes, pack: Path) -> tuple[list[str], list[str]]:
 
 
 def c_array(pte: bytes) -> str:
+    """The program as a C array in the section .rodata.model, so a board layer's
+    linker script can give it a memory of its own (the Corstone-320 layer puts
+    it in DDR: the 2 MB FPGA SRAM that holds the code is too small); scripts
+    that only know .rodata* or +RO still pick it up."""
     rows = [", ".join(f"0x{b:02x}" for b in pte[i : i + 16]) for i in range(0, len(pte), 16)]
     return (
         "// Generated by create_ai_layer.py -- do not edit.\n"
-        f"__attribute__((aligned(16))) const unsigned char {SYMBOL}[] = {{\n  "
+        f'__attribute__((aligned(16), section(".rodata.model"))) const unsigned char {SYMBOL}[] = {{\n  '
         + ",\n  ".join(rows)
         + f"\n}};\nconst unsigned long {SYMBOL}_size = sizeof({SYMBOL});\n"
     )
@@ -215,7 +414,50 @@ extern const unsigned long {SYMBOL}_size;
 """
 
 
-def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Path, version: str) -> str:
+def c_number(value: float) -> str:
+    text = f"{float(value):.9g}"
+    if not any(ch in text for ch in ".en"):  # e, inf, nan
+        text += ".0"
+    return text + "f"
+
+
+def c_initializer(values, indent: str = "    ") -> list[str]:
+    """Lines of a nested brace initializer for a float array of any rank."""
+    if values.ndim == 1:
+        items = [c_number(v) for v in values.tolist()]
+        return [indent + ", ".join(items[i : i + 8]) + "," for i in range(0, len(items), 8)]
+    lines = []
+    for row in values:
+        lines += [indent + "{", *c_initializer(row, indent + "  "), indent + "},"]
+    return lines
+
+
+def params_header(params: dict[str, Any]) -> str:
+    """model_params.h from model.get_params(), names as given: strings, integers
+    and floats become #defines, sequences and tensors of numbers `static const
+    float` arrays of the same shape."""
+    import numpy as np
+
+    lines = [
+        "// Generated by create_ai_layer.py from get_params() in model/model.py -- do not edit.",
+        "#pragma once",
+        "",
+    ]
+    for name, value in params.items():
+        if isinstance(value, str):
+            lines.append(f'#define {name} "{value}"')
+        elif isinstance(value, (bool, int)):
+            lines.append(f"#define {name} {int(value)}")
+        elif isinstance(value, float):
+            lines.append(f"#define {name} {c_number(value)}")
+        else:
+            array = np.asarray(value.detach().cpu() if hasattr(value, "detach") else value, dtype=np.float32)
+            dims = "".join(f"[{d}]" for d in array.shape)
+            lines += ["", f"static const float {name}{dims} = {{", *c_initializer(array), "};"]
+    return "\n".join(lines) + "\n"
+
+
+def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Path, version: str, files: list[str]) -> str:
     lines = [
         f"# Generated by create_ai_layer.py from {mlops_file.name} -- do not edit.",
         f"# Re-run `python create_ai_layer.py {mlops_file.name}` after changing",
@@ -228,7 +470,8 @@ def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Pa
         f"    - pack: {PACK}@{version}",
         "",
         "  define:",
-        "    - ET_LOG_ENABLED: 0",
+        "    - ET_LOG_ENABLED: 1",  # the runner prints the runtime's error messages,
+        "    - ET_MIN_LOG_LEVEL: Error",  # but not its progress notes
         "",
         "  add-path:",
         "    - .",
@@ -240,8 +483,7 @@ def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Pa
         "  groups:",
         f"    - group: {mlops['model'].get('name', 'Model')}",
         "      files:",
-        f"        - file: ./{SYMBOL}.c",
-        f"        - file: ./{SYMBOL}.h",
+        *[f"        - file: ./{name}" for name in files],
         "",
     ]
     return "\n".join(lines)
@@ -254,20 +496,29 @@ def main() -> None:
 
     import yaml
 
+    if os.environ.get("AI_LAYER_VERBOSE"):
+        logging.basicConfig(level=logging.INFO)
+        logging.getLogger("executorch.backends.arm").setLevel(logging.INFO)
+
     mlops_file = Path(sys.argv[1]).resolve()
     mlops = yaml.safe_load(mlops_file.read_text())["cbuild-mlops"]
     layer_file = mlops_file.parent / mlops["model"]["clayer"]
     layer_dir = layer_file.parent
 
-    pte = export_model(compile_spec(mlops, mlops_file.parent))
+    model = load_model_module()
+    pte, cpu_ops = export_model(compile_spec(mlops, mlops_file.parent), model)
     version = executorch_version(mlops_file)
-    runtime, operators = components(pte, executorch_pack(version))
+    runtime, operators = components(pte, executorch_pack(version), cpu_ops)
 
     layer_dir.mkdir(parents=True, exist_ok=True)
+    files = [f"{SYMBOL}.c", f"{SYMBOL}.h"]
     (layer_dir / "model.pte").write_bytes(pte)
     (layer_dir / f"{SYMBOL}.c").write_text(c_array(pte), newline="\n")
     (layer_dir / f"{SYMBOL}.h").write_text(HEADER, newline="\n")
-    layer_file.write_text(clayer(mlops, runtime, operators, mlops_file, version), newline="\n")
+    if hasattr(model, "get_params"):
+        (layer_dir / PARAMS_HEADER).write_text(params_header(model.get_params()), newline="\n")
+        files.append(PARAMS_HEADER)
+    layer_file.write_text(clayer(mlops, runtime, operators, mlops_file, version, files), newline="\n")
 
     print(f"[ai_layer] {len(pte)} byte program, operators: {operators}")
     print(f"[ai_layer] wrote {layer_file}")

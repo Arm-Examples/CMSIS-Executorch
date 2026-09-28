@@ -11,14 +11,14 @@ The pack is published as an asset of the matching ExecuTorch GitHub release,
 which is also what its `.pdsc` declares as its download location:
 
 ```xml
-<url>https://github.com/pytorch/executorch/releases/download/v1.4.1/</url>
+<url>https://github.com/pytorch/executorch/releases/download/v1.5.1/</url>
 ```
 
 So the normal acquisition routes work, and `cbuild setup ... --packs` takes
 care of it on a fresh clone. To install it by hand:
 
 ```bash
-cpackget add PyTorch::ExecuTorch@1.4.1
+cpackget add PyTorch::ExecuTorch@1.5.1
 ```
 
 The version is pinned exactly, in `cmsis-executorch.csolution.yml` and
@@ -26,18 +26,20 @@ The version is pinned exactly, in `cmsis-executorch.csolution.yml` and
 
 ```yaml
 packs:
-  - pack: PyTorch::ExecuTorch@1.4.1
+  - pack: PyTorch::ExecuTorch@1.5.1
 ```
 
-Both must agree. The pin is exact rather than a `@^1.4.1` range because the
+Both must agree. The pin is exact rather than a `@^1.5.1` range because the
 pack's C++ runtime and the Python exporter have to be the *same* ExecuTorch
 version — see [Moving to a new ExecuTorch version](#moving-to-a-new-executorch-version).
 
 `create_ai_layer.py` reads the installed pack's `.pdsc` out of the pack root
 (`$CMSIS_PACK_ROOT`, or cpackget's default) to find out which operator
-components exist. It reads the version `cbuild setup` resolved, taken from
-`cmsis-executorch.cbuild-pack.yml`, so a pack root holding several
-ExecuTorch versions cannot make it read the wrong one.
+components exist. It reads the version `cbuild setup` resolved for the
+csolution's `PyTorch::ExecuTorch` entry, taken from
+`cmsis-executorch.cbuild-pack.yml`, so neither a pack root holding several
+ExecuTorch versions nor an older resolution that the lock file keeps for the
+previous AI layer can make it read the wrong one.
 
 ## What is in the pack
 
@@ -63,7 +65,7 @@ ExecuTorch tree at `backends/arm/cmsis_pack/scripts/build_pack.sh`.
 ```bash
 git clone https://github.com/pytorch/executorch.git
 cd executorch
-git checkout release/1.4          # or the tag matching your target version
+git checkout release/1.5          # or the tag matching your target version
 git submodule update --init --recursive
 ```
 
@@ -111,7 +113,7 @@ them); the pack lands in the output directory:
 backends/arm/cmsis_pack/scripts/build_pack.sh \
     --executorch-root "$PWD" \
     --build-dir cmake-out-arm \
-    --version 1.4.1-local \
+    --version 1.5.1-local \
     --output-dir pack-output
 ```
 
@@ -120,7 +122,7 @@ backends/arm/cmsis_pack/scripts/build_pack.sh \
 Before trusting a freshly built pack, check the parts that go missing quietly:
 
 ```bash
-VERSION=1.4.1-local
+VERSION=1.5.1-local
 PACK=pack-output/PyTorch.ExecuTorch.$VERSION
 set -e
 
@@ -158,7 +160,8 @@ in order:
 2. **Update both pins** — `PyTorch::ExecuTorch@<new>` in the csolution and in
    the cproject.
 3. **Update the Python pins**: `executorch`, `torch` and `torchao` in
-   `requirements.txt`, following the new release's `install_requirements.py`;
+   `requirements.txt`, following the new release's `torch_pin.py` and
+   `install_requirements.py`;
    `requirements-arm-tosa.txt` (the TOSA serializer and its flatbuffers pin)
    only changes when the Arm backend's `requirements-arm-tosa.txt` does.
 4. **Rebuild the venv, the AI layer and the project:**
@@ -173,6 +176,6 @@ in order:
    A changed operator set simply shows up in the regenerated
    `ai_layer/ai_layer.clayer.yml`.
 
-Finally, update the version wherever it appears in prose: the README
-(Prerequisites and the pack-version note), the csolution header comment and
-this page.
+Finally, update the version wherever it appears in prose:
+`documentation/example.md` (Prerequisites and the pack-version note),
+`requirements.txt` and this page.
