@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -101,6 +102,42 @@ def executorch_pack(version: str) -> Path:
     return pack_root() / vendor / pack / version
 
 
+# Vela options that are arguments of EthosUCompileSpec, and the ones the export
+# sets itself: the configuration file comes from vela.ini of the cbuild-mlops.yml.
+SPEC_OPTIONS = ("accelerator-config", "system-config", "memory-mode")
+EXPORT_OPTIONS = ("config", "output-format", "output-dir")
+
+
+def vela_options(options: str) -> tuple[dict[str, str], list[str]]:
+    """Split vela.options of the cbuild-mlops.yml: the EthosUCompileSpec arguments, and every other option.
+
+    The other options are the `misc:` of the csolution's mlops: node (for
+    example `--optimise Size`); they reach Vela as extra flags, written as
+    `--name=value`.
+    """
+    tokens = shlex.split(options)
+    spec, extra = {}, []
+    while tokens:
+        token = tokens.pop(0)
+        if not token.startswith("--"):
+            sys.exit(f"vela options: unexpected '{token}' in '{options}'")
+        name, has_value, value = token[2:].partition("=")
+        if not has_value and tokens and not tokens[0].startswith("-"):
+            value = tokens.pop(0)
+        if name in EXPORT_OPTIONS:
+            sys.exit(
+                f"vela options: --{name} is set by the export; "
+                "the configuration file is vela: ini: of the mlops: node"
+            )
+        if name in SPEC_OPTIONS:
+            if name in spec:
+                sys.exit(f"vela options: --{name} is given twice in '{options}'")
+            spec[name] = value
+        else:
+            extra.append(f"--{name}={value}" if value else f"--{name}")
+    return spec, extra
+
+
 def compile_spec(mlops: dict, mlops_dir: Path):
     """EthosUCompileSpec from the npu: and vela: nodes of the cbuild-mlops.yml."""
     from executorch.backends.arm.ethosu import EthosUCompileSpec
@@ -109,17 +146,14 @@ def compile_spec(mlops: dict, mlops_dir: Path):
     if not npu:
         sys.exit("the solution's mlops: node names no NPU; this example needs an Ethos-U")
     vela = mlops.get("vela", {})
-    options = vela.get("options", "")
+    spec, extra = vela_options(vela.get("options", ""))
 
-    def option(name: str) -> str | None:
-        found = re.search(rf"--{name}[= ](\S+)", options)
-        return found.group(1) if found else None
-
-    target = option("accelerator-config") or f"{npu['type'].lower()}-{npu.get('macs', 256)}"
+    target = spec.get("accelerator-config") or f"{npu['type'].lower()}-{npu.get('macs', 256)}"
     kwargs = {
         "target": target,
-        "system_config": option("system-config"),
-        "memory_mode": option("memory-mode"),
+        "system_config": spec.get("system-config"),
+        "memory_mode": spec.get("memory-mode"),
+        "extra_flags": extra,
     }
     if vela.get("ini"):
         # ExecuTorch stores the path in the compile spec, and the spec ends up

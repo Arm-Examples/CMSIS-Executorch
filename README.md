@@ -180,8 +180,8 @@ mlops:
 
 `cbuild setup --active SSE-320-U85` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. `create_ai_layer.py` reads those options and passes them to
-ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
+and Vela options. `create_ai_layer.py` reads those options and passes all of
+them to ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
 duplicated in Python. The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
@@ -213,7 +213,8 @@ and build.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically. Moving to a different
+options then follow that configuration automatically; `vela: misc:` takes any
+further Vela option, for example `--optimise Size`. Moving to a different
 board or reference platform also requires the corresponding device pack, board
 support, memory layout, and FVP configuration.
 
