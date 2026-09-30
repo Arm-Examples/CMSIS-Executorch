@@ -36,15 +36,17 @@ using executorch::runtime::MemoryAllocator;
 
 namespace {
 
-// Pool sizes and placement are board-overridable: a board layer that cannot
-// fit 8 MB of .bss in its default RAM sets APP_*_POOL_SIZE and, via
-// APP_POOL_SECTION, the linker section its linker script routes to a larger
-// (NPU-accessible) memory.
+// The pools follow the program: model_pte.h names the bytes of its
+// memory-planned tensors, which the method pool holds next to the loaded
+// method itself, and of the Ethos-U scratch, which is drawn from the temp pool
+// for each inference. Sizes and placement are board-overridable: a board layer
+// sets APP_*_POOL_SIZE and, via APP_POOL_SECTION, the linker section its
+// linker script routes to another (NPU-accessible) memory.
 #ifndef APP_METHOD_POOL_SIZE
-#define APP_METHOD_POOL_SIZE (4 * 1024 * 1024)
+#define APP_METHOD_POOL_SIZE (MODEL_PTE_PLANNED_SIZE + 16 * 1024)
 #endif
 #ifndef APP_TEMP_POOL_SIZE
-#define APP_TEMP_POOL_SIZE (4 * 1024 * 1024)  // Ethos-U scratch is drawn from here.
+#define APP_TEMP_POOL_SIZE (MODEL_PTE_SCRATCH_SIZE + 16 * 1024)
 #endif
 #ifdef APP_POOL_SECTION
 #define APP_POOL_ATTRIBUTES __attribute__((section(APP_POOL_SECTION)))
