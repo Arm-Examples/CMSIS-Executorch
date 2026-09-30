@@ -73,7 +73,7 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8832 byte model
+ExecuTorch Ethos-U85 example: 10960 byte model
 Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
 Test_result: PASS
 ```
@@ -172,7 +172,7 @@ mlops:
     type: Ethos-U85
   vela:
     system: Ethos_U85_SYS_DRAM_Mid
-    memory: Shared_Sram
+    memory: Sram_Only
   model:
     clayer: $AI-Layer$
     name: TinyCNN
@@ -185,10 +185,28 @@ ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
 duplicated in Python. The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
-- `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
+- `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as
+  a C array, and the run-time memory it needs (its memory-planned tensors and
+  the Ethos-U scratch), from which the application sizes its two pools.
 - `ai_layer/model.pte`: the program itself, for inspection.
 
 See [the MLOps flow](documentation/mlops-flow.md) for a detailed walkthrough.
+
+### Fitting the model to the target
+
+The Vela memory mode and the memory the application reserves follow from where
+the image puts things on the Corstone-320 FVP
+([`regions_SSE-320.h`](board/Corstone-320/regions_SSE-320.h)):
+
+- **`memory: Sram_Only`:** code and the program with its weights are in the
+  2 MB FPGA SRAM, all RAM in the two 2 MB SRAM banks. The NPU reads the weights
+  where they are. `Shared_Sram` assumes weights in slower memory and lets the
+  NPU copy weight streams into the scratch first, on every inference.
+- **Pools from the program:** `model_pte.h` names the bytes of the program's
+  memory-planned tensors and of its Ethos-U scratch, and `src/app_main.cpp`
+  sizes the method and temp pools from them, so they follow the model.
+- **No Ethos-U cache buffer:** only the `Dedicated_Sram` memory modes use the
+  driver's 384 KB fast scratch; the board layer sets `ETHOS_CACHE_BUF_SIZE` to 0.
 
 ## Component selection
 
@@ -213,7 +231,10 @@ and build.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically. Moving to a different
+options then follow that configuration automatically. Choose the memory mode
+for where the target keeps the weights and the scratch, and give a
+`Dedicated_Sram` mode its cache buffer (`ETHOS_CACHE_BUF_SIZE` in the board
+layer). Moving to a different
 board or reference platform also requires the corresponding device pack, board
 support, memory layout, and FVP configuration.
 
@@ -234,7 +255,7 @@ together. More information is available in
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer) merged by the CMSIS Solution extension |
 | `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile` | The FVP model command used by Run and Debug; runs the model in Docker on macOS |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
-| `src/app_main.cpp` | Loads the model, runs inference, and prints the result; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
+| `src/app_main.cpp` | Loads the model, runs inference, and prints the result; the pools are sized from `model_pte.h`, overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
 | `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading (BSD-3-Clause, `src/LICENSE-ExecuTorch`) |
 | `documentation/mlops-flow.md` | The MLOps flow in detail |
 | `documentation/pack-provenance.md` | Where the ExecuTorch pack comes from, how to update it |

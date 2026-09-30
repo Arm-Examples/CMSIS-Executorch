@@ -21,7 +21,10 @@ layer:
   define:
     - CMSIS_target_header: \"Corstone-320.h\"
     - ETHOSU85
-    - ARM_MODEL_USE_PMU_COUNTERS
+    # No Ethos-U cache buffer: only the Dedicated_Sram memory modes of Vela use
+    # one, and the csolution's mlops: node selects Sram_Only. Remove this
+    # define for the 384 KB default that Dedicated_Sram_384KB needs.
+    - ETHOS_CACHE_BUF_SIZE: 0
 
   packs:
     - pack: ARM::CMSIS

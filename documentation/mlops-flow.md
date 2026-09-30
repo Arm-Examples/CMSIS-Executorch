@@ -30,7 +30,7 @@ solution:
       type: Ethos-U85
     vela:
       system: Ethos_U85_SYS_DRAM_Mid   # system-config from the Vela config
-      memory: Shared_Sram              # memory-mode from the Vela config
+      memory: Sram_Only                # memory-mode from the Vela config
     model:
       clayer: $AI-Layer$
       name: TinyCNN
@@ -51,7 +51,7 @@ cbuild-mlops:
   npu:
     type: Ethos-U85
   vela:
-    options: --system-config Ethos_U85_SYS_DRAM_Mid --memory-mode Shared_Sram
+    options: --system-config Ethos_U85_SYS_DRAM_Mid --memory-mode Sram_Only
   model:
     clayer: ai_layer/ai_layer.clayer.yml
     name: TinyCNN
@@ -97,7 +97,7 @@ for an MLOps system. It reads the file and:
 | File | Content |
 |------|---------|
 | `ai_layer/ai_layer.clayer.yml` | runtime, kernel utilities and registration, Ethos-U backend and the operator components the program uses |
-| `ai_layer/model_pte.c` / `.h` | the program as a 16-byte-aligned C array, `model_pte` / `model_pte_size` |
+| `ai_layer/model_pte.c` / `.h` | the program as a 16-byte-aligned C array, `model_pte` / `model_pte_size`, and its run-time memory, `MODEL_PTE_PLANNED_SIZE` / `MODEL_PTE_SCRATCH_SIZE`, for the application's pools |
 | `ai_layer/model.pte` | the program itself, for inspection (not committed) |
 
 The clayer and the C array are committed, so a checkout builds without

@@ -25,7 +25,8 @@
 #include "main.h"
 
 #if defined(ETHOSU65) || defined(ETHOSU85)
-/* Define Ethos-U NPU cache buffer size */
+/* Define Ethos-U NPU cache buffer size: the fast scratch (base address 2) of a
+   model compiled for a Dedicated_Sram memory mode, 0 for no buffer. */
 #ifndef ETHOS_CACHE_BUF_SIZE
 #define ETHOS_CACHE_BUF_SIZE        393216
 #endif
@@ -54,7 +55,7 @@
 /* Ethos NPU driver instance. */
 static struct ethosu_driver EthosDriver;
 
-#if defined(ETHOSU65) || defined(ETHOSU85)
+#if (defined(ETHOSU65) || defined(ETHOSU85)) && (ETHOS_CACHE_BUF_SIZE > 0)
 static uint8_t ethos_cache[ETHOS_CACHE_BUF_SIZE] ETHOS_CACHE_BUF_ATTRIBUTES;
 #endif
 
@@ -76,7 +77,7 @@ void ethos_setup (void) {
   /*  Initialize Ethos-U NPU driver. */
   rval = ethosu_init(&EthosDriver,            /* Ethos-U device driver */
                      ethos_base_addr,         /* Ethos-U base address  */
-                     #if defined(ETHOSU65) || defined(ETHOSU85)
+                     #if (defined(ETHOSU65) || defined(ETHOSU85)) && (ETHOS_CACHE_BUF_SIZE > 0)
                      ethos_cache,             /* Cache memory pointer  */
                      sizeof(ethos_cache),     /* Cache memory size     */
                      #else
