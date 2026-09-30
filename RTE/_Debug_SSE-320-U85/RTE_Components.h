@@ -30,17 +30,17 @@
 #define RTE_TIMEOUT      1
 /* ARM::Machine Learning:NPU Support:Ethos-U Driver&Generic U85@1.26.2 */
 #define RTE_ETHOS_U_CORE_DRIVER
-/* PyTorch::Machine Learning:ExecuTorch Operators:Quantized dequantize@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch Operators:Quantized dequantize@1.5.1 */
 #define RTE_ML_EXECUTORCH_OP_QUANTIZED_DEQUANTIZE     /* ExecuTorch op_dequantize */
-/* PyTorch::Machine Learning:ExecuTorch Operators:Quantized quantize@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch Operators:Quantized quantize@1.5.1 */
 #define RTE_ML_EXECUTORCH_OP_QUANTIZED_QUANTIZE     /* ExecuTorch op_quantize */
-/* PyTorch::Machine Learning:ExecuTorch:Backend EthosU@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch:Backend EthosU@1.5.1 */
 #define RTE_ML_EXECUTORCH_BACKEND_ETHOS_U     /* ExecuTorch Ethos-U Backend (Cortex-M host) */
-/* PyTorch::Machine Learning:ExecuTorch:Kernel Registration@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch:Kernel Registration@1.5.1 */
 #define RTE_ML_EXECUTORCH_KERNEL_REGISTRATION     /* ExecuTorch Kernel Registration */
-/* PyTorch::Machine Learning:ExecuTorch:Kernel Utils@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch:Kernel Utils@1.5.1 */
 #define RTE_ML_EXECUTORCH_KERNEL_UTILS     /* ExecuTorch Kernel Utils */
-/* PyTorch::Machine Learning:ExecuTorch:Runtime@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch:Runtime@1.5.1 */
 #define RTE_ML_EXECUTORCH_RUNTIME     /* ExecuTorch Runtime */
 
 

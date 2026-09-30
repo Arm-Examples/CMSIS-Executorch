@@ -12,10 +12,10 @@
 /* ARM::Machine Learning:NPU Support:Ethos-U Driver&Generic U85@1.26.2 */
 // enabling global pre includes 
         #define ETHOSU_ARCH u85
-/* PyTorch::Machine Learning:ExecuTorch:Backend EthosU@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch:Backend EthosU@1.5.1 */
 #define EXECUTORCH_BUILD_ARM_BAREMETAL 1
         #define ET_USE_ETHOS_U_BACKEND 1
-/* PyTorch::Machine Learning:ExecuTorch:Runtime@1.4.1 */
+/* PyTorch::Machine Learning:ExecuTorch:Runtime@1.5.1 */
 /* ExecuTorch global configuration */
         #define C10_USING_CUSTOM_GENERATED_MACROS
         #define FLATBUFFERS_MAX_ALIGNMENT 1024
