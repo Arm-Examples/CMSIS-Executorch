@@ -73,8 +73,8 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8784 byte model
-Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
+ExecuTorch Ethos-U85 example: 8720 byte model
+Output: 10 element(s): -0.0142 0.0206 0.0601 -0.0886 0.0791 0.0522 -0.0301 -0.0775 -0.2800 -0.0095
 Test_result: PASS
 ```
 
@@ -210,6 +210,11 @@ model. The runner in `src/app_main.cpp` builds its input tensor with the same
 fixed shape and prints the output as ten floats, so a model with another input
 shape or output needs matching changes there. Then re-run `create_ai_layer.py`
 and build.
+
+Give an image model its input as NHWC, the layout of a camera frame, as
+`model/model.py` does: the model permutes it to the NCHW its convolutions take,
+and Vela folds that into the first convolution. With an NCHW input the NPU
+first reorders the image in an operation of its own.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela

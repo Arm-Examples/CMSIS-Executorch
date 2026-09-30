@@ -71,14 +71,14 @@ extern "C" int app_main(void) {
       std::make_unique<MemoryAllocator>(kMethodPoolSize, g_method_pool),
       std::make_unique<MemoryAllocator>(kTempPoolSize, g_temp_pool));
 
-  // TinyCNN takes one 16x16 RGB image in NCHW order (see model/model.py),
+  // TinyCNN takes one 16x16 RGB image in NHWC order (see model/model.py),
   // filled here with a deterministic ramp. The tensor only wraps the buffer;
   // no tensor extension (and its std::random_device) is needed for that.
-  alignas(16) static float input_data[3 * 16 * 16];
+  alignas(16) static float input_data[16 * 16 * 3];
   for (size_t i = 0; i < sizeof(input_data) / sizeof(input_data[0]); ++i) {
     input_data[i] = static_cast<float>(i % 32) / 32.0f - 0.5f;
   }
-  std::array<SizesType, 4> sizes{1, 3, 16, 16};
+  std::array<SizesType, 4> sizes{1, 16, 16, 3};
   std::array<DimOrderType, 4> dim_order{0, 1, 2, 3};
   TensorImpl input_impl(ScalarType::Float, sizes.size(), sizes.data(), input_data, dim_order.data());
   Tensor input(&input_impl);
