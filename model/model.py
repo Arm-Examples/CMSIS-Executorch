@@ -4,19 +4,22 @@
 
 Small enough to export in seconds and fully partition onto the NPU, but real
 enough to exercise conv / relu / pool / linear through Vela. Input is a single
-16x16 RGB image (NCHW); output is a 10-class logit vector.
+16x16 RGB image (NHWC); output is a 10-class logit vector.
 """
 
 import torch
 from torch import nn
 
-INPUT_SHAPE = (1, 3, 16, 16)
+# NHWC, the layout of a camera frame, which the Ethos-U reads as it is. An NCHW
+# input costs one more NPU operation that reorders it before the first
+# convolution.
+INPUT_SHAPE = (1, 16, 16, 3)
 
 
 class TinyCNN(nn.Module):
     def __init__(self, input_shape: tuple[int, ...] = INPUT_SHAPE, num_classes: int = 10) -> None:
         super().__init__()
-        _, channels, height, width = input_shape
+        _, height, width, channels = input_shape
         self.features = nn.Sequential(
             nn.Conv2d(channels, 8, kernel_size=3, padding=1),
             nn.ReLU(),
@@ -28,7 +31,8 @@ class TinyCNN(nn.Module):
         self.classifier = nn.Linear(16 * (height // 4) * (width // 4), num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.features(x)
+        # The convolutions take NCHW. Vela folds the permutation into the first one.
+        x = self.features(x.permute(0, 3, 1, 2))
         x = torch.flatten(x, 1)
         return self.classifier(x)
 
