@@ -31,13 +31,13 @@ application.
 The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) can be optionally installed manually with:
 
 ```bash
-cpackget add PyTorch::ExecuTorch@1.4.1
+cpackget add PyTorch::ExecuTorch@1.5.1
 ```
 
 > [!Note]
 > The pack and Python exporter versions must match, as the generated `.pte`
-> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.4.1`.
-> The matching wheel is `executorch==1.4.1` from PyPI, pinned in
+> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.5.1`.
+> The matching wheel is `executorch==1.5.1` from PyPI, pinned in
 > `requirements.txt`.
 
 ## Quick start
@@ -73,7 +73,7 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8832 byte model
+ExecuTorch Ethos-U85 example: 8784 byte model
 Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
 Test_result: PASS
 ```
