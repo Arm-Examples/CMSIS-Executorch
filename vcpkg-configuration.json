@@ -7,7 +7,7 @@
     }
   ],
   "requires": {
-    "arm:tools/open-cmsis-pack/cmsis-toolbox": "2.15.1",
+    "arm:tools/open-cmsis-pack/cmsis-toolbox": "2.15.0",
     "arm:compilers/arm/arm-none-eabi-gcc": "14.3.1",
     "arm:compilers/arm/llvm-embedded": "22.1.0",
     "arm:tools/kitware/cmake": "4.2.1",
