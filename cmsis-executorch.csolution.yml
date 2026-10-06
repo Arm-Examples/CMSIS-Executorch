@@ -41,12 +41,10 @@ solution:
           debugger:
             name: Arm-FVP
             # The model is its own GDB server (plugins/GDBServer.so, MDK FVP
-            # models 11.32.23+). fvp.sh resolves that plugin when VS Code was
-            # not started from a `vcpkg activate` shell, line-buffers the
-            # model's stdout so the debug adapter sees the "Listening" banner,
-            # and on macOS runs the model in Docker (Arm ships no macOS build).
-            # model: ${workspaceFolder}/.vscode/fvp.sh
-            # On Windows and Linux point this straight at FVP_Corstone_SSE-320.
+            # models 11.32.23+). On Windows and Linux the FVP from vcpkg runs
+            # as it is. On macOS, where Arm ships no FVP build, set this to
+            # ${workspaceFolder}/.vscode/fvp.sh, which runs the model in
+            # Docker, and copy .vscode/launch.json.mac to .vscode/launch.json.
             model: FVP_Corstone_SSE-320
             config-file: board/Corstone-320/fvp_config.txt
             args: "--simlimit 60"

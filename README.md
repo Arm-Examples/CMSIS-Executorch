@@ -4,7 +4,7 @@ This example shows how to deploy and run an
 [ExecuTorch](https://github.com/pytorch/executorch) model on an Arm Ethos-U NPU.
 The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/)
 provides the source code components to build the ExecuTorch runtime, required operators, and Ethos-U backend.
-The build process uses the [CMSIS-Toolbox 2.14.1](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
+The build process uses the [CMSIS-Toolbox 2.15.0](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
 
 This example application targets the Arm Corstone-320 reference platform with
 an Ethos-U85 NPU. It demonstrates the same overall workflow used for other
@@ -59,11 +59,12 @@ The example can be built and run entirely in Keil Studio for VS Code.
    changing the model or the target.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
-   where Arm ships no FVP build, `.vscode/fvp.sh` runs the model in Docker:
-   Docker Desktop must be running, and the first Run or Debug builds the
-   container image (about 100 MB download). On Windows, set `model:` in the
-   csolution's target-set back to `FVP_Corstone_SSE-320` (the shim is a bash
-   script).
+   where Arm ships no FVP build, run the model in Docker instead: set `model:`
+   in the csolution's target-set to `${workspaceFolder}/.vscode/fvp.sh` and
+   copy `.vscode/launch.json.mac` to `.vscode/launch.json` (its debug
+   configuration waits for the model to come up in the container). Docker
+   Desktop must be running, and the first Run or Debug builds the container
+   image (about 100 MB download).
 
 A successful run prints the Ethos-U configuration, output logits, and a pass
 result:
@@ -152,14 +153,13 @@ out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 #### 4. Run on the FVP
 
 ```bash
-.vscode/fvp.sh \
+FVP_Corstone_SSE-320 \
     -f board/Corstone-320/fvp_config.txt --simlimit 60 \
     -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
-`.vscode/fvp.sh` is the model command the Run and Debug buttons use too; on
-Linux and Windows `FVP_Corstone_SSE-320` can be called directly with the same
-arguments.
+This is the model command the Run and Debug buttons use too. On macOS, call
+`.vscode/fvp.sh` with the same arguments; it runs the model in Docker.
 
 ## How model generation works
 
@@ -238,7 +238,7 @@ together. More information is available in
 | `ai_layer/` | Generated: component selection and the embedded model data |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer) merged by the CMSIS Solution extension |
-| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile` | The FVP model command used by Run and Debug; runs the model in Docker on macOS |
+| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
 | `src/app_main.cpp` | Loads the model, runs inference, and prints the result; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
 | `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading (BSD-3-Clause, `src/LICENSE-ExecuTorch`) |

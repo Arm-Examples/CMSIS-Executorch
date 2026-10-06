@@ -74,12 +74,13 @@ tmp/
 fvp_stdout.log
 
 # Editor config. The CMSIS Solution extension regenerates tasks.json,
-# settings.json and cmsis.json; only the FVP run/debug wiring is kept: the
-# model shim + its Dockerfile, and launch.json, whose Arm-FVP launch config is
-# "manual" (see the comment in it). The leading negation overrides a global
-# excludes file that ignores every .vscode directory.
+# settings.json, cmsis.json and launch.json; only the macOS FVP wiring is kept:
+# the model shim + its Dockerfile, and launch.json.mac, an Arm-FVP launch
+# config that waits for the model in Docker (see the comment in it). The
+# leading negation overrides a global excludes file that ignores every .vscode
+# directory.
 !.vscode/
 .vscode/*
 !.vscode/fvp.sh
 !.vscode/fvp.Dockerfile
-!.vscode/launch.json
+!.vscode/launch.json.mac
