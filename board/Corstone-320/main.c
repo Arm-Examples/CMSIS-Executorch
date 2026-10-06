@@ -39,5 +39,8 @@ int main (void) {
   osKernelInitialize();
 #endif
 
-  return (app_main());
+  /* End the simulation: the FVP stops on the semihosting exit call (or
+     --simlimit), not on the EOT character the application prints. */
+  stdio_exit(app_main());
+  return 0;
 }

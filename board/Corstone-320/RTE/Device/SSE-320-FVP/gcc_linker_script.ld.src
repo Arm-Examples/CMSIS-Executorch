@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+/* Changed for the CMSIS-Executorch example: the section .rodata.model (the
+ * ExecuTorch program) goes to ROM2, see SECTIONS. */
+
 /* ----------------------------------------------------------------------------
   Stack seal size definition
  *----------------------------------------------------------------------------*/
@@ -89,6 +92,16 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
+#if __ROM2_SIZE > 0
+  /* The ExecuTorch program (ai_layer/model_pte.c, ~2.8 MB) goes to the DDR
+     region ROM2 instead of the 2 MB FPGA SRAM that holds the code. It comes
+     before .text, whose .rodata pattern would otherwise take it. */
+  .rodata.model : ALIGN(16)
+  {
+    *(.rodata.model)
+  } > ROM2
+#endif
+
   .text :
   {
     KEEP(*(.vectors))

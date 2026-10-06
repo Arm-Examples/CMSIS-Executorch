@@ -28,7 +28,8 @@
  */
 /* Copied from the Ensemble pack (Device/core/rtss_hp/linker/linker_gnu_mram.ld.src)
    for the CMSIS-Executorch DevKit-E8 layer: a larger main stack, and the
-   .bss.ai_pool section (the runner's ExecuTorch memory pools) in bulk SRAM. */
+   .bss.ai_pool section (the runner's ExecuTorch memory pools) in bulk SRAM,
+   above the A32 boot stub the ATOC loads to the start of SRAM0. */
 /* app_mem_regions.h (the layer's RTE copy) is force-included by the
    CMSIS-Toolbox through the layer's `linker: regions:` entry, which also
    makes the toolbox preprocess this .src file with the project defines. */
@@ -51,7 +52,8 @@ MEMORY
   ITCM  (rwx) : ORIGIN = APP_ITCM_BASE , LENGTH = APP_HP_ITCM_SIZE
   DTCM  (rwx) : ORIGIN = APP_DTCM_BASE , LENGTH = APP_HP_DTCM_SIZE
   #if __HAS_BULK_SRAM
-  SRAM0 (rwx) : ORIGIN = APP_SRAM0_BASE, LENGTH = APP_SRAM0_SIZE
+  /* Above the A32 boot stub the ATOC loads to the start of SRAM0 */
+  SRAM0 (rwx) : ORIGIN = APP_SRAM0_BASE + APP_SRAM_POOL_OFFSET, LENGTH = APP_SRAM0_SIZE - APP_SRAM_POOL_OFFSET
   SRAM1 (rwx) : ORIGIN = APP_SRAM1_BASE, LENGTH = APP_SRAM1_SIZE
   #endif
   MRAM  (rx)  : ORIGIN = __ROM_BASE, LENGTH = __ROM_SIZE

@@ -16,6 +16,14 @@
  * limitations under the License.
  */
 
+/* Changed for the CMSIS-Executorch example (the gcc_ and clang_ scripts next
+ * to this one have the same changes):
+ * - The exported ExecuTorch program (ai_layer/model_pte.c, section
+ *   .rodata.model, ~2.8 MB) goes to the DDR region ROM2 instead of the 2 MB
+ *   FPGA SRAM that holds the code; the Ethos-U85 reads its weights from there.
+ * - RAM is a load region of its own (see LR_RAM0), and RW_RAM0 is NOCOMPRESS.
+ */
+
 /* ----------------------------------------------------------------------------
   Stack seal size definition
  *----------------------------------------------------------------------------*/
@@ -42,13 +50,29 @@ LR_ROM0 __ROM0_BASE __ROM0_SIZE  {
     *(Veneer$$CMSE)
   }
 #endif
+}
+
+/*
+ * RAM gets its own load region rather than living inside LR_ROM0: armlink emits
+ * one PT_LOAD per load region and sizes it to span every execution region it
+ * contains. With the ExecuTorch pools (8 MB of ZI in app_main.cpp) inside
+ * LR_ROM0 the ELF segment based at ROM0 would claim ~9 MB, and the FVP refuses
+ * the image ("Failed to write bytes at address range [0x12200000..]", past the
+ * end of the 2 MB FPGA SRAM). The RW data is loaded straight into DDR.
+ */
+LR_RAM0 __RAM0_BASE __RAM0_SIZE  {
 
   RW_NOINIT __RAM0_BASE UNINIT (__RAM0_SIZE - __HEAP_SIZE - __STACK_SIZE - __STACKSEAL_SIZE) {
     *.o(.bss.noinit)
     *.o(.bss.noinit.*)
   }
 
-  RW_RAM0 AlignExpr(+0, 8) (__RAM0_SIZE - __HEAP_SIZE - __STACK_SIZE - __STACKSEAL_SIZE - AlignExpr(ImageLength(RW_NOINIT), 8)) {
+  ; NOCOMPRESS: this load region has the same base as the execution region, so
+  ; the image loader places the initial RW data in place. If armlink compressed
+  ; it, SystemInit() (which runs before the C library decompresses the region)
+  ; would write SystemCoreClock into the compressed blob and corrupt the data
+  ; that follows it (seen: the ExecuTorch PAL function table held 25000000).
+  RW_RAM0 AlignExpr(+0, 8) NOCOMPRESS (__RAM0_SIZE - __HEAP_SIZE - __STACK_SIZE - __STACKSEAL_SIZE - AlignExpr(ImageLength(RW_NOINIT), 8)) {
     *(+RW +ZI)
   }
 
@@ -64,24 +88,6 @@ LR_ROM0 __ROM0_BASE __ROM0_SIZE  {
   STACKSEAL +0 EMPTY __STACKSEAL_SIZE {             ; Reserve empty region for stack seal immediately after stack
   }
 #endif
-
-#if __RAM1_SIZE > 0
-  RW_RAM1 __RAM1_BASE __RAM1_SIZE  {
-   .ANY (+RW +ZI)
-  }
-#endif
-
-#if __RAM2_SIZE > 0
-  RW_RAM2 __RAM2_BASE __RAM2_SIZE  {
-   .ANY (+RW +ZI)
-  }
-#endif
-
-#if __RAM3_SIZE > 0
-  RW_RAM3 __RAM3_BASE __RAM3_SIZE  {
-   .ANY (+RW +ZI)
-  }
-#endif
 }
 
 #if __ROM1_SIZE > 0
@@ -95,6 +101,7 @@ LR_ROM1 __ROM1_BASE __ROM1_SIZE  {
 #if __ROM2_SIZE > 0
 LR_ROM2 __ROM2_BASE __ROM2_SIZE  {
   ER_ROM2 +0 __ROM2_SIZE {
+   *(.rodata.model)     ; the ExecuTorch program; a named selector outranks the +RO of ER_ROM0
    .ANY (+RO +XO)
   }
 }

@@ -1,13 +1,18 @@
-# ExecuTorch on Ethos-U85: hackathon guide
+# pico-faces on Ethos-U85 with ExecuTorch: hackathon guide
 
-The Arm ExecuTorch example, on its `hackathon` branch with the Alif board
-added. One CMSIS solution runs a tiny int8 CNN on the Ethos-U85 of the **Alif Ensemble E8 DevKit** (Cortex-M55
-HP core) and on the **Corstone-320 FVP**; you switch between them by
-target-type. The model is exported from PyTorch in three steps: the
-CMSIS-Toolbox describes the target, `create_ai_layer.py` turns that into the
-AI layer, the toolbox builds the application. This page takes you from an
-empty machine to a debug session on the board. Everything about the example
-itself is in [documentation/example.md](documentation/example.md).
+The Arm ExecuTorch example, on its `hackathon` branch: a generative model on
+a microcontroller. [pico-faces](https://github.com/cpldcpu/pico-faces) by
+cpldcpu, a latent diffusion transformer (2.5M parameters) with a small
+decoder, generates 128x128 faces; exported through ExecuTorch, every layer of
+it runs on the Ethos-U85 NPU while the Cortex-M drives the sampling loop. One
+CMSIS solution runs it on the **Alif Ensemble E8 DevKit** (Cortex-M55 HP core;
+the faces appear on the board's LCD, a new one per joystick press) and on the
+**Corstone-320 FVP**; you switch between them by target-type. The model is
+exported from PyTorch in three steps: the CMSIS-Toolbox describes the target,
+`create_ai_layer.py` turns that into the AI layer, the toolbox builds the
+application. This page takes you from an empty machine to a debug session on
+the board. Everything about the example itself is in
+[documentation/example.md](documentation/example.md).
 
 ## 1. Host tools
 
@@ -29,7 +34,7 @@ itself is in [documentation/example.md](documentation/example.md).
 
 ## 2. Alif and SEGGER tools (board only)
 
-1. **Alif SETOOLS** V1.110.000 or later from the
+1. **Alif SETOOLS** V1.110.00 or later (V1.112.00 is current) from the
    [Alif software and tools page](https://alifsemi.com/support/software-tools/ensemble/)
    (login required). Unpack it; on Linux and macOS make the tools executable
    and install the Python packages its README lists. Add the root directory
@@ -77,12 +82,19 @@ installation (`PyTorch::ExecuTorch`, `AlifSemiconductor::Ensemble`, CMSIS).
 In the CMSIS view open **Manage Solution**, choose the target-type
 **DevKit-E8** (or **SSE-320-U85** for the FVP) and click **Apply**.
 
-The repository ships a generated AI layer, so no Python is needed to build.
-To change the model, run **Terminal > Run Task > Setup Python virtual
-environment** once (several GB of PyTorch, takes a while; the **(uv)**
-variant of the task uses uv and can download the Python version it asks
-for), edit `model/model.py`, and run the task **Create AI layer** before
-building.
+The model data is generated rather than committed, so a fresh checkout
+needs Python once before the first build:
+
+1. **Terminal > Run Task > Setup Python virtual environment** (several GB of
+   PyTorch, takes a while; the **(uv)** variant of the task uses uv and can
+   download the Python version it asks for). It also downloads the
+   pico-faces checkpoints (about 60 MB, checked by SHA-256) into
+   `model/pico_faces/`.
+2. **Terminal > Run Task > Create AI layer** exports the model for the NPU
+   and writes `ai_layer/` (a few minutes). It reads
+   `cmsis-executorch.cbuild-mlops.yml`, which the CMSIS Solution extension
+   writes when it loads the solution (click **Build** once if the file is
+   missing). Run the task again after changing `model/model.py`.
 
 ## 5. Prepare the board once
 
@@ -92,8 +104,13 @@ debugger needs that table to point at a debug stub.
 1. SW4 to **SEUART**, PRG USB attached.
 2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**. Choose COM port
    discovery (`-d`) the first time; SETOOLS remembers the port. The task
+   selects the DevKit-E8's part in SETOOLS (`tools-config -p 'E8
+   (AE822FA0E5597LS0) ...' -r A0`: the part goes into the table of contents,
+   and the Secure Enclave does not boot a table built for another part),
    copies the configuration and stub from `.alif/` into the SETOOLS tree and
-   runs `app-gen-toc` and `app-write-mram`.
+   runs `app-gen-toc` and `app-write-mram`. If `app-write-mram` reports a
+   different revision of the board, answer `y`: only the part number decides
+   whether the table boots.
 3. SW4 to **UART4**.
 
 Repeat this after another project has reprogrammed the table.
@@ -104,34 +121,76 @@ Repeat this after another project has reprogrammed the table.
    port, 115200 baud.
 2. In the CMSIS view click **Build**, then **Debug** (or **Run**). Keil Studio
    starts the J-Link GDB server over SWD, loads the image into MRAM and stops
-   at `main`; continue with F5. The console shows:
+   at `main`; continue with F5. The console shows the Ethos-U banner, the
+   program and its two methods, the timings of the boot demo, the CRC of the
+   image, an ASCII preview of the face and the pass marker:
 
    ```text
    Ethos-U version info:
        Arch:       v2.0.0
        MACs/cc:    256
        Cmd stream: v1
-   ExecuTorch Ethos-U85 example: 8736 byte model
-   Output: 10 element(s): -0.0142 0.0206 0.0601 -0.0886 0.0791 0.0522 -0.0301 -0.0775 -0.2800 -0.0095
+   ExecuTorch pico-faces (m3_long_cfg, a16w8/a8w8): 2796016 byte program
+   Methods:
+     dit_step  2 input(s), 1 output(s), 16384 planned byte(s)
+     decode    1 input(s), 1 output(s), 245760 planned byte(s)
+   Generating: seed 3, 4 steps, class 1, w 4.0
+   Display: 480x800 RGB888 panel started
+     dit_step: 8 call(s), 68 ms total (8 ms each)
+     decode:   3 ms
+     total:    78 ms at 400 MHz (wall clock; not meaningful on the FVP)
+     dit_step: NPU 27132 kcycles, active 95%, MAC active 39%, 32 MAC/cycle, read 21279 kB on AXI0 + 0 kB on AXI1
+     decode:   NPU 1303 kcycles, active 50%, MAC active 37%, 83 MAC/cycle, read 434 kB on AXI0 + 0 kB on AXI1
+   Image: 128x128x3, CRC32 6b938c66
+     |::::::::.......  .    ..........|
+     |::::::::...........     .....   |
+     ...
    Test_result: PASS
+   Interactive: send "G <seed> [k_steps] [class] [w]" (viewer/view_serial.py) or "I"
+   Joystick: left = one new image, right = start/stop continuous generation
    ```
 
-3. Set a breakpoint after `module.forward(input)` in `src/app_main.cpp` and
-   inspect the output tensor, or ask the CMSIS Developer Assistant to do it:
-   "Build for the DevKit-E8, load it, break after the inference and show me
-   the output logits."
+   A face with guidance takes 78 ms: eight `dit_step` calls of 8.5 ms on the
+   NPU and a 3 ms decode. The same face appears on the LCD, scaled to
+   384 x 384 in the centre of the screen; it is bit for bit the image the FVP
+   produces. (The CRC depends on the exported program, which can differ
+   slightly between the machines that run **Create AI layer**.)
+3. Press the **SW2 joystick** to the left for a new face (the next seed; class
+   and guidance follow from it), to the right to generate faces back to back
+   until you press right again. Each one is reported on the console.
+4. Or request faces from the host with pico-faces' viewer (close the Serial
+   Monitor first, the viewer needs the port; in a clone of
+   [pico-faces](https://github.com/cpldcpu/pico-faces),
+   `pip install pyserial pillow`):
+
+   ```bash
+   python viewer/view_serial.py --port /dev/tty.usbmodemXXXX --seed 3 --steps 4 --class 1 --cfg 4 --show
+   ```
+
+   Classes are 0 (female, neutral), 1 (female, smiling), 2 (male, neutral),
+   3 (male, smiling) and 4 (unconditional); `--cfg` is the guidance strength
+   (0 = plain), `--steps` 8, 4, 2 or 1.
+5. Set a breakpoint after `generate()` in `src/app_main.cpp` and inspect the
+   timings in `tm`, or ask the CMSIS Developer Assistant to do it: "Build for
+   the DevKit-E8, load it, break after the first generate() and show me the
+   NPU cycles per method."
 
 **FVP instead of the board:** choose the **SSE-320-U85** target-type and click
-**Run** or **Debug**; the same output appears in the terminal. On macOS,
-where Arm ships no FVP build, the FVP runs in Docker: set `model:` in the
-csolution's SSE-320-U85 target-set to `${workspaceFolder}/.vscode/fvp.sh`,
-copy `.vscode/launch.json.mac` to `.vscode/launch.json`, and keep Docker
-Desktop running (the first run builds the image, about 100 MB).
+**Run** or **Debug**; the same output appears in the terminal (a run takes a
+few minutes), and the image lands in `out/fvp_image.bin`.
+`python3 model/verify_export.py --compare out/fvp_image.bin <reference.png>`
+compares it with the host's rendering of the same seed (see
+[documentation/example.md](documentation/example.md)). On macOS, where Arm
+ships no FVP build, the FVP runs in Docker: set `model:` in the csolution's
+SSE-320-U85 target-set to `${workspaceFolder}/.vscode/fvp.sh`, copy
+`.vscode/launch.json.mac` to `.vscode/launch.json`, and keep Docker Desktop
+running (the first run builds the image, about 100 MB).
 
 ## 7. If something does not work
 
 - **J-Link connects but never stops at `main`:** either the table of contents
-  does not point at the debug stub (repeat step 5), or the image cannot boot.
+  does not point at the debug stub or was built for another part, which the
+  Secure Enclave skips (repeat step 5), or the image cannot boot.
   Look before reprogramming: in the debugger, read the vector table at
   `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
   lockup at reset, which an image linked to run from ITCM produces when the
@@ -142,10 +201,23 @@ Desktop running (the first run builds the image, about 100 MB).
   until it is power-cycled.
 - **No console output:** SW4 is still on `SEUART`, or the port was opened
   before the switch was moved. Set `UART4` and reopen the port.
+- **Every SETOOLS tool prints `Revision is invalid!`:** SETOOLS stores the
+  selected part and revision in `utils/global-cfg.db`, and a
+  `tools-config -p` without `-r` (another project switching to an E7 or the
+  AppKit-E8, for example) keeps a revision the new part does not have. From
+  then on even `tools-config` refuses to run. The stub task of step 5 writes
+  the DevKit's part and revision into that file before it calls
+  `tools-config`, so it recovers by itself; for SETOOLS commands of your own,
+  set `"Part#"` to `"E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM"` and
+  `"Revision"` to `"A0"` there.
 - **`app-write-mram` gets no answer:** press reset while it waits, check SW4
   is on `SEUART`, close any terminal holding the port.
-- **"`.venv` does not exist":** run the task **Setup Python virtual
-  environment** first; it is only needed to regenerate the AI layer.
+- **The build cannot find `ai_layer/model_pte.c`:** the model data is not
+  committed; run the tasks **Setup Python virtual environment** and **Create
+  AI layer** (step 4).
+- **"`.venv` does not exist" or "`model/pico_faces/...` is missing":** run the
+  task **Setup Python virtual environment** first; it creates the
+  environment and downloads the checkpoints.
 - `.vscode/launch.json` is generated by the extension for the target-types
   and is not committed; after **Apply** it has a J-Link entry for the
   DevKit-E8. That is expected.

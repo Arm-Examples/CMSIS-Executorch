@@ -33,6 +33,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Changed for the CMSIS-Executorch example: the section .rodata.model (the
+ * ExecuTorch program) goes to ROM2 in a program header of its own, see
+ * SECTIONS. */
+
 /* ----------------------------------------------------------------------------
   Stack seal size definition
  *----------------------------------------------------------------------------*/
@@ -75,6 +79,7 @@ ENTRY(Reset_Handler)
 PHDRS
 {
     text PT_LOAD;
+    model PT_LOAD;
     ram PT_LOAD;
     ram_init PT_LOAD;
     tls PT_TLS;
@@ -82,6 +87,16 @@ PHDRS
 
 SECTIONS
 {
+#if __ROM2_SIZE > 0
+    /* The ExecuTorch program (ai_layer/model_pte.c, ~2.8 MB) goes to the DDR
+       region ROM2 instead of the 2 MB FPGA SRAM that holds the code. It comes
+       before .text, whose .rodata pattern would otherwise take it, and before
+       .init, so that lld keeps the text segment contiguous in the file. */
+    .rodata.model : ALIGN(16) {
+        *(.rodata.model)
+    } >ROM2 AT>ROM2 :model
+#endif
+
     .init : {
         KEEP (*(.vectors))
 

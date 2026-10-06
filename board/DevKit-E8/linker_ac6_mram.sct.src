@@ -5,7 +5,8 @@
 
 /* Copied from the Ensemble pack (Device/core/rtss_hp/linker/linker_ac6_mram.sct)
    for the CMSIS-Executorch DevKit-E8 layer: a larger main stack, and the
-   .bss.ai_pool section (the ExecuTorch memory pools of the runner) in bulk SRAM. */
+   .bss.ai_pool section (the ExecuTorch memory pools of the runner) in bulk SRAM,
+   above the A32 boot stub the ATOC loads to the start of SRAM0. */
 
 #define __ROM_BASE      APP_MRAM_HP_BASE
 #define __ROM_SIZE      APP_CODE_MRAM_SIZE
@@ -91,7 +92,7 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
   }
 
 #if (SRAM0_SRAM1_COMBINED == 1)
-  RW_SRAM APP_SRAM_BASE APP_SRAM_SIZE  {  ; Update sections as needed
+  RW_SRAM (APP_SRAM_BASE + APP_SRAM_POOL_OFFSET) (APP_SRAM_SIZE - APP_SRAM_POOL_OFFSET)  {  ; above the A32 boot stub
    * (.bss.ai_pool)                       ; ExecuTorch method/temp pools (src/app_main.cpp)
    * (.bss.lcd_crop_and_interpolate_buf)  ; LCD crop and interpolate image processing buffer.
    * (.bss.lcd_frame_buf)                 ; LCD frame Buffer.
@@ -99,7 +100,7 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
    * (.bss.camera_frame_bayer_to_rgb_buf) ; (Optional) Camera Frame Buffer for Bayer to RGB Conversion.
   }
 #else
-  RW_SRAM0 APP_SRAM0_BASE APP_SRAM0_SIZE  {  ; Update sections as needed
+  RW_SRAM0 (APP_SRAM0_BASE + APP_SRAM_POOL_OFFSET) (APP_SRAM0_SIZE - APP_SRAM_POOL_OFFSET)  {  ; above the A32 boot stub
    * (.bss.ai_pool)                       ; ExecuTorch method/temp pools (src/app_main.cpp)
    * (.bss.lcd_crop_and_interpolate_buf)  ; LCD crop and interpolate image processing buffer.
    * (.bss.lcd_frame_buf)                 ; LCD frame Buffer.

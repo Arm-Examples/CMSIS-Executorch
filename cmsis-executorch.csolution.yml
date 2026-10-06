@@ -1,8 +1,9 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
-# A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP
-# and the Alif Ensemble E8 DevKit (target-type DevKit-E8). Three steps build it:
+# pico-faces (a latent diffusion transformer that generates 128x128 faces) on
+# the Ethos-U85 with ExecuTorch, for the Corstone-320 (SSE-320) FVP and the
+# Alif Ensemble E8 DevKit (target-type DevKit-E8). Three steps build it:
 #
 #   cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85
 #   python create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
@@ -95,7 +96,7 @@ solution:
   # keys under model: are passed through to create_ai_layer.py.
   # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
   mlops:
-    description: TinyCNN int8 image classifier for Ethos-U85
+    description: pico-faces rectified-flow face generator for Ethos-U85
     npu:
       type: Ethos-U85 # explicit: the Ensemble pack lists an Ethos-U55 first
     vela:
@@ -107,8 +108,4 @@ solution:
       memory: Shared_Sram
     model:
       clayer: $AI-Layer$
-      name: TinyCNN
-      # Model parameters for create_ai_layer.py: the NHWC input shape and the
-      # number of samples the quantizer is calibrated with.
-      input-shape: 1x16x16x3
-      calibration-samples: 2
+      name: PicoFaces

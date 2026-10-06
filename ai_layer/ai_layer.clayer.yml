@@ -3,13 +3,14 @@
 # model/model.py or the csolution's mlops: node.
 layer:
   type: AI
-  description: TinyCNN int8 image classifier for Ethos-U85
+  description: pico-faces rectified-flow face generator for Ethos-U85
 
   packs:
     - pack: PyTorch::ExecuTorch@1.5.1
 
   define:
-    - ET_LOG_ENABLED: 0
+    - ET_LOG_ENABLED: 1
+    - ET_MIN_LOG_LEVEL: Error
 
   add-path:
     - .
@@ -23,7 +24,8 @@ layer:
     - component: Machine Learning:ExecuTorch Operators:Quantized quantize
 
   groups:
-    - group: TinyCNN
+    - group: PicoFaces
       files:
         - file: ./model_pte.c
         - file: ./model_pte.h
+        - file: ./model_params.h

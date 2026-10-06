@@ -35,9 +35,11 @@ version — see [Moving to a new ExecuTorch version](#moving-to-a-new-executorch
 
 `create_ai_layer.py` reads the installed pack's `.pdsc` out of the pack root
 (`$CMSIS_PACK_ROOT`, or cpackget's default) to find out which operator
-components exist. It reads the version `cbuild setup` resolved, taken from
-`cmsis-executorch.cbuild-pack.yml`, so a pack root holding several
-ExecuTorch versions cannot make it read the wrong one.
+components exist. It reads the version `cbuild setup` resolved for the
+csolution's `PyTorch::ExecuTorch` entry, taken from
+`cmsis-executorch.cbuild-pack.yml`, so neither a pack root holding several
+ExecuTorch versions nor an older resolution that the lock file keeps for the
+previous AI layer can make it read the wrong one.
 
 ## What is in the pack
 
@@ -174,6 +176,6 @@ in order:
    A changed operator set simply shows up in the regenerated
    `ai_layer/ai_layer.clayer.yml`.
 
-Finally, update the version wherever it appears in prose: the README
-(Prerequisites and the pack-version note), the csolution header comment and
-this page.
+Finally, update the version wherever it appears in prose:
+`documentation/example.md` (Prerequisites and the pack-version note),
+`requirements.txt` and this page.
