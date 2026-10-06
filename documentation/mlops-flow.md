@@ -34,19 +34,20 @@ solution:
     model:
       clayer: $AI-Layer$
       name: TinyCNN
-    hardware:
-      target: DevKit-E8       # <target-type>[@<target-set>] of the board;
-                              # named explicitly, 2.14.1 detects none
-    simulator:
-      target: SSE-320-U85     # <target-type>[@<target-set>] of the FVP
+      input-shape: 1x16x16x3           # passed through to create_ai_layer.py
+      calibration-samples: 2
 ```
+
+CMSIS-Toolbox detects the `hardware:` target (DevKit-E8, J-Link Server) and
+the `simulator:` target (SSE-320-U85, Arm-FVP) from the target-sets, and
+passes the extra keys under `model:` through unchanged.
 
 `cbuild setup cmsis-executorch.csolution.yml --active DevKit-E8`
 resolves it and writes `cmsis-executorch.cbuild-mlops.yml`:
 
 ```yaml
 cbuild-mlops:
-  generated-by: csolution version 2.14.1+p38-gf512b381
+  generated-by: csolution version 2.15.1+p3-gf46d68bf
   description: TinyCNN int8 image classifier for Ethos-U85
   processor:
     type: Cortex-M55
@@ -59,6 +60,8 @@ cbuild-mlops:
   model:
     clayer: ai_layer/ai_layer.clayer.yml
     name: TinyCNN
+    input-shape: 1x16x16x3
+    calibration-samples: 2
   hardware:
     active: DevKit-E8
     cbuild-run: out/cmsis-executorch+DevKit-E8.cbuild-run.yml
@@ -71,7 +74,7 @@ cbuild-mlops:
     output:
       - file: out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
         type: elf
-    model: ${workspaceFolder}/.vscode/fvp.sh
+    model: FVP_Corstone_SSE-320
     config-file: board/Corstone-320/fvp_config.txt
 ```
 
@@ -95,7 +98,9 @@ for an MLOps system. It reads the file and:
 
 1. builds ExecuTorch's `EthosUCompileSpec` from `npu:` and `vela:` -- the
    accelerator (`ethos-u85-256`), system config and memory mode come from
-   there, so the Python code contains no NPU configuration;
+   there, and every other option in `vela.options` (the `misc:` of the
+   csolution's `vela:` node) reaches Vela as an extra flag, so the Python code
+   contains no NPU configuration;
 2. exports `model/model.py`: quantizes it, delegates the whole graph to the
    Ethos-U and compiles it with Vela;
 3. reads the operators the resulting program still calls on the CPU and looks

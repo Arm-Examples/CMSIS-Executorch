@@ -4,7 +4,7 @@ This example shows how to deploy and run an
 [ExecuTorch](https://github.com/pytorch/executorch) model on an Arm Ethos-U NPU.
 The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/)
 provides the source code components to build the ExecuTorch runtime, required operators, and Ethos-U backend.
-The build process uses the [CMSIS-Toolbox 2.14.1](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
+The build process uses the [CMSIS-Toolbox 2.15.0](https://open-cmsis-pack.github.io/cmsis-toolbox/) or higher.
 
 This example application targets the Arm Corstone-320 reference platform with
 an Ethos-U85 NPU, simulated on the Arm FVP, and the
@@ -42,13 +42,13 @@ the first debug session, is the [getting-started README](../README.md).
 The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) can be optionally installed manually with:
 
 ```bash
-cpackget add PyTorch::ExecuTorch@1.4.1
+cpackget add PyTorch::ExecuTorch@1.5.1
 ```
 
 > [!Note]
 > The pack and Python exporter versions must match, as the generated `.pte`
-> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.4.1`.
-> The matching wheel is `executorch==1.4.1` from PyPI, pinned in
+> format is consumed by the runtime supplied in `PyTorch::ExecuTorch@1.5.1`.
+> The matching wheel is `executorch==1.5.1` from PyPI, pinned in
 > `requirements.txt`.
 
 ## Quick start
@@ -70,11 +70,12 @@ The example can be built and run entirely in Keil Studio for VS Code.
    changing the model or the target.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
-   where Arm ships no FVP build, `.vscode/fvp.sh` runs the model in Docker:
-   Docker Desktop must be running, and the first Run or Debug builds the
-   container image (about 100 MB download). On Windows, set `model:` in the
-   csolution's target-set back to `FVP_Corstone_SSE-320` (the shim is a bash
-   script).
+   where Arm ships no FVP build, run the model in Docker instead: set `model:`
+   in the csolution's SSE-320-U85 target-set to
+   `${workspaceFolder}/.vscode/fvp.sh` and copy `.vscode/launch.json.mac` to
+   `.vscode/launch.json` (its debug configuration waits for the model to come
+   up in the container). Docker Desktop must be running, and the first Run or
+   Debug builds the container image (about 100 MB download).
 
 For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
 **Manage Solution** and follow the [getting-started README](../README.md) for the
@@ -88,8 +89,8 @@ Ethos-U version info:
     Arch:       v2.0.0
     MACs/cc:    256
     Cmd stream: v1
-ExecuTorch Ethos-U85 example: 8896 byte model
-Output: 10 element(s): 0.0079 0.0459 0.0475 -0.0475 0.0791 0.0411 -0.0285 -0.0744 -0.2246 -0.0016
+ExecuTorch Ethos-U85 example: 8736 byte model
+Output: 10 element(s): -0.0142 0.0206 0.0601 -0.0886 0.0791 0.0522 -0.0301 -0.0775 -0.2800 -0.0095
 Test_result: PASS
 ```
 
@@ -169,14 +170,13 @@ out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 #### 4. Run on the FVP
 
 ```bash
-.vscode/fvp.sh \
+FVP_Corstone_SSE-320 \
     -f board/Corstone-320/fvp_config.txt --simlimit 60 \
     -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
-`.vscode/fvp.sh` is the model command the Run and Debug buttons use too; on
-Linux and Windows `FVP_Corstone_SSE-320` can be called directly with the same
-arguments.
+This is the model command the Run and Debug buttons use too. On macOS, call
+`.vscode/fvp.sh` with the same arguments; it runs the model in Docker.
 
 ## How model generation works
 
@@ -193,16 +193,21 @@ mlops:
   model:
     clayer: $AI-Layer$
     name: TinyCNN
+    input-shape: 1x16x16x3
+    calibration-samples: 2
 ```
 
 `cbuild setup --active DevKit-E8` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. With the Ensemble pack in the solution, the toolbox also
+and Vela options, and the two target-sets as the `hardware:` and
+`simulator:` to test on. With the Ensemble pack in the solution, the toolbox also
 copies the pack's Vela configuration to `.cmsis/ensemble_vela.ini` and adds
 `--accelerator-config ethos-u85-256`, for both targets; the system
 configuration named above comes from that file. `create_ai_layer.py` reads
-those options and passes them to ExecuTorch's `EthosUCompileSpec`, so the
-target configuration is never duplicated in Python. The script then writes:
+those options and passes all of them to ExecuTorch's `EthosUCompileSpec`, so
+the target configuration is never duplicated in Python. The two extra keys
+under `model:` are parameters of the model itself; the toolbox passes them
+through and the script hands them to `model/model.py`. The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
@@ -222,8 +227,8 @@ changes the operator set needs nothing more than re-running steps 2 and 3.
 ## Adapting the example
 
 To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required: `INPUT_SHAPE` and
-`get_model(input_shape)` define the input, and
+model name or input handling as required: `get_model(input_shape)` builds the
+model for the `input-shape` of the `mlops:` node, and
 `get_calibration_inputs(input_shape, calibration_samples)` returns the samples
 the quantizer is calibrated with; give it representative data for a trained
 model. The runner in `src/app_main.cpp` builds its input tensor with the same
@@ -231,9 +236,15 @@ fixed shape and prints the output as ten floats, so a model with another input
 shape or output needs matching changes there. Then re-run `create_ai_layer.py`
 and build.
 
+Give an image model its input as NHWC, the layout of a camera frame, as
+`model/model.py` does: the model permutes it to the NCHW its convolutions take,
+and Vela folds that into the first convolution. With an NCHW input the NPU
+first reorders the image in an operation of its own.
+
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically. Moving to a different
+options then follow that configuration automatically; `vela: misc:` takes any
+further Vela option, for example `--optimise Size`. Moving to a different
 board or reference platform also requires the corresponding device pack, board
 support, memory layout, and FVP configuration.
 
@@ -244,7 +255,7 @@ together. More information is available in
 ## Project layout
 
 | Path | Purpose |
-|------|---------|
+| ------ | --------- |
 | `cmsis-executorch.csolution.yml` | Solution, target, and MLOps configuration |
 | `cmsis-executorch.cproject.yml` | Application project: sources plus the Board and AI layers |
 | `model/model.py` | Example TinyCNN model |
@@ -252,7 +263,7 @@ together. More information is available in
 | `ai_layer/` | Generated: component selection and the embedded model data |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer, Alif debug stubs) merged by the CMSIS Solution extension |
-| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile` | The FVP model command used by Run and Debug; runs the model in Docker on macOS |
+| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration |
 | `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console) |
 | `.alif/` | SETOOLS configuration and debug stubs for the DevKit-E8 (from the Ensemble pack) |
