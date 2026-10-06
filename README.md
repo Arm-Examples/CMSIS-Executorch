@@ -176,13 +176,18 @@ mlops:
   model:
     clayer: $AI-Layer$
     name: TinyCNN
+    input-shape: 1x16x16x3
+    calibration-samples: 2
 ```
 
 `cbuild setup --active SSE-320-U85` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. `create_ai_layer.py` reads those options and passes all of
-them to ExecuTorch's `EthosUCompileSpec`, so the target configuration is never
-duplicated in Python. The script then writes:
+and Vela options, and the FVP target-set as the `simulator:` to test on.
+`create_ai_layer.py` reads those options and passes all of them to ExecuTorch's
+`EthosUCompileSpec`, so the target configuration is never duplicated in
+Python. The two extra keys under `model:` are parameters of the model itself;
+the toolbox passes them through and the script hands them to `model/model.py`.
+The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
@@ -202,8 +207,8 @@ changes the operator set needs nothing more than re-running steps 2 and 3.
 ## Adapting the example
 
 To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required: `INPUT_SHAPE` and
-`get_model(input_shape)` define the input, and
+model name or input handling as required: `get_model(input_shape)` builds the
+model for the `input-shape` of the `mlops:` node, and
 `get_calibration_inputs(input_shape, calibration_samples)` returns the samples
 the quantizer is calibrated with; give it representative data for a trained
 model. The runner in `src/app_main.cpp` builds its input tensor with the same
