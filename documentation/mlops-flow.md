@@ -61,7 +61,7 @@ cbuild-mlops:
     output:
       - file: out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
         type: elf
-    model: ${workspaceFolder}/.vscode/fvp.sh
+    model: FVP_Corstone_SSE-320
     config-file: board/Corstone-320/fvp_config.txt
 ```
 

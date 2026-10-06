@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Stand-in for the FVP_Corstone_SSE-320 executable, referenced from the
-# `debugger: model:` node of the SSE-320-U85 target-set. The CMSIS Solution
-# extension runs it both as the "CMSIS Run" task and as the gdbtarget debug
-# server, in the latter case with
+# Stand-in for the FVP_Corstone_SSE-320 executable on macOS, where the
+# `debugger: model:` node of the SSE-320-U85 target-set points at it (see the
+# README). The CMSIS Solution extension runs it both as the "CMSIS Run" task
+# and as the gdbtarget debug server (.vscode/launch.json.mac), in the latter
+# case with
 #
 #   -D --plugin $AVH_FVP_PLUGINS/GDBServer.so -C GDBServer.port=3333 \
 #      -f board/Corstone-320/fvp_config.txt --simlimit 60 -a <application>.hex
@@ -15,8 +16,8 @@
 #   * runs the model in Docker on macOS, where Arm publishes no FVP build, with
 #     the GDB port forwarded to the host so arm-none-eabi-gdb can reach it.
 #
-# On Linux it just execs the real model. On Windows, where the extension cannot
-# run a bash script, point the csolution's `model:` at FVP_Corstone_SSE-320.exe.
+# On Linux it just execs the real model. Windows and Linux need no shim: the
+# csolution's `model:` names FVP_Corstone_SSE-320 directly.
 set -euo pipefail
 
 MODEL="${FVP_MODEL:-FVP_Corstone_SSE-320}"
