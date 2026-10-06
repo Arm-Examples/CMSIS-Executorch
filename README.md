@@ -235,7 +235,7 @@ together. More information is available in
 ## Project layout
 
 | Path | Purpose |
-|------|---------|
+| ------ | --------- |
 | `cmsis-executorch.csolution.yml` | Solution, target, and MLOps configuration |
 | `cmsis-executorch.cproject.yml` | Application project: sources plus the Board and AI layers |
 | `model/model.py` | Example TinyCNN model |
