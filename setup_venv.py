@@ -45,7 +45,7 @@ PICO_FACES_FILES: dict[str, dict[str, str]] = {
     },
 }
 
-# ExecuTorch 1.4 declares requires-python = ">=3.10,<3.15" in its pyproject.toml,
+# ExecuTorch 1.5 declares requires-python = ">=3.10,<3.15" in its pyproject.toml,
 # but the tosa-tools 2026.5.0 it pins for the Arm backend (see
 # requirements-arm-tosa.txt) only ships wheels up to CPython 3.13, so on 3.14
 # pip reports "No matching distribution found for tosa-tools==2026.5.0".

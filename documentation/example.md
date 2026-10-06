@@ -88,11 +88,12 @@ The example can be built and run entirely in Keil Studio for VS Code.
    again after changing the model.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
-   where Arm ships no FVP build, `.vscode/fvp.sh` runs the model in Docker:
-   Docker Desktop must be running, and the first Run or Debug builds the
-   container image (about 100 MB download). On Windows, set `model:` in the
-   csolution's target-set back to `FVP_Corstone_SSE-320` (the shim is a bash
-   script).
+   where Arm ships no FVP build, run the model in Docker instead: set `model:`
+   in the csolution's SSE-320-U85 target-set to
+   `${workspaceFolder}/.vscode/fvp.sh` and copy `.vscode/launch.json.mac` to
+   `.vscode/launch.json` (its debug configuration waits for the model to come
+   up in the container). Docker Desktop must be running, and the first Run or
+   Debug builds the container image (about 100 MB download).
 
 For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
 **Manage Solution** and follow the [getting-started README](../README.md) for the
@@ -247,14 +248,14 @@ out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 #### 4. Run on the FVP
 
 ```bash
-.vscode/fvp.sh \
+FVP_Corstone_SSE-320 \
     -f board/Corstone-320/fvp_config.txt --simlimit 60 \
     -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
-`.vscode/fvp.sh` is the model command the Run and Debug buttons use too; on
-Linux and Windows `FVP_Corstone_SSE-320` can be called directly with the same
-arguments. The application generates one face (seed 3, 4 steps, class 1,
+This is the model command the Run and Debug buttons use too. On macOS, call
+`.vscode/fvp.sh` with the same arguments; it runs the model in Docker. The
+application generates one face (seed 3, 4 steps, class 1,
 guidance 4), prints the timings, the CRC-32 of the image and a coarse ASCII
 preview, writes the image and the measurements to `out/fvp_image.bin` and
 `out/fvp_result.txt` through semihosting, and ends the simulation. A run
@@ -317,12 +318,16 @@ mlops:
 
 `cbuild setup --active DevKit-E8` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options. With the Ensemble pack in the solution, the toolbox also
+and Vela options, and the two target-sets as the `hardware:` and
+`simulator:` to test on. With the Ensemble pack in the solution, the toolbox also
 copies the pack's Vela configuration to `.cmsis/ensemble_vela.ini` and adds
 `--accelerator-config ethos-u85-256`, for both targets; the system
 configuration named above comes from that file. `create_ai_layer.py` reads
-those options and passes them to ExecuTorch's `EthosUCompileSpec`, so the
-target configuration is never duplicated in Python. The script then writes:
+those options and passes all of them to ExecuTorch's `EthosUCompileSpec`, so
+the target configuration is never duplicated in Python. Extra keys under
+`model:` (`input-shape`, `calibration-samples`) are parameters of the model
+itself; the toolbox passes them through and the script hands them to
+`model/model.py` (pico-faces takes none). The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
@@ -387,7 +392,8 @@ region without further memory work.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically. Moving to a different
+options then follow that configuration automatically; `vela: misc:` takes any
+further Vela option, for example `--optimise Size`. Moving to a different
 board or reference platform also requires the corresponding device pack, board
 support, memory layout, and FVP configuration.
 
@@ -398,7 +404,7 @@ together. More information is available in
 ## Project layout
 
 | Path | Purpose |
-|------|---------|
+| ------ | --------- |
 | `cmsis-executorch.csolution.yml` | Solution, target, and MLOps configuration |
 | `cmsis-executorch.cproject.yml` | Application project: sources plus the Board and AI layers |
 | `model/model.py` | pico-faces re-expressed as the ExecuTorch methods `dit_step` and `decode` |
@@ -408,7 +414,7 @@ together. More information is available in
 | `ai_layer/` | Generated: component selection, `model_params.h` and the embedded model data (`model_pte.c` not committed) |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export and downloads the checkpoints |
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer, Alif debug stubs) merged by the CMSIS Solution extension |
-| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile` | The FVP model command used by Run and Debug; runs the model in Docker on macOS |
+| `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration; the linker scripts in its `RTE/` put the model in DDR |
 | `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console, LCD, joystick) |
 | `.alif/` | SETOOLS configuration and debug stubs for the DevKit-E8 (from the Ensemble pack) |

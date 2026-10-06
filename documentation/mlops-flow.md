@@ -36,11 +36,12 @@ solution:
     model:
       clayer: $AI-Layer$
       name: PicoFaces
-    hardware:
-      target: DevKit-E8       # <target-type>[@<target-set>] of the board
-    simulator:
-      target: SSE-320-U85     # <target-type>[@<target-set>] of the FVP
 ```
+
+CMSIS-Toolbox detects the `hardware:` target (DevKit-E8, J-Link Server) and
+the `simulator:` target (SSE-320-U85, Arm-FVP) from the target-sets, and
+passes extra keys under `model:` (parameters of the model, none for
+pico-faces) through unchanged.
 
 `cbuild setup cmsis-executorch.csolution.yml --active DevKit-E8`
 resolves it and writes `cmsis-executorch.cbuild-mlops.yml`:
@@ -72,7 +73,7 @@ cbuild-mlops:
     output:
       - file: out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
         type: elf
-    model: ${workspaceFolder}/.vscode/fvp.sh
+    model: FVP_Corstone_SSE-320
     config-file: board/Corstone-320/fvp_config.txt
 ```
 
@@ -99,7 +100,9 @@ for an MLOps system. It reads the file and:
 
 1. builds ExecuTorch's `EthosUCompileSpec` from `npu:` and `vela:` -- the
    accelerator (`ethos-u85-256`), system config and memory mode come from
-   there, so the Python code contains no NPU configuration;
+   there, and every other option in `vela.options` (the `misc:` of the
+   csolution's `vela:` node) reaches Vela as an extra flag, so the Python code
+   contains no NPU configuration;
 2. exports `model/model.py`. The model describes itself through a small
    contract: `get_methods()` lists the methods of the program (here
    `dit_step` and `decode`, each an `nn.Module` with example inputs, a

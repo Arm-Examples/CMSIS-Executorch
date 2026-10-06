@@ -32,12 +32,17 @@ model/model.py describes the model through a small contract:
                                             calibration data (see Method below)
     get_params()                            constants written to model_params.h
 
+The extra keys of the `model:` node (input-shape, calibration-samples), which
+CMSIS-Toolbox passes through, reach get_methods(), or get_model() and
+get_calibration_inputs(), as keyword arguments.
+
 Every method is quantized, calibrated on its data and delegated to the Ethos-U.
 The script prints, per method, how many Ethos-U delegates the graph has and
 which operators remain on the CPU. Set AI_LAYER_STRICT=1 to fail when a method
 is not a single delegate, AI_LAYER_VERBOSE=1 for the backend's partitioning
 diagnostics, AI_LAYER_DUMP=<dir> to keep the TOSA and Vela artefacts, and
-AI_LAYER_VELA_FLAGS for extra Vela options (e.g. --verbose-performance).
+AI_LAYER_VELA_FLAGS for Vela options on top of the vela: node's (e.g.
+--verbose-performance).
 
 The script runs itself in the solution's .venv (see setup_venv.py) when it is
 started with another interpreter.
@@ -49,6 +54,7 @@ import logging
 import operator
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -145,6 +151,42 @@ def executorch_pack(version: str) -> Path:
     return pack_root() / vendor / pack / version
 
 
+# Vela options that are arguments of EthosUCompileSpec, and the ones the export
+# sets itself: the configuration file comes from vela.ini of the cbuild-mlops.yml.
+SPEC_OPTIONS = ("accelerator-config", "system-config", "memory-mode")
+EXPORT_OPTIONS = ("config", "output-format", "output-dir")
+
+
+def vela_options(options: str) -> tuple[dict[str, str], list[str]]:
+    """Split vela.options of the cbuild-mlops.yml: the EthosUCompileSpec arguments, and every other option.
+
+    The other options are the `misc:` of the csolution's mlops: node (for
+    example `--optimise Size`); they reach Vela as extra flags, written as
+    `--name=value`.
+    """
+    tokens = shlex.split(options)
+    spec, extra = {}, []
+    while tokens:
+        token = tokens.pop(0)
+        if not token.startswith("--"):
+            sys.exit(f"vela options: unexpected '{token}' in '{options}'")
+        name, has_value, value = token[2:].partition("=")
+        if not has_value and tokens and not tokens[0].startswith("-"):
+            value = tokens.pop(0)
+        if name in EXPORT_OPTIONS:
+            sys.exit(
+                f"vela options: --{name} is set by the export; "
+                "the configuration file is vela: ini: of the mlops: node"
+            )
+        if name in SPEC_OPTIONS:
+            if name in spec:
+                sys.exit(f"vela options: --{name} is given twice in '{options}'")
+            spec[name] = value
+        else:
+            extra.append(f"--{name}={value}" if value else f"--{name}")
+    return spec, extra
+
+
 def compile_spec(mlops: dict, mlops_dir: Path):
     """EthosUCompileSpec from the npu: and vela: nodes of the cbuild-mlops.yml."""
     from executorch.backends.arm.ethosu import EthosUCompileSpec
@@ -153,25 +195,22 @@ def compile_spec(mlops: dict, mlops_dir: Path):
     if not npu:
         sys.exit("the solution's mlops: node names no NPU; this example needs an Ethos-U")
     vela = mlops.get("vela", {})
-    options = vela.get("options", "")
+    spec_options, extra = vela_options(vela.get("options", ""))
 
-    def option(name: str) -> str | None:
-        found = re.search(rf"--{name}[= ](\S+)", options)
-        return found.group(1) if found else None
-
-    target = option("accelerator-config") or f"{npu['type'].lower()}-{npu.get('macs', 256)}"
+    target = spec_options.get("accelerator-config") or f"{npu['type'].lower()}-{npu.get('macs', 256)}"
     kwargs = {
         "target": target,
-        "system_config": option("system-config"),
-        "memory_mode": option("memory-mode"),
+        "system_config": spec_options.get("system-config"),
+        "memory_mode": spec_options.get("memory-mode"),
     }
     if vela.get("ini"):
         # ExecuTorch stores the path in the compile spec, and the spec ends up
         # in the .pte. A path relative to the working directory keeps the
         # program identical between checkouts; Vela resolves it from there.
         kwargs["config_ini"] = os.path.relpath(mlops_dir / vela["ini"])
-    if flags := os.environ.get("AI_LAYER_VELA_FLAGS", "").split():
-        kwargs["extra_flags"] = flags
+    extra += os.environ.get("AI_LAYER_VELA_FLAGS", "").split()
+    if extra:
+        kwargs["extra_flags"] = extra
     print(f"[ai_layer] Vela: {kwargs}")
     spec = EthosUCompileSpec(**kwargs)
     if dump := os.environ.get("AI_LAYER_DUMP"):
@@ -208,12 +247,29 @@ def load_model_module():
     return model
 
 
-def methods(model) -> list[Method]:
+def model_params(mlops: dict) -> dict:
+    """The extra keys of the model: node, as keyword arguments for model/model.py."""
+    params = {}
+    for key, value in mlops["model"].items():
+        if key == "input-shape":
+            params["input_shape"] = tuple(int(d) for d in re.split(r"[x,]", str(value)))
+        elif key == "calibration-samples":
+            params["calibration_samples"] = int(value)
+        elif key not in ("clayer", "name"):
+            print(f"[ai_layer] warning: ignoring unknown model key {key!r}", file=sys.stderr)
+    if params:
+        print(f"[ai_layer] model parameters: {params}")
+    return params
+
+
+def methods(model, params: dict | None = None) -> list[Method]:
     """model.get_methods(), or "forward" from get_model() and get_calibration_inputs()."""
+    params = params or {}
     if hasattr(model, "get_methods"):
-        return list(model.get_methods())
-    samples = model.get_calibration_inputs()
-    return [Method("forward", model.get_model(), (samples[0],), lambda: [(s,) for s in samples])]
+        return list(model.get_methods(**params))
+    samples = model.get_calibration_inputs(**params)
+    module = model.get_model(**{k: v for k, v in params.items() if k == "input_shape"})
+    return [Method("forward", module, (samples[0],), lambda: [(s,) for s in samples])]
 
 
 def quant_config(kind: str):
@@ -324,14 +380,14 @@ def report_partitioning(edge, name: str) -> set[str]:
     return set(cpu_ops)
 
 
-def export_model(spec, model) -> tuple[bytes, set[str]]:
+def export_model(spec, model, params: dict | None = None) -> tuple[bytes, set[str]]:
     """Quantize, delegate and serialize every method; return the .pte and the CPU operators."""
     import torch
     from executorch.backends.arm.ethosu import EthosUPartitioner
     from executorch.exir import EdgeCompileConfig, ExecutorchBackendConfig, to_edge_transform_and_lower
 
     programs = {}
-    for method in methods(model):
+    for method in methods(model, params):
         print(f"[ai_layer] {method.name}: quantization {method.quantization}")
         programs[method.name] = torch.export.export(quantize_method(method, spec), method.example_inputs)
 
@@ -506,7 +562,7 @@ def main() -> None:
     layer_dir = layer_file.parent
 
     model = load_model_module()
-    pte, cpu_ops = export_model(compile_spec(mlops, mlops_file.parent), model)
+    pte, cpu_ops = export_model(compile_spec(mlops, mlops_file.parent), model, model_params(mlops))
     version = executorch_version(mlops_file)
     runtime, operators = components(pte, executorch_pack(version), cpu_ops)
 
