@@ -29,7 +29,7 @@ mps4_board.telnetterminal5.start_telnet=0             # (bool  , init-time) defa
 mps4_board.uart0.out_file=-                           # (string, init-time) default = ''       : Output file to hold data written by the UART (use '-' to send all output to stdout)
 mps4_board.uart0.unbuffered_output=1                  # (bool  , init-time) default = '0'      : Unbuffered output
                                                       # NOTE: without this the FVP block-buffers uart0 stdout when it is a
-                                                      # pipe and output only appears when the FVP exits. This example's
+                                                      # pipe and output only appears when the FVP exits. This template's
                                                       # stdio goes through semihosting, so uart0 only matters for code
                                                       # that writes to it directly.
 mps4_board.uart0.shutdown_on_eot=1                    # (bool  , init-time) default = '0'      : Shutdown simulation when a EOT (ASCII 4) char is transmitted (useful for regression tests when semihosting is not available)

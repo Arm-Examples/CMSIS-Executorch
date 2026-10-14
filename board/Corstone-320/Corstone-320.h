@@ -1,6 +1,6 @@
-/*---------------------------------------------------------------------------
- * Copyright (c) 2025 Arm Limited (or its affiliates).
- * All rights reserved.
+/*
+ * Copyright 2026 Arm Limited and/or its affiliates.
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the License); you may
@@ -14,10 +14,17 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *---------------------------------------------------------------------------*/
+ */
 
 #ifndef CORSTONE_320_H_
 #define CORSTONE_320_H_
+
+#include "Driver_USART.h"
+
+#define CMSIS_DRIVER_USART  0
+#define RETARGET_STDIO_UART 0
+
+extern ARM_DRIVER_USART Driver_USART0;
 
 #ifdef CMSIS_shield_header
 #include CMSIS_shield_header

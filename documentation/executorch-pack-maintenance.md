@@ -1,4 +1,4 @@
-# Where the ExecuTorch CMSIS pack comes from
+# ExecuTorch pack maintenance and versioning
 
 The `PyTorch::ExecuTorch` pack is installed into your CMSIS pack root like
 any other pack; nothing of it lives in this repository. This page explains
@@ -48,7 +48,7 @@ ExecuTorch versions cannot make it read the wrong one.
 | `include/` | Public headers, **including the bundled `include/flatbuffers/`** |
 | `armclang_shims/` | Small compatibility shims for Arm Compiler 6 |
 | `Documentation/` | Pack README |
-| `LICENSE` | Upstream BSD-3-Clause (the example code around it is Apache-2.0) |
+| `LICENSE` | Upstream BSD-3-Clause (the template code around it is Apache-2.0) |
 
 It is a **source** pack: nothing is prebuilt. Every operator is a selectable
 component, which is what lets `create_ai_layer.py` narrow the link to
@@ -96,12 +96,12 @@ cmake -S . -B cmake-out-arm \
     -DEXECUTORCH_BUILD_KERNELS_QUANTIZED=ON \
     -DEXECUTORCH_BUILD_FLATC=ON \
     -DEXECUTORCH_BUILD_EXECUTOR_RUNNER=OFF \
-    -DPYTHON_EXECUTABLE=/path/to/this/example/.venv/bin/python
+    -DPYTHON_EXECUTABLE=/path/to/this/template/.venv/bin/python
 cmake --build cmake-out-arm --config Release -j4
 ```
 
 `arm-none-eabi-gcc` must be on `PATH` (the one from `vcpkg-configuration.json`
-does); `PYTHON_EXECUTABLE` points at this example's `.venv`, which has the
+does); `PYTHON_EXECUTABLE` points at this template's `.venv`, which has the
 Python packages the generators import.
 
 Then run the generator with all four arguments (it refuses to run without
@@ -138,7 +138,7 @@ python3 backends/arm/cmsis_pack/test/validate_pack.py "$PACK.pack"
 
 These checks catch the parts that go missing quietly; they do not prove that
 the operators a model needs are present or that the pack compiles. Install it
-and build this example against it, with the pack version pinned in the
+and build this template against it, with the pack version pinned in the
 csolution and the cproject:
 
 ```bash

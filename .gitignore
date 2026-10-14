@@ -2,6 +2,7 @@
 .venv/
 __pycache__/
 *.pyc
+*.bak
 
 # The exported ExecuTorch program. create_ai_layer.py writes it next to the
 # generated AI layer; the C array in ai_layer/model_pte.c is what gets built.

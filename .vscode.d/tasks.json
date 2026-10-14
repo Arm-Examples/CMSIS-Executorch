@@ -2,7 +2,8 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Setup Python virtual environment",
+            "label": "Create Python environment (pip)",
+            "detail": "Create .venv with the installed Python and pip, then install the model-export dependencies",
             "type": "shell",
             "command": "./setup_venv.sh",
             "windows": {
@@ -14,8 +15,8 @@
             "problemMatcher": []
         },
         {
-            "label": "Setup Python virtual environment (uv)",
-            "detail": "Same as above, but with uv (must be on PATH): uv creates .venv for the Python version you enter and can download that interpreter",
+            "label": "Create Python environment (uv)",
+            "detail": "Create .venv with uv, optionally downloading the selected Python version; requires uv on PATH",
             "type": "shell",
             "command": "./setup_venv.sh",
             "windows": {
@@ -29,10 +30,13 @@
         },
         {
             "label": "Create AI layer",
-            "detail": "Export model/model.py for the NPU in cmsis-executorch.cbuild-mlops.yml and write ai_layer/ (run a CMSIS build or 'cbuild setup' first)",
+            "detail": "Export model/model.py for the active solution's NPU and write ai_layer (run 'cbuild setup' first)",
             "type": "shell",
             "command": "${workspaceFolder}/.venv/bin/python",
-            "args": ["create_ai_layer.py", "cmsis-executorch.cbuild-mlops.yml"],
+            "args": [
+                "create_ai_layer.py",
+                "${command:cmsis-csolution.getSolutionName}.cbuild-mlops.yml"
+            ],
             "windows": {
                 "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
             },

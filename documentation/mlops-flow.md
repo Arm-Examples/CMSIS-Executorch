@@ -1,7 +1,7 @@
 # The MLOps flow
 
 The `mlops:` node in `cmsis-executorch.csolution.yml` is the central
-definition of the Ethos-U target for this example. It follows the CMSIS-Toolbox
+definition of the initial Ethos-U target for this template. It follows the CMSIS-Toolbox
 [MLOps information](https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information)
 specification. This document explains how the three build steps use and
 propagate that information.
@@ -80,7 +80,7 @@ on the FVP.
 
 This is the hand-over point to the MLOps side: everything a model-export
 pipeline needs to know about the target is in this one file, and nothing in it
-is specific to this example's Python code.
+is specific to this template's Python code.
 
 `cbuild setup` writes the file even when the AI layer does not exist yet, so
 the flow also works on a checkout without a generated layer.

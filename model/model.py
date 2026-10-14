@@ -1,6 +1,6 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-"""The example model: a tiny CNN classifier, quantized to int8 for Ethos-U85 by create_ai_layer.py.
+"""The starter model: a tiny CNN classifier, quantized to int8 for Ethos-U85 by create_ai_layer.py.
 
 Small enough to export in seconds and fully partition onto the NPU, but real
 enough to exercise conv / relu / pool / linear through Vela. Input is a single
@@ -38,7 +38,7 @@ class TinyCNN(nn.Module):
 
 
 def get_model(input_shape: tuple[int, ...] = INPUT_SHAPE) -> nn.Module:
-    # Fixed seed: the example uses untrained (random) weights, and a fixed seed
+    # Fixed seed: the starter model uses untrained (random) weights, and a fixed seed
     # keeps the exported program identical from one export to the next (the
     # C array also embeds the Vela options, so the same working directory is
     # part of that guarantee).
@@ -49,7 +49,7 @@ def get_model(input_shape: tuple[int, ...] = INPUT_SHAPE) -> nn.Module:
 def get_calibration_inputs(
     input_shape: tuple[int, ...] = INPUT_SHAPE, calibration_samples: int = 2
 ) -> list[torch.Tensor]:
-    """Float samples for quantization calibration; the first one is also the export example.
+    """Float samples for quantization calibration; the first one is also the export input.
 
     Fixed values keep the quantization parameters, and with them the output
     logits in the README, the same from one export to the next. Replace them

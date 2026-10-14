@@ -1,0 +1,96 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+# Generated with AI and adapted from the create-csolution-github-action skill.
+
+name: Build and test Ethos-U85-256
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Corstone-320 / Ethos-U85-256 (${{ matrix.toolchain }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [AC6, GCC, CLANG]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Activate vcpkg environment
+        uses: ARM-software/cmsis-actions/vcpkg@v1
+        with:
+          config: vcpkg-configuration.json
+          cache: cmsis-executorch
+
+      # The default Arm license setup is for evaluation only.
+      - name: Activate Arm tool license
+        uses: ARM-software/cmsis-actions/armlm@v1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache CMSIS packs
+        uses: actions/cache@v6
+        with:
+          key: cmsis-packs-u85-${{ hashFiles('*.csolution.yml', 'board/Corstone-320/*.clayer.yml') }}
+          path: /home/runner/.cache/arm/packs
+
+      - name: Cache model-export environment
+        uses: actions/cache@v6
+        with:
+          key: model-export-${{ runner.os }}-${{ hashFiles('requirements*.txt', 'setup_venv.py') }}
+          path: .venv
+
+      - name: Create model-export environment
+        run: ./setup_venv.sh
+
+      - name: Generate U85 MLOps information
+        run: cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs
+
+      - name: Create U85 AI layer
+        run: .venv/bin/python create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
+
+      - name: Build SSE-320-U85
+        run: cbuild cmsis-executorch.csolution.yml --active SSE-320-U85 --packs --toolchain ${{ matrix.toolchain }}
+
+      - name: Run SSE-320-U85 on FVP simulation
+        env:
+          PYTHONHOME: ${{ env.pythonLocation }}
+        run: |
+          set -o pipefail
+          FVP_Corstone_SSE-320 \
+            -f board/Corstone-320/fvp_config.txt \
+            -a out/*/SSE-320-U85/*/*.hex \
+            --simlimit 120 2>&1 | tee fvp.log
+
+      - name: Check application result
+        run: 'grep -Fq "Test_result: PASS" fvp.log'
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cmsis-executorch-SSE-320-U85-${{ matrix.toolchain }}
+          path: |
+            out
+            ai_layer
+            fvp.log
+          if-no-files-found: warn
+

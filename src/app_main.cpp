@@ -1,7 +1,7 @@
 // Copyright 2026 Arm Limited and/or its affiliates.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Headless ExecuTorch runner for the Ethos-U85 example. Loads the .pte
+// Headless ExecuTorch runner for an Ethos-U application. Loads the .pte
 // embedded by the AI layer (model_pte.h, see create_ai_layer.py), runs one
 // inference on the NPU, and prints the output logits. Built entirely from the
 // PyTorch::ExecuTorch pack's runtime + operator components; the board layer
@@ -23,6 +23,25 @@
 
 #include "arm_embedded_module.hpp"
 #include "model_pte.h"
+
+#define APP_STRINGIFY_IMPL(value) #value
+#define APP_STRINGIFY(value) APP_STRINGIFY_IMPL(value)
+
+#if defined(ETHOSU55)
+#define APP_ETHOS_U_NAME "Ethos-U55"
+#elif defined(ETHOSU65)
+#define APP_ETHOS_U_NAME "Ethos-U65"
+#elif defined(ETHOSU85)
+#define APP_ETHOS_U_NAME "Ethos-U85"
+#else
+#error "Unknown Ethos-U configuration"
+#endif
+
+#ifdef ETHOSU_MACS
+#define APP_ETHOS_U_CONFIG APP_ETHOS_U_NAME "-" APP_STRINGIFY(ETHOSU_MACS)
+#else
+#define APP_ETHOS_U_CONFIG APP_ETHOS_U_NAME
+#endif
 
 using arm::embedded::EmbeddedModule;
 using executorch::aten::DimOrderType;
@@ -63,7 +82,7 @@ alignas(16) uint8_t g_temp_pool[kTempPoolSize] APP_POOL_ATTRIBUTES;
 extern "C" int app_main(void) {
   executorch::runtime::runtime_init();
 
-  printf("ExecuTorch Ethos-U85 example: %lu byte model\n", model_pte_size);
+  printf("ExecuTorch %s application: %lu byte model\n", APP_ETHOS_U_CONFIG, model_pte_size);
 
   EmbeddedModule module(
       model_pte, model_pte_size,
@@ -107,7 +126,8 @@ extern "C" int app_main(void) {
   }
 
   printf("Test_result: PASS\n");
-  printf("\x04");  // EOT: ends the FVP run (semihosting exit); a board just sees a 0x04
+  fflush(stdout);
+  putchar('\x04');  // EOT: ends the FVP run
   fflush(stdout);
   return 0;
 }
