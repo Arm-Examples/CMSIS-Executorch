@@ -8,27 +8,28 @@
 [![ExecuTorch: 1.5.1](https://img.shields.io/badge/ExecuTorch-1.5.1-blue.svg)](https://www.keil.arm.com/packs/executorch-pytorch/)
 
 This repository is a template for creating embedded applications that deploy
-and run an [ExecuTorch](https://github.com/pytorch/executorch) model on an Arm
+and run an [ExecuTorch](https://github.com/pytorch/executorch) ML model on an Arm
 Ethos-U NPU.
 
 - The [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/)
   pack provides the ExecuTorch runtime, required operators, and Ethos-U backend.
 - The [`ARM::CMSIS-Ethos-U`](https://www.keil.arm.com/packs/cmsis-ethos-u-arm/overview/)
   pack provides Ethos-U drivers, configuration support, Corstone reference
-  integrations and examples, and documentation for deploying models on Ethos-U.
+  integrations and examples, and documentation for deploying ML models on
+  Ethos-U.
 - The build process uses [CMSIS-Toolbox 2.15.0](https://open-cmsis-pack.github.io/cmsis-toolbox/)
   or higher.
 
 The template can be used for applications targeting any Ethos-U configuration;
 the default solution targets the Arm Corstone-320 reference platform with an
-Ethos-U85 NPU. The same workflow applies to other models, targets, and
-applications: export and quantize a PyTorch model, delegate it to Ethos-U,
-select only the required runtime components, and build it into an embedded
-application.
+Ethos-U85 NPU. The same workflow applies to other ML models, targets, and
+applications: export and quantize an ML model developed in PyTorch, delegate it
+to Ethos-U, select only the required runtime components, and build it into an
+embedded application.
 
 ## What the template provides
 
-- Exporting an ExecuTorch model for Ethos-U from a Python virtual environment.
+- Exporting an ExecuTorch ML model for Ethos-U from a Python virtual environment.
 - The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
 - Managing the NPU and Vela configuration in the CMSIS solution project rather than duplicating it in the Python exporter.
 - A three-step flow with a clean hand-over from the CMSIS-Toolbox to an MLOps system: the toolbox describes the target in a `*.cbuild-mlops.yml` file, a script turns that into the AI layer, and the toolbox builds the application.
@@ -70,7 +71,7 @@ start.
 When the folder opens, Arm Environment Manager installs the tools listed in
 `vcpkg-configuration.json`.
 
-To set up model export, select **Terminal > Run Task > Create Python environment
+To set up ML model export, select **Terminal > Run Task > Create Python environment
 (uv)**. This task uses [Astral's uv](https://docs.astral.sh/uv/) from `PATH` and can
 download a supported Python (`>=3.10,<3.14`) before installing the dependencies.
 Alternatively, **Create Python environment (pip)** uses a compatible Python
@@ -93,8 +94,8 @@ cpackget add PyTorch::ExecuTorch@1.5.1
 ### 3. Build and run
 
 The repository contains the generated U85 AI layer, so the default solution
-builds immediately. After changing the model or target, select **Terminal > Run
-Task > Create AI layer**. The task exports the model for the active solution's
+builds immediately. After changing the ML model or target, select **Terminal > Run
+Task > Create AI layer**. The task exports the ML model for the active solution's
 NPU from its `*.cbuild-mlops.yml` file and rewrites `ai_layer/`.
 
 To use Ethos-U55-128 instead, select
@@ -102,9 +103,10 @@ To use Ethos-U55-128 instead, select
 layer** before building.
 
 Use the CMSIS action buttons to build the application, then select **Run** or
-**Debug**. Keil Studio starts the selected FVP automatically. On macOS, where
-Arm ships no native FVP, set `model:` in the active csolution's target-set to
-`${workspaceFolder}/.vscode/fvp.sh` and copy `.vscode/launch.json.mac` to
+**Debug**. Keil Studio starts the selected FVP simulation model automatically.
+On macOS, where Arm ships no native FVP, set `model:` in the active csolution's
+target-set to `${workspaceFolder}/.vscode/fvp.sh` and copy
+`.vscode/launch.json.mac` to
 `.vscode/launch.json`. Docker Desktop must be running; the first Run or Debug
 builds the container image (about 100 MB download).
 
@@ -142,7 +144,7 @@ On Windows:
 ```
 
 The setup script creates `.venv/` and installs the packages required to
-quantize and export the model. It is safe to run again; use `--recreate` when
+quantize and export the ML model. It is safe to run again; use `--recreate` when
 you want a completely new environment. The wrappers use `python3` (`python` on
 Windows); point them at another interpreter with `PYTHON=python3.12 ./setup_venv.sh`.
 
@@ -172,7 +174,7 @@ python3 create_ai_layer.py cmsis-executorch.cbuild-mlops.yml
 
 This is the MLOps step. The script reads the NPU and Vela settings from the
 file, quantizes and exports `model/model.py` for that NPU, and writes the
-complete AI layer into `ai_layer/`: the component selection and the model as a
+complete AI layer into `ai_layer/`: the component selection and the ML model as a
 C array. It runs itself in `.venv` when started with another interpreter (use
 `python` on Windows).
 
@@ -196,10 +198,11 @@ FVP_Corstone_SSE-320 \
     -a out/cmsis-executorch/SSE-320-U85/Debug/cmsis-executorch.axf
 ```
 
-This is the model command the Run and Debug buttons use too. On macOS, call
-`.vscode/fvp.sh` with the same arguments; it runs the model in Docker.
+This is the FVP command the Run and Debug buttons use too. On macOS, call
+`.vscode/fvp.sh` with the same arguments; it runs the FVP simulation model in
+Docker.
 
-## How model generation works
+## How ML model generation works
 
 The target is described by the `mlops:` node in
 `cmsis-executorch.csolution.yml`:
@@ -220,14 +223,15 @@ mlops:
 
 `cbuild setup --active SSE-320-U85` resolves it into
 `cmsis-executorch.cbuild-mlops.yml`, which contains the processor, NPU
-and Vela options, and the FVP target-set as the `simulator:` to test on.
+and Vela options, and the FVP simulation target-set as the `simulator:` to test
+on.
 `create_ai_layer.py` reads those options and passes all of them to ExecuTorch's
 `EthosUCompileSpec`, so the target configuration is never duplicated in
-Python. The two extra keys under `model:` are parameters of the model itself;
+Python. The two extra keys under `model:` are parameters of the ML model itself;
 the toolbox passes them through and the script hands them to `model/model.py`.
 The script then writes:
 
-- `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
+- `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the ML model.
 - `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
 - `ai_layer/model.pte`: the program itself, for inspection.
 
@@ -239,23 +243,23 @@ The [ExecuTorch pack](https://www.keil.arm.com/packs/executorch-pytorch/)
 provides the runtime, backends, and individual operators as selectable CMSIS
 components. `create_ai_layer.py` examines the exported program and writes
 `ai_layer/ai_layer.clayer.yml` so only the required components are linked.
-Because the layer is complete before the build starts, a model change that
+Because the layer is complete before the build starts, an ML model change that
 changes the operator set needs nothing more than re-running steps 2 and 3.
 
 ## Adapting the template
 
-To use a different model, replace or modify `model/model.py` and update the
-model name or input handling as required: `get_model(input_shape)` builds the
-model for the `input-shape` of the `mlops:` node, and
+To use a different ML model, replace or modify `model/model.py` and update the
+ML model name or input handling as required: `get_model(input_shape)` builds the
+ML model for the `input-shape` of the `mlops:` node, and
 `get_calibration_inputs(input_shape, calibration_samples)` returns the samples
 the quantizer is calibrated with; give it representative data for a trained
-model. The runner in `src/app_main.cpp` builds its input tensor with the same
-fixed shape and prints the output as ten floats, so a model with another input
-shape or output needs matching changes there. Then re-run `create_ai_layer.py`
-and build.
+ML model. The runner in `src/app_main.cpp` builds its input tensor with the same
+fixed shape and prints the output as ten floats, so an ML model with another
+input shape or output needs matching changes there. Then re-run
+`create_ai_layer.py` and build.
 
-Give an image model its input as NHWC, the layout of a camera frame, as
-`model/model.py` does: the model permutes it to the NCHW its convolutions take,
+Give a vision ML model its input as NHWC, the layout of a camera frame, as
+`model/model.py` does: the ML model permutes it to the NCHW its convolutions take,
 and Vela folds that into the first convolution. With an NCHW input the NPU
 first reorders the image in an operation of its own.
 
@@ -276,10 +280,10 @@ Two GitHub Actions workflows validate the supplied Ethos-U configurations on
 every push and pull request to `main`. They create the Python environment,
 generate the target-specific AI layer, build the Corstone-320/Ethos-U85-256 and
 Corstone-300/Ethos-U55-128 solutions with AC6, GCC, and Clang, run each
-application on its FVP, verify the reported test result, and upload the build
-artifacts. A separate workflow verifies the Python environment setup on Linux,
-macOS, and Windows. The badges at the top of this README show the current status
-of all three workflows.
+application on its FVP simulation model, verify the reported test result, and
+upload the build artifacts. A separate workflow verifies the Python environment
+setup on Linux, macOS, and Windows. The badges at the top of this README show
+the current status of all three workflows.
 
 ## Project layout
 
@@ -288,14 +292,14 @@ of all three workflows.
 | `cmsis-executorch.csolution.yml` | Corstone-320 / Ethos-U85 solution and MLOps configuration |
 | `cmsis-executorch-u55.csolution.yml` | Corstone-300 / Ethos-U55-128 solution and MLOps configuration |
 | `cmsis-executorch.cproject.yml` | Application project: sources plus the Board and AI layers |
-| `model/model.py` | Starter TinyCNN model |
-| `create_ai_layer.py` | Exports the model for the target and writes the AI layer |
-| `ai_layer/` | Generated: component selection and the embedded model data |
+| `model/model.py` | Starter TinyCNN ML model |
+| `create_ai_layer.py` | Exports the ML model for the target and writes the AI layer |
+| `ai_layer/` | Generated: component selection and the embedded ML model data |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export |
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer) merged by the CMSIS Solution extension |
 | `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |
 | `board/Corstone-300/`, `board/Corstone-320/` | Platform support and FVP configurations |
-| `src/app_main.cpp` | Loads the model, runs inference, and prints the result; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
+| `src/app_main.cpp` | Loads the ML model, runs inference, and prints the result; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
 | `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading (BSD-3-Clause, `src/LICENSE-ExecuTorch`) |
 | `documentation/mlops-flow.md` | The MLOps flow in detail |
 | `documentation/executorch-pack-maintenance.md` | Where the ExecuTorch pack comes from, how to update it |
