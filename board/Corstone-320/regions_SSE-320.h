@@ -1,7 +1,7 @@
 // Copyright 2026 Arm Limited and/or its affiliates.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Memory regions of the Corstone-320 FVP for this example. Every region that
+// Memory regions of the Corstone-320 FVP for this template. Every region that
 // differs from the SSE_320_BSP pack default says so in its comment.
 #ifndef REGIONS_SSE_320_H
 #define REGIONS_SSE_320_H

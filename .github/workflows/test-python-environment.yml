@@ -1,0 +1,67 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+
+name: Test Python environment
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  venv-cross-platform:
+    name: Python environment (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create model-export environment
+        if: runner.os != 'Windows'
+        run: ./setup_venv.sh
+
+      - name: Create model-export environment
+        if: runner.os == 'Windows'
+        run: .\setup_venv.bat
+
+      - name: Check model-export environment
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            PY=.venv/Scripts/python.exe
+          else
+            PY=.venv/bin/python
+          fi
+          "${PY}" -c "import executorch.backends.arm.quantizer.quantization_annotator; print('arm quantizer OK')"
+          "${PY}" -c "import create_ai_layer; print('create_ai_layer.py OK')"
+
+      - name: Check resolved package versions
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            PY=.venv/Scripts/python.exe
+          else
+            PY=.venv/bin/python
+          fi
+          "${PY}" -m pip list | grep -iE "torch|executorch|vela|tosa|flatbuffers"
+          "${PY}" -m pip show flatbuffers | grep "Version: 24.3.25" \
+            || { echo "::error::flatbuffers pin regressed"; exit 1; }

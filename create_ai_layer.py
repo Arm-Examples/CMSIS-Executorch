@@ -146,7 +146,7 @@ def compile_spec(mlops: dict, mlops_dir: Path):
 
     npu = mlops.get("npu")
     if not npu:
-        sys.exit("the solution's mlops: node names no NPU; this example needs an Ethos-U")
+        sys.exit("the solution's mlops: node names no NPU; this template needs an Ethos-U")
     vela = mlops.get("vela", {})
     spec, extra = vela_options(vela.get("options", ""))
 

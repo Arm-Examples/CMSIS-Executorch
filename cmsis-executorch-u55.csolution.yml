@@ -1,0 +1,66 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# ExecuTorch application template targeting an Ethos-U55 on the
+# Corstone-300 (SSE-300) FVP.
+#
+#   cbuild setup cmsis-executorch-u55.csolution.yml --active SSE-300-U55
+#   python create_ai_layer.py cmsis-executorch-u55.cbuild-mlops.yml
+#   cbuild cmsis-executorch-u55.csolution.yml --active SSE-300-U55
+#
+# See CMSIS-Toolbox MLOps information:
+# https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
+# `cbuild setup` exports it for create_ai_layer.py to generate the AI layer.
+solution:
+  created-for: CMSIS-Toolbox@2.15.0
+  cdefault:
+  compiler: AC6
+
+  packs:
+    # The PyTorch::ExecuTorch pack version must match the ExecuTorch Python
+    # exporter in requirements.txt because its runtime consumes the generated .pte.
+    - pack: PyTorch::ExecuTorch@1.5.1
+    - pack: ARM::Cortex_DFP
+
+  target-types:
+    # Corstone-300 with an Ethos-U55-128 NPU, simulated on the Arm FVP.
+    - type: SSE-300-U55
+      board: V2M-MPS3-SSE-300-FVP
+      device: SSE-300-MPS3
+      variables:
+        - Board-Layer: $SolutionDir()$/board/Corstone-300/Board-U55.clayer.yml
+        - AI-Layer: $SolutionDir()$/ai_layer/ai_layer.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: cmsis-executorch.Debug
+          debugger:
+            name: Arm-FVP
+            # See: https://github.com/Arm-Examples/FVPs-on-Mac/tree/main/skills/fvp-debug-setup
+            # On macOS use .vscode/fvp.sh and copy launch.json.mac to launch.json.
+            model: FVP_Corstone_SSE-300_Ethos-U55
+            config-file: board/Corstone-300/fvp_config_u55.txt
+            args: "--simlimit 60"
+
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: debug
+
+  projects:
+    - project: ./cmsis-executorch.cproject.yml
+
+  # Target and model settings consumed by create_ai_layer.py.
+  mlops:
+    description: TinyCNN int8 image classifier for Ethos-U55-128
+    npu:
+      type: Ethos-U55
+      macs: 128
+    vela:
+      system: Ethos_U55_High_End_Embedded
+      memory: Shared_Sram
+    model:
+      clayer: $AI-Layer$
+      name: TinyCNN
+      input-shape: 1x16x16x3
+      calibration-samples: 2
