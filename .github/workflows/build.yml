@@ -19,8 +19,9 @@ env:
 
 jobs:
   # Step 1 and 2 of the flow, once: the AI layer is the same for every
-  # toolchain and both target-types. The model data (ai_layer/model_pte.c) is
-  # generated here rather than committed; the job also renders the host's
+  # toolchain and both target-types. The model data
+  # (ai_layer/model_pte_data.inc) is generated here rather than committed;
+  # the job also renders the host's
   # fake-quant reference image of the boot demo for the FVP check below.
   export:
     name: Create the AI layer
@@ -61,13 +62,8 @@ jobs:
       - name: Create model-export venv and fetch the checkpoints
         run: ./setup_venv.sh
 
-      # The committed AI layer lists ai_layer/model_pte.c, which only step 2
-      # generates, and csolution refuses a layer whose files are missing. An
-      # empty placeholder lets step 1 run; create_ai_layer.py overwrites it.
       - name: Generate the MLOps information
-        run: |
-          touch ai_layer/model_pte.c
-          cbuild setup ${SOLUTION}.csolution.yml --active ${TARGET} --packs
+        run: cbuild setup ${SOLUTION}.csolution.yml --active ${TARGET} --packs
 
       - name: Create the AI layer
         run: python3 create_ai_layer.py ${SOLUTION}.cbuild-mlops.yml

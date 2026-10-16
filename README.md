@@ -218,9 +218,9 @@ running (the first run builds the image, about 100 MB).
   to `"A0"` there.
 - **`app-write-mram` gets no answer:** press reset while it waits, check SW4
   is on `SEUART`, close any terminal holding the port.
-- **The build cannot find `ai_layer/model_pte.c`:** the model data is not
-  committed; run the tasks **Setup Python virtual environment** and **Create
-  AI layer** (step 4).
+- **The build stops at `model_pte_data.inc is missing`:** the model data is
+  not committed; run the tasks **Setup Python virtual environment** and
+  **Create AI layer** (step 4).
 - **"`.venv` does not exist" or "`model/pico_faces/...` is missing":** run the
   task **Setup Python virtual environment** first; it creates the
   environment and downloads the checkpoints.

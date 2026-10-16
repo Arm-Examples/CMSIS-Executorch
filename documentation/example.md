@@ -83,8 +83,8 @@ The example can be built and run entirely in Keil Studio for VS Code.
    the NPU of the active target and writes the `ai_layer/` directory. It reads
    `cmsis-executorch.cbuild-mlops.yml`, which the extension writes when the
    solution is loaded or built (`cbuild setup` on the command line). The
-   model data (`ai_layer/model_pte.c`, 2.8 MB of program as a 14 MB C source)
-   is generated, not committed, so this step is needed once per checkout and
+   model data (`ai_layer/model_pte_data.inc`, 2.8 MB of program as 14 MB of
+   C source) is generated, not committed, so this step is needed once per checkout and
    again after changing the model.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
@@ -199,14 +199,8 @@ version of an existing environment.
 #### 1. Generate the MLOps information
 
 ```bash
-touch ai_layer/model_pte.c        # fresh checkout only, see below
 cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85 --packs
 ```
-
-The committed AI layer lists `ai_layer/model_pte.c`, which only step 2
-generates, and csolution refuses a layer whose files are missing; on a fresh
-checkout an empty placeholder stands in until `create_ai_layer.py` writes the
-real file.
 
 This resolves the packs and the active target and writes
 `cmsis-executorch.cbuild-mlops.yml`: the processor, NPU and Vela
@@ -330,7 +324,8 @@ itself; the toolbox passes them through and the script hands them to
 `model/model.py` (pico-faces takes none). The script then writes:
 
 - `ai_layer/ai_layer.clayer.yml`: the CMSIS components required by the model.
-- `ai_layer/model_pte.c` and `model_pte.h`: the ExecuTorch program embedded as a C array.
+- `ai_layer/model_pte_data.inc`: the ExecuTorch program as the rows of a C
+  array, which `model_pte.c` embeds and `model_pte.h` declares.
 - `ai_layer/model_params.h`: the constants the runner needs (latent and image
   shapes, the schedule, the conditioning vectors per class and step).
 - `ai_layer/model.pte`: the program itself, for inspection.
@@ -411,7 +406,7 @@ together. More information is available in
 | `model/verify_export.py` | Host checks: float and fake-quant sampling to PNG, TOSA reference model, upstream comparison, PSNR |
 | `model/pico_faces/` | Downloaded checkpoints (not committed) |
 | `create_ai_layer.py` | Exports the model for the target and writes the AI layer |
-| `ai_layer/` | Generated: component selection, `model_params.h` and the embedded model data (`model_pte.c` not committed) |
+| `ai_layer/` | Generated: component selection, `model_params.h` and the embedded model data (`model_pte_data.inc` not committed) |
 | `setup_venv.py` (`.sh` / `.bat`) | Creates the Python environment for the export and downloads the checkpoints |
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer, Alif debug stubs) merged by the CMSIS Solution extension |
 | `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |

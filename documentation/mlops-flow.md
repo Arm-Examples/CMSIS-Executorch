@@ -11,7 +11,7 @@ flowchart TD
     A["cmsis-executorch.csolution.yml<br/><b>mlops:</b> node"] -->|"1. cbuild setup --active &lt;target&gt;"| B["cmsis-executorch.cbuild-mlops.yml<br/>npu, vela.options, model.clayer"]
     B -->|"2. create_ai_layer.py"| C["EthosUCompileSpec<br/>quantize, delegate, Vela"]
     D["model/model.py<br/>pico-faces: dit_step, decode"] --> C
-    C --> E["ai_layer/model_pte.c<br/>the program as a C array"]
+    C --> E["ai_layer/model_pte_data.inc<br/>the program as a C array"]
     C --> F["ai_layer/ai_layer.clayer.yml<br/>component selection"]
     C --> P["ai_layer/model_params.h<br/>schedule, conditioning table"]
     E --> G["3. cbuild --active &lt;target&gt;"]
@@ -88,10 +88,10 @@ pipeline needs to know about the target is in this one file, and nothing in it
 is specific to this example's Python code.
 
 `cbuild setup` writes the file even when the AI layer does not exist yet.
-Here the clayer and its headers are committed but the 14 MB `model_pte.c` is
-not, and csolution refuses a layer whose files are missing: on a fresh
-checkout, `touch ai_layer/model_pte.c` first (CI does the same);
-`create_ai_layer.py` replaces the placeholder.
+csolution refuses a layer whose files are missing, so the committed clayer
+lists only committed files: `model_pte.c` includes the 14 MB of array rows
+from `model_pte_data.inc`, which is not committed and not listed. A build
+before step 2 stops at an `#error` that names the missing file.
 
 ## 2. `create_ai_layer.py` turns `*.cbuild-mlops.yml` into the AI layer
 
@@ -123,12 +123,14 @@ for an MLOps system. It reads the file and:
 | File | Content |
 |------|---------|
 | `ai_layer/ai_layer.clayer.yml` | runtime, kernel utilities and registration, Ethos-U backend and the operator components the program uses |
-| `ai_layer/model_pte.c` / `.h` | the program as a 16-byte-aligned C array in the section `.rodata.model`, `model_pte` / `model_pte_size` |
+| `ai_layer/model_pte.c` / `.h` | the program as a 16-byte-aligned C array in the section `.rodata.model`, `model_pte` / `model_pte_size`; the same on every run |
+| `ai_layer/model_pte_data.inc` | the rows of that array, which `model_pte.c` includes |
 | `ai_layer/model_params.h` | the constants from `get_params()`: latent and image shapes, the sampling schedule, the guidance strengths and the conditioning table `pf_cond[class][step][128]` |
 | `ai_layer/model.pte` | the program itself, for inspection |
 
-The clayer and the headers are committed; `model_pte.c` (a 14 MB C source for
-the 2.8 MB program) and `model.pte` are not, so a fresh checkout runs step 2
+The clayer, the headers and `model_pte.c` are committed; `model_pte_data.inc`
+(14 MB of C source for the 2.8 MB program) and `model.pte` are not, so a
+fresh checkout runs step 2
 once before it builds. For a fully delegated model the component list is
 short: `Runtime`, `Kernel Utils`, `Kernel Registration`, `Backend EthosU`,
 and the boundary `Quantized quantize` / `Quantized dequantize` operators
