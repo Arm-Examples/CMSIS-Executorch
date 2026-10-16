@@ -1,0 +1,108 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Alif Ensemble E8 AI/ML AppKit board bring-up for the Ethos-U85 NPU, running
+# on the Cortex-M55 high-performance (HP) core. The AppKit carries the same E8
+# die as the DevKit in another package (AE822FA0E5597BS0, WLCSP) with the same
+# UART4 console on the PRG USB connector (SW4 in position UART4), and the NPU
+# at the same address, so this layer is the headless DevKit-E8 layer with the
+# AppKit's board support (BSP:AppKit Config, the pack's Boards/AppKit-e8
+# Conductor files) and its own RTE configuration; the board sources and the
+# linker scripts are shared with ../DevKit-E8. The pack ships no Board layer
+# or examples for the AppKit-E8. Camera, display, USB, VIO and the vStream
+# drivers are omitted.
+layer:
+  type: Board
+  description: AppKit-E8 board setup for headless Ethos-U85 inference on M55_HP
+  for-board: Alif Semiconductor::AppKit-E8-AIML
+  for-device: Alif Semiconductor::AE822FA0E5597BS0:M55_HP
+  device: :M55_HP
+
+  processor:
+    trustzone: off
+
+  connections:
+    - connect: AppKit-E8 Board
+      provides:
+        - STDIN
+        - STDOUT
+        - STDERR
+        - Heap: 98304
+
+  define:
+    - CMSIS_target_header: \"AppKit-E8.h\"
+    - ETHOSU85
+    # The runner's memory pools (src/app_main.cpp) do not fit the 1 MB DTCM
+    # that the Alif linker scripts use for .bss. Place them in the bulk SRAM
+    # at 0x02000000 (NPU-accessible; SRAM0+SRAM1 combined, 8 MB, with the AC6
+    # script, SRAM0 alone, 4 MB, with the GNU one) via the section named here, and
+    # size them for that region; the linker scripts route the section there.
+    # Same layout as the DevKit-E8 layer.
+    - APP_POOL_SECTION: \".bss.ai_pool\"
+    - APP_METHOD_POOL_SIZE: 0x100000
+    - APP_TEMP_POOL_SIZE: 0x200000
+
+  packs:
+    - pack: AlifSemiconductor::Ensemble@^2.2.0-0
+    - pack: ARM::CMSIS@^6.2.0
+    - pack: ARM::CMSIS-Compiler@^2.1.0
+    - pack: ARM::ethos-u-core-driver@^1.26.2
+
+  misc:
+    - for-compiler: AC6
+      Link:
+        - '--diag_suppress 6312,6314,6329,6848'
+
+  components:
+    - component: Device:Startup
+
+    - component: BSP:Board Config
+    # The AppKit's Conductor files (board_defs.h, pins.h, gpios.h) from the
+    # pack's Boards/AppKit-e8; the DevKit layer uses BSP:DevKit Config.
+    - component: BSP:AppKit Config&AppKit-E8-AIML
+
+    - component: CMSIS:CORE
+
+    - component: CMSIS Driver:USART
+
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDERR:Custom
+    - component: CMSIS-Compiler:STDIN:Custom
+    - component: CMSIS-Compiler:STDOUT:Custom
+
+    - component: Device:SOC Peripherals:MHU
+    - component: Device:SOC Peripherals:PINCONF
+
+    - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
+
+    - component: Services:Retarget IO:STDERR
+    - component: Services:Retarget IO:STDIN
+    - component: Services:Retarget IO:STDOUT
+    - component: Services:Secure Enclave:core&Source
+    - component: Services:Secure Enclave:Initialization Helper&Source
+
+  # The board sources are shared with the DevKit-E8 layer: the console UART
+  # and the NPU are wired the same on both boards.
+  groups:
+    - group: Board
+      files:
+        - file: ../DevKit-E8/main.c
+        - file: ../DevKit-E8/main.h
+        - file: ./AppKit-E8.h
+        - file: ../DevKit-E8/ethos_setup.c
+        - file: ../DevKit-E8/retarget_stdio.c
+
+    - group: Ethos Interface
+      files:
+        - file: ../DevKit-E8/ethosu_cb_dcache.c
+
+  # The DevKit layer's linker scripts (the pack's plus the .bss.ai_pool section
+  # in bulk SRAM and a 32 kB main stack) with this layer's memory regions.
+  linker:
+    - regions: ./RTE/Device/AE822FA0E5597BS0_M55_HP/app_mem_regions.h
+    - script: ../DevKit-E8/linker_ac6_mram.sct.src
+      for-compiler: AC6
+    - script: ../DevKit-E8/linker_gnu_mram.ld.src
+      for-compiler: GCC
+    - script: ../DevKit-E8/linker_gnu_mram.ld.src
+      for-compiler: CLANG
