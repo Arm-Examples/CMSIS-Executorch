@@ -5,9 +5,10 @@ a microcontroller. [pico-faces](https://github.com/cpldcpu/pico-faces) by
 cpldcpu, a latent diffusion transformer (2.5M parameters) with a small
 decoder, generates 128x128 faces; exported through ExecuTorch, every layer of
 it runs on the Ethos-U85 NPU while the Cortex-M drives the sampling loop. One
-CMSIS solution runs it on the **Alif Ensemble E8 DevKit** (Cortex-M55 HP core;
-the faces appear on the board's LCD, a new one per joystick press) and on the
-**Corstone-320 FVP**; you switch between them by target-type. The model is
+CMSIS solution runs it on the **Alif Ensemble E8 DevKit** or the **Ensemble E8
+AI/ML AppKit** (Cortex-M55 HP core; the faces appear on the board's LCD, a new
+one per joystick press) and on the **Corstone-320 FVP**; you switch between
+them by target-type. The model is
 exported from PyTorch in three steps: the CMSIS-Toolbox describes the target,
 `create_ai_layer.py` turns that into the AI layer, the toolbox builds the
 application. This page takes you from an empty machine to a debug session on
@@ -51,16 +52,17 @@ the board. Everything about the example itself is in
 
 ## 3. Board
 
-- Connect a USB-C cable to **PRG USB** (the connector in the corner). It
-  powers the board and carries the J-Link and a USB-to-UART bridge. Leave
-  **MCU USB** unconnected.
-- Jumpers at their defaults: **JP5 on 1-2**, **JP7 on 3-4**. Never move
-  jumpers with power applied.
-- **SW4** selects what the UART bridge is connected to:
+- Connect a USB cable to **PRG USB** (USB-C in the corner of the DevKit,
+  Micro-USB on the AppKit). It powers the board and carries the J-Link and a
+  USB-to-UART bridge. Leave the other USB device connector unconnected.
+- DevKit: jumpers at their defaults, **JP5 on 1-2**, **JP7 on 3-4**. Never
+  move jumpers with power applied.
+- **SW4** (on both boards) selects what the UART bridge is connected to:
 
   | SW4 | Connected to | Used for |
   |-----|--------------|----------|
   | `SEUART` (default) | Secure Enclave UART | SETOOLS (step 5) |
+  | `UART2` (AppKit only, middle position) | Application UART2 | Not used here |
   | `UART4` | Application UART4, 115200 8N1 | The example's console (step 6) |
 
 - With the board attached, run these once: in the SETOOLS directory
@@ -80,7 +82,8 @@ git checkout hackathon
 Open the folder in VS Code and accept the tool activation and the pack
 installation (`PyTorch::ExecuTorch`, `AlifSemiconductor::Ensemble`, CMSIS).
 In the CMSIS view open **Manage Solution**, choose the target-type
-**DevKit-E8** (or **SSE-320-U85** for the FVP) and click **Apply**.
+of your board, **DevKit-E8** or **AppKit-E8** (**SSE-320-U85** for the FVP),
+and click **Apply**.
 
 The model data is generated rather than committed, so a fresh checkout
 needs Python once before the first build:
@@ -102,10 +105,12 @@ The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
 debugger needs that table to point at a debug stub.
 
 1. SW4 to **SEUART**, PRG USB attached.
-2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**. Choose COM port
+2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**,
+   or the **(AppKit-E8, ...)** task for the AppKit. Choose COM port
    discovery (`-d`) the first time; SETOOLS remembers the port. The task
-   selects the DevKit-E8's part in SETOOLS (`tools-config -p 'E8
-   (AE822FA0E5597LS0) ...' -r A0`: the part goes into the table of contents,
+   selects the board's part in SETOOLS (`tools-config -p 'E8
+   (AE822FA0E5597LS0) ...' -r A0` for the DevKit, `AE822FA0E5597BS0` for the
+   AppKit: the part goes into the table of contents,
    and the Secure Enclave does not boot a table built for another part),
    copies the configuration and stub from `.alif/` into the SETOOLS tree and
    runs `app-gen-toc` and `app-write-mram`. If `app-write-mram` reports a
@@ -203,13 +208,14 @@ running (the first run builds the image, about 100 MB).
   before the switch was moved. Set `UART4` and reopen the port.
 - **Every SETOOLS tool prints `Revision is invalid!`:** SETOOLS stores the
   selected part and revision in `utils/global-cfg.db`, and a
-  `tools-config -p` without `-r` (another project switching to an E7 or the
-  AppKit-E8, for example) keeps a revision the new part does not have. From
-  then on even `tools-config` refuses to run. The stub task of step 5 writes
-  the DevKit's part and revision into that file before it calls
-  `tools-config`, so it recovers by itself; for SETOOLS commands of your own,
-  set `"Part#"` to `"E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM"` and
-  `"Revision"` to `"A0"` there.
+  `tools-config -p` without `-r` (another project switching to an E7, for
+  example) keeps a revision the new part does not have. From then on even
+  `tools-config` refuses to run. The stub tasks of step 5 write their
+  board's part and revision into that file before they call `tools-config`,
+  so they recover by themselves; for SETOOLS commands of your own, set
+  `"Part#"` to `"E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM"` (DevKit) or
+  `"E8 (AE822FA0E5597BS0) - 5.5 MRAM / 9.75 SRAM"` (AppKit) and `"Revision"`
+  to `"A0"` there.
 - **`app-write-mram` gets no answer:** press reset while it waits, check SW4
   is on `SEUART`, close any terminal holding the port.
 - **The build cannot find `ai_layer/model_pte.c`:** the model data is not
@@ -220,7 +226,7 @@ running (the first run builds the image, about 100 MB).
   environment and downloads the checkpoints.
 - `.vscode/launch.json` is generated by the extension for the target-types
   and is not committed; after **Apply** it has a J-Link entry for the
-  DevKit-E8. That is expected.
+  DevKit-E8 or the AppKit-E8. That is expected.
 
 ## Read on
 
@@ -228,6 +234,8 @@ running (the first run builds the image, about 100 MB).
   command-line flow, how the model is generated.
 - [board/DevKit-E8/README.md](board/DevKit-E8/README.md): the board layer,
   memory map and RTE configuration.
+- [board/AppKit-E8/README.md](board/AppKit-E8/README.md): the AppKit-E8
+  layer and what differs from the DevKit.
 - [documentation/mlops-flow.md](documentation/mlops-flow.md): the `mlops:`
   node and `*.cbuild-mlops.yml` in detail.
 - [documentation/pack-provenance.md](documentation/pack-provenance.md): where
