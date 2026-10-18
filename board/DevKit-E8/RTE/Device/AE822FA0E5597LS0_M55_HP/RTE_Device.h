@@ -998,7 +998,7 @@
 //     <4=>   320x240_RGB565
 //     <5=>   320x320_RGB565
 // <i> Default: 1
-#define RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG            1
+#define RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG            3
 
 // <o> select MT9M114 MIPI number of lanes in DPHY
 // <i> defines select MT9M114 MIPI number of lanes in DPHY.
@@ -1037,11 +1037,11 @@
 
 // <o> MT9M114 sensor frame width for ISP / CSI2 pipeline
 // <i> Width in pixels of the MT9M114 MIPI sensor frame
-#define RTE_MT9M114_CAMERA_SENSOR_FRAME_WIDTH  1280
+#define RTE_MT9M114_CAMERA_SENSOR_FRAME_WIDTH  640
 
 // <o> MT9M114 sensor frame height for ISP / CSI2 pipeline
 // <i> Height in pixels of the MT9M114 MIPI sensor frame
-#define RTE_MT9M114_CAMERA_SENSOR_FRAME_HEIGHT 720
+#define RTE_MT9M114_CAMERA_SENSOR_FRAME_HEIGHT 480
 
 #endif
 // </e> MT9M114_MIPI [Driver_MT9M114_MIPI]

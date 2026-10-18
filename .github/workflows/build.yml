@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # CI for the three-step flow (cbuild setup, create_ai_layer.py, cbuild)
-# followed by an FVP run that checks the generated face against the host
-# reference, with each of the three toolchains.
+# followed by an FVP run, with each of the three toolchains.
 name: Build and Run
 
 on:
@@ -18,14 +17,16 @@ env:
   TARGET: SSE-320-U85
 
 jobs:
-  # Step 1 and 2 of the flow, once: the AI layer is the same for every
-  # toolchain and both target-types. The model data
-  # (ai_layer/model_pte_data.inc) is generated here rather than committed;
-  # the job also renders the host's
-  # fake-quant reference image of the boot demo for the FVP check below.
-  export:
-    name: Create the AI layer
+  # Full build plus an FVP run, once per toolchain. Linux only: the FVP needs
+  # an Arm user-based license, so matrixing this across hosts is not cheap.
+  build-and-run:
+    name: Build and run on Corstone-320 (${{ matrix.toolchain }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [AC6, GCC, CLANG]
 
     steps:
       - name: Checkout repo
@@ -34,10 +35,17 @@ jobs:
       - name: Install tools
         uses: ARM-software/cmsis-actions/vcpkg@v1
 
-      # cbuild setup of CMSIS-Toolbox 2.15 configures the CMake project, which
-      # probes the solution's compiler (AC6).
       - name: Activate Arm tool license
         uses: ARM-software/cmsis-actions/armlm@v1
+
+      # The FVP loads the runner's libpython3.11, whose standard library is
+      # not where that build's prefix says; the model then dies at start-up
+      # with "Fatal Python error: init_fs_encoding". PYTHONHOME (set on the
+      # FVP step only) points it at a complete Python 3.11.
+      - name: Set up Python 3.11 for the FVP
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Cache packs
         uses: actions/cache@v6
@@ -53,13 +61,7 @@ jobs:
           key: venv-${{ runner.os }}-${{ hashFiles('requirements*.txt', 'setup_venv.py') }}
           path: .venv
 
-      - name: Cache pico-faces checkpoints
-        uses: actions/cache@v6
-        with:
-          key: pico-faces-${{ hashFiles('setup_venv.py') }}
-          path: model/pico_faces
-
-      - name: Create model-export venv and fetch the checkpoints
+      - name: Create model-export venv
         run: ./setup_venv.sh
 
       - name: Generate the MLOps information
@@ -68,62 +70,8 @@ jobs:
       - name: Create the AI layer
         run: python3 create_ai_layer.py ${SOLUTION}.cbuild-mlops.yml
 
-      - name: Render the host reference of the boot demo
-        run: python3 model/verify_export.py --stage fakequant --seed 3 --class 1 --w 4 --k 4 --out reference/pf_fakequant.png
-
-      - name: Upload the AI layer
-        uses: actions/upload-artifact@v4
-        with:
-          name: ai-layer
-          path: |
-            ai_layer/
-            reference/
-
-  # Full build plus an FVP run, once per toolchain. Linux only: the FVP needs
-  # an Arm user-based license, so matrixing this across hosts is not cheap.
-  build-and-run:
-    name: Build and run on Corstone-320 (${{ matrix.toolchain }})
-    runs-on: ubuntu-latest
-    needs: export
-
-    strategy:
-      fail-fast: false
-      matrix:
-        toolchain: [AC6, GCC, CLANG]
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-
-      - name: Download the AI layer
-        uses: actions/download-artifact@v4
-        with:
-          name: ai-layer
-
-      - name: Install tools
-        uses: ARM-software/cmsis-actions/vcpkg@v1
-
-      - name: Activate Arm tool license
-        uses: ARM-software/cmsis-actions/armlm@v1
-
-      # The FVP loads the runner's libpython3.11, whose standard library is
-      # not where that build's prefix says; the model then dies at start-up
-      # with "Fatal Python error: init_fs_encoding". PYTHONHOME (set on the
-      # FVP step only) points it at a complete Python 3.11, which also runs
-      # the image comparison.
-      - name: Set up Python 3.11 for the FVP
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Cache packs
-        uses: actions/cache@v6
-        with:
-          key: cmsis-packs-${{ hashFiles('*.csolution.yml') }}
-          path: /home/runner/.cache/arm/packs
-
       - name: Build
-        run: cbuild ${SOLUTION}.csolution.yml --active ${TARGET} --toolchain ${{ matrix.toolchain }} --packs
+        run: cbuild ${SOLUTION}.csolution.yml --active ${TARGET} --toolchain ${{ matrix.toolchain }}
 
       - name: Run on the FVP
         env:
@@ -132,7 +80,7 @@ jobs:
           IMAGE=$(find out -name "${SOLUTION}.axf" -o -name "${SOLUTION}.elf" | head -1)
           echo "Running ${IMAGE}"
           # stdio is retargeted to semihosting, so the output arrives on the
-          # FVP's own stdout; the application ends the simulation itself.
+          # FVP's own stdout.
           FVP_Corstone_SSE-320 \
               -f board/Corstone-320/fvp_config.txt \
               -a "${IMAGE}" \
@@ -142,15 +90,6 @@ jobs:
           echo "Checking simulation output"
           grep -q "Test_result: PASS" fvp_stdout.log
 
-      # The run writes the generated image to out/fvp_image.bin through
-      # semihosting; it has to match what the quantized graphs compute on the
-      # host (the NPU's integer arithmetic differs from the fake-quant graphs
-      # only by rounding).
-      - name: Compare the image with the host reference
-        run: |
-          python -m pip install --quiet numpy pillow
-          python model/verify_export.py --compare out/fvp_image.bin reference/pf_fakequant.png --min-psnr 35
-
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -158,17 +97,16 @@ jobs:
           name: corstone-320-${{ matrix.toolchain }}
           path: |
             fvp_stdout.log
-            out/fvp_image.bin
-            out/fvp_result.txt
             out/**/*.axf
             out/**/*.elf
+            ai_layer/
 
   # The same solution for the Alif Ensemble E8 DevKit (target-type DevKit-E8),
-  # once per toolchain. Build only: the hardware is not in CI.
+  # once per toolchain. Build only: the hardware is not in CI. The shipped
+  # ai_layer/ is used, so no venv is needed.
   build-devkit-e8:
     name: Build for the Alif Ensemble E8 DevKit (${{ matrix.toolchain }})
     runs-on: ubuntu-latest
-    needs: export
 
     strategy:
       fail-fast: false
@@ -179,11 +117,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v7
 
-      - name: Download the AI layer
-        uses: actions/download-artifact@v4
-        with:
-          name: ai-layer
-
       - name: Install tools
         uses: ARM-software/cmsis-actions/vcpkg@v1
 
@@ -193,11 +126,14 @@ jobs:
       - name: Cache packs
         uses: actions/cache@v6
         with:
-          key: cmsis-packs-${{ hashFiles('*.csolution.yml') }}
+          key: cmsis-packs
           path: /home/runner/.cache/arm/packs
 
+      - name: Generate the MLOps information
+        run: cbuild setup ${SOLUTION}.csolution.yml --active DevKit-E8 --packs
+
       - name: Build
-        run: cbuild ${SOLUTION}.csolution.yml --active DevKit-E8 --toolchain ${{ matrix.toolchain }} --packs
+        run: cbuild ${SOLUTION}.csolution.yml --active DevKit-E8 --toolchain ${{ matrix.toolchain }}
 
       - name: Upload artifacts
         if: always()
@@ -206,7 +142,6 @@ jobs:
           name: devkit-e8-${{ matrix.toolchain }}
           path: |
             out/**/*.axf
-            out/**/*.elf
             out/**/*.hex
 
   # The export flow must work on all three host OSes -- that is the point of a
@@ -251,8 +186,6 @@ jobs:
           # No cbuild-mlops.yml without cbuild; importing the script checks
           # that it parses under this interpreter.
           "${PY}" -c "import create_ai_layer; print('create_ai_layer.py OK')"
-          # The checkpoints setup_venv.py downloaded load on this host.
-          "${PY}" -c "import sys; sys.path.insert(0, 'model'); import model; model.load_checkpoint(); print('checkpoints OK')"
 
       - name: Report resolved versions
         shell: bash

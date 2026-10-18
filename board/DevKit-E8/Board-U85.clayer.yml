@@ -3,15 +3,14 @@
 #
 # Alif Ensemble E8 DevKit board bring-up for the Ethos-U85 NPU, running on the
 # Cortex-M55 high-performance (HP) core. Derived from the pack's
-# Boards/DevKit-e8/Layers/M55_HP/Board_HP-U85.clayer.yml and trimmed to what an
-# ExecuTorch face generator needs: device startup, the Secure Enclave services
-# (clocks, pin mux), a UART-backed stdout on the PRG USB connector, the Ethos-U
-# driver, and the MIPI-DSI display (CDC200 + ILI9806E panel) that shows the
-# generated images. Camera, Ethernet, USB, VIO and the vStream drivers are
-# omitted.
+# Boards/DevKit-e8/Layers/M55_HP/Board_HP-U85.clayer.yml and trimmed to what a
+# headless ExecuTorch inference runner needs: device startup, the Secure
+# Enclave services (clocks, pin mux), a UART-backed stdout on the PRG USB
+# connector, and the Ethos-U driver. Camera, display, Ethernet, USB, VIO and
+# the vStream drivers are omitted.
 layer:
   type: Board
-  description: DevKit-E8 board setup for Ethos-U85 inference on M55_HP with the LCD
+  description: DevKit-E8 board setup for headless Ethos-U85 inference on M55_HP
   for-board: Alif Semiconductor::DevKit-E8
   for-device: Alif Semiconductor::AE822FA0E5597LS0:M55_HP
   device: :M55_HP
@@ -30,24 +29,36 @@ layer:
   define:
     - CMSIS_target_header: \"DevKit-E8.h\"
     - ETHOSU85
+    # Which demo face_demo_loop / bunny_demo_loop runs: BOARD_FACE_DEMO (camera + face
+    # generator, needs the 1x16 model) or BOARD_BUNNY_DEMO (bunny companion, 1x30 model)
+    - BOARD_BUNNY_DEMO
+    # Settings the 2.2.1 I2C driver expects but the 2.2.0 RTE_Device.h lacks (pack defaults)
+    - RTE_I2C0_SCL_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C0_SDA_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C1_SCL_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C1_SDA_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C2_SCL_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C2_SDA_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C3_SCL_STUCK_LOW_TIMEOUT: 1000000
+    - RTE_I2C3_SDA_STUCK_LOW_TIMEOUT: 1000000
     # The runner's memory pools (src/app_main.cpp) do not fit the 1 MB DTCM
-    # that the Alif linker scripts use for .bss. Place them in the bulk SRAM0
-    # (4 MB at 0x02000000, NPU-accessible) via the section named here; the
-    # linker scripts in this layer route the section there, above the A32 boot
-    # stub and next to the 1.15 MB LCD frame buffer. The temp pool holds the
-    # Ethos-U scratch of the decoder.
+    # that the Alif linker scripts use for .bss. Place them in the bulk SRAM
+    # at 0x02000000 (NPU-accessible; SRAM0+SRAM1 combined, 8 MB, with the AC6
+    # script, SRAM0 alone, 4 MB, with the GNU one) via the section named here, and
+    # size them for that region; the linker scripts in this layer route the
+    # section there.
     - APP_POOL_SECTION: \".bss.ai_pool\"
-    - APP_METHOD_POOL_SIZE: 0x100000
-    - APP_TEMP_POOL_SIZE: 0x180000
-    # After the boot demo the runner keeps serving pico-faces' serial protocol
-    # on the console, for pico-faces' viewer/view_serial.py (APP_INTERACTIVE),
-    # and generates new faces on the SW2 joystick: left, one image; right,
-    # start or stop back-to-back generation (APP_BUTTONS, buttons.c).
-    - APP_INTERACTIVE
-    - APP_BUTTONS
-    # Every generated image is shown on the LCD (board_display_image(),
-    # display.c).
-    - APP_DISPLAY
+    - APP_METHOD_POOL_SIZE: 0x80000   # 512 KB: model I/O only
+    # Run the bunny model from a copy in SRAM: the NPU fails reading weights
+    # above 0x80400000 in MRAM, where a 2.4 MB model ends up (see app_main.cpp)
+    - APP_MODEL_SRAM_SIZE: 0x1A0000   # 96x96 program 1.63 MB (128x128: 0x280000)
+    # The models run from SRAM copies, so the NPU fetches its command stream
+    # (QCONFIG) and weights (region 0) through the SRAM AXI port (memory
+    # attribute 0). The driver default (2/3 = EXT port) bus-faulted (status
+    # 0x804) on anything outside low MRAM.
+    - NPU_QCONFIG: 0
+    - NPU_REGIONCFG_0: 0
+    - APP_TEMP_POOL_SIZE: 0x1C0000  # v2 96x96 decoder: Vela scratch 1.73 MB (128x128 needs 0x310000)
 
   packs:
     - pack: AlifSemiconductor::Ensemble@^2.2.0-0
@@ -69,6 +80,8 @@ layer:
     - component: CMSIS:CORE
 
     - component: CMSIS Driver:USART
+    - component: CMSIS Driver:I2C
+    - component: Device:SOC Peripherals:GPIO
 
     - component: CMSIS-Compiler:CORE
     - component: CMSIS-Compiler:STDERR:Custom
@@ -77,14 +90,18 @@ layer:
 
     - component: Device:SOC Peripherals:MHU
     - component: Device:SOC Peripherals:PINCONF
-
-    # Display: CDC200 controller, 2-lane MIPI DSI + DPHY, the ILI9806E panel of
-    # the DevKit (480 x 800), GPIO for the panel reset and backlight
     - component: Device:SOC Peripherals:CDC
     - component: Device:SOC Peripherals:MIPI DSI
     - component: Device:SOC Peripherals:MIPI DSI CSI2 DPHY
-    - component: Device:SOC Peripherals:GPIO
     - component: BSP:External peripherals:ILI9806E LCD panel
+    - component: BSP:External peripherals:CAMERA Sensor MT9M114
+    - component: BSP:External peripherals:GT911 Touch Controller
+    - component: Device:SOC Peripherals:CPI
+    - component: Device:SOC Peripherals:MIPI CSI2
+    - component: Device:SOC Peripherals:PDM
+    - component: Device:SOC Peripherals:I3C
+    - component: Device:SOC Peripherals:WDT
+    - component: BSP:External peripherals:BMI323
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
 
@@ -102,8 +119,22 @@ layer:
         - file: ./DevKit-E8.h
         - file: ./ethos_setup.c
         - file: ./retarget_stdio.c
+        - file: ./face_demo.c
+        - file: ./bunny_demo.c
+        - file: ./bunny_clips.c
+        - file: ./bunny_clips.h
+        - file: ./doodle_pte.c
+        - file: ./kws_pte.c
+        - file: ./face_pte.c
         - file: ./display.c
-        - file: ./buttons.c
+        - file: ./display.h
+        - file: ./camera.c
+        - file: ./camera.h
+        - file: ./mic.c
+        - file: ./mic.h
+        - file: ./imu.c
+        - file: ./voice.c
+        - file: ./imu.h
 
     - group: Ethos Interface
       files:

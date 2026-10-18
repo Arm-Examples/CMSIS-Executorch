@@ -3,14 +3,13 @@
 # model/model.py or the csolution's mlops: node.
 layer:
   type: AI
-  description: pico-faces rectified-flow face generator for Ethos-U85
+  description: Bunny decoder (int8, 30 pose dials in, RGB bunny out) for Ethos-U85
 
   packs:
     - pack: PyTorch::ExecuTorch@1.5.1
 
   define:
-    - ET_LOG_ENABLED: 1
-    - ET_MIN_LOG_LEVEL: Error
+    - ET_LOG_ENABLED: 0
 
   add-path:
     - .
@@ -24,8 +23,7 @@ layer:
     - component: Machine Learning:ExecuTorch Operators:Quantized quantize
 
   groups:
-    - group: PicoFaces
+    - group: BunnyDecoderV2
       files:
         - file: ./model_pte.c
         - file: ./model_pte.h
-        - file: ./model_params.h

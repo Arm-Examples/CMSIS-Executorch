@@ -568,14 +568,6 @@
 // <6=> PIN6 <7=> PIN7
 #define BOARD_LCD_BACKLIGHT_GPIO_PIN                    1
 
-// The pack's ILI9806E panel driver (components/Source/ILI9806E_LCD_panel.c)
-// drives the backlight through BOARD_LCD_BL_LED_GPIO_*, which the Conductor
-// file of the DevKit-e8 defines next to BOARD_LCD_BACKLIGHT_GPIO_* (same pin)
-// and the AppKit-e8 one does not. Added for the CMSIS-Executorch AppKit-E8
-// layer: the backlight enable of the on-board panel, GPIO6_1 as above.
-#define BOARD_LCD_BL_LED_GPIO_PORT                      BOARD_LCD_BACKLIGHT_GPIO_PORT
-#define BOARD_LCD_BL_LED_GPIO_PIN                       BOARD_LCD_BACKLIGHT_GPIO_PIN
-
 // <o> "CAN_RXD" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=> GPIO5
 // <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=> GPIO13
 // <14=> GPIO14 <15=> LPGPIO

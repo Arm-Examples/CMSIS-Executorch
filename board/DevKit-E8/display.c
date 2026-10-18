@@ -1,27 +1,9 @@
 /*---------------------------------------------------------------------------
- * Copyright (c) 2026 Arm Limited (or its affiliates). All rights reserved.
+ * MIPI-DSI LCD (ILI9806E panel on the DevKit-E8) bring-up.
  *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the License); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * DevKit-E8 display: shows an RGB image on the 4.3" MIPI-DSI panel (ILI9806E,
- * 480 x 800 portrait) through the CDC200 display controller. The application
- * calls board_display_image() with an 8-bit RGB image (HWC); the image is
- * scaled up by the largest integer factor that fits the panel, centred on a
- * black background and written into the RGB888 frame buffer in bulk SRAM.
- * The display is brought up on the first call (CDC200 + DSI + panel), as in
- * the pack's Boards/Templates/Baremetal/demo_cdc200.c.
+ * Follows Alif's bare-metal CDC200 demo: power the MIPI PHY through the Secure
+ * Enclave, then start the CDC200 display controller scanning out a frame
+ * buffer. The frame buffer lives in the bulk SRAM next to the NPU pools.
  *---------------------------------------------------------------------------*/
 
 #include <stdint.h>
@@ -32,111 +14,179 @@
 #include CMSIS_device_header
 #include "RTE_Device.h"
 
+#include "board_config.h"
 #include "Driver_CDC200.h"
+#include "Driver_MIPI_DSI.h"
+#include "DPHY_DSI.h"
+#include "Driver_IO.h"
+#include "sys_utils.h"
+#include "se_services_port.h"
 
-#define LCD_WIDTH   RTE_PANEL_HACTIVE_TIME   /* 480 */
-#define LCD_HEIGHT  RTE_PANEL_VACTIVE_LINE   /* 800 */
+#include "display.h"
 
-#if RTE_CDC200_PIXEL_FORMAT != 1
-#error "display.c expects RTE_CDC200_PIXEL_FORMAT 1 (RGB888) in RTE_Device.h"
+#if RTE_CDC200_PIXEL_FORMAT == 0
+#define PIXEL_BYTES (4)
+#elif RTE_CDC200_PIXEL_FORMAT == 1
+#define PIXEL_BYTES (3)
+#else
+#define PIXEL_BYTES (2)
 #endif
-#define LCD_BPP     3
+
+/* VBAT PWR_CTRL fields (from the pack's Boards/DevKit-e8/Layers/M55_HP/main.c) */
+#define VBAT_PWR_CTRL_TX_DPHY_PWR_MASK        (1U << 0)
+#define VBAT_PWR_CTRL_TX_DPHY_ISO             (1U << 1)
+#define VBAT_PWR_CTRL_RX_DPHY_PWR_MASK        (1U << 4)
+#define VBAT_PWR_CTRL_RX_DPHY_ISO             (1U << 5)
+#define VBAT_PWR_CTRL_DPHY_PLL_PWR_MASK       (1U << 8)
+#define VBAT_PWR_CTRL_DPHY_PLL_ISO            (1U << 9)
+#define VBAT_PWR_CTRL_DPHY_VPH_1P8_PWR_BYP_EN (1U << 12)
+#define VBAT_PWR_CTRL_UPHY_PWR_MASK           (1U << 16)
+#define VBAT_PWR_CTRL_UPHY_ISO                (1U << 17)
+
+#define LCD_W RTE_PANEL_HACTIVE_TIME
+#define LCD_H RTE_PANEL_VACTIVE_LINE
+
+/* .bss.ai_pool is routed to the bulk SRAM by the linker scripts of this layer */
+static uint8_t lcd_image[LCD_H][LCD_W][PIXEL_BYTES] __attribute__((section(".bss.ai_pool"), aligned(32)));
+/* Second frame buffer for double buffering (display_enable_double_buffer) */
+static uint8_t lcd_image2[LCD_H][LCD_W][PIXEL_BYTES] __attribute__((section(".bss.ai_pool"), aligned(32)));
+static uint8_t *fb_front = &lcd_image[0][0][0], *fb_back = &lcd_image[0][0][0];
+static int fb_double;
 
 extern ARM_DRIVER_CDC200 Driver_CDC200;
-static ARM_DRIVER_CDC200 *CDCdrv = &Driver_CDC200;
+extern ARM_DRIVER_MIPI_DSI Driver_MIPI_DSI;
 
-/* RGB888 frame buffer, 480 x 800 x 3 = 1152000 bytes, in bulk SRAM (NPU and
-   display DMA accessible); the layer's linker scripts route the section. */
-static uint8_t lcd_frame[LCD_HEIGHT][LCD_WIDTH][LCD_BPP]
-    __attribute__((section(".bss.lcd_frame_buf"), aligned(32)));
+static void dsi_callback(uint32_t event)
+{
+    (void)event;
+}
 
-static int display_ready = 0;
+extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_LCD_RESET_GPIO_PORT);
+extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_LCD_BL_LED_GPIO_PORT);
+
+/* Diagnostics: the panel driver's reset/backlight GPIO steps, one by one. */
+static void pin_steps(const char *name, ARM_DRIVER_GPIO *gpio, uint8_t pin)
+{
+    int32_t a = gpio->Initialize(pin, NULL);
+    int32_t b = gpio->PowerControl(pin, ARM_POWER_FULL);
+    int32_t c = gpio->SetDirection(pin, GPIO_PIN_DIRECTION_OUTPUT);
+    int32_t d = gpio->SetValue(pin, GPIO_PIN_OUTPUT_STATE_HIGH);
+    printf("display: %s pin: init %ld power %ld dir %ld high %ld\n", name, (long)a, (long)b,
+           (long)c, (long)d);
+}
+
+static volatile uint32_t dsi_error;
+
+/* Result of the 20 MHz clock request made in main() (0xFFFFFFFF = not made) */
+volatile uint32_t g_clk20m_rc = 0xFFFFFFFFU, g_clk20m_err = 0U;
+/* main(): [0] board_clocks_config result, [1] SE heartbeat result */
+volatile uint32_t g_boot_dbg[4] = {0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU};
 
 static void display_callback(uint32_t event)
 {
     if (event & ARM_CDC_DSI_ERROR_EVENT) {
-        printf("Display: DSI error event\n");
+        dsi_error = 1;
     }
 }
 
-/* Bring up the display controller, DSI link and panel; returns 0 on success. */
-static int display_init(void)
+int display_init(void)
 {
-    int32_t ret;
+    /* Power the MIPI DPHY and take it out of isolation, the way the pack's own
+     * DevKit-E8 board layer does (vbat_init). Asking the Secure Enclave for a
+     * new run profile timed out on this board. */
+    VBAT->PWR_CTRL &= ~(VBAT_PWR_CTRL_TX_DPHY_PWR_MASK | VBAT_PWR_CTRL_RX_DPHY_PWR_MASK |
+                        VBAT_PWR_CTRL_DPHY_PLL_PWR_MASK | VBAT_PWR_CTRL_DPHY_VPH_1P8_PWR_BYP_EN);
+    VBAT->PWR_CTRL &= ~(VBAT_PWR_CTRL_TX_DPHY_ISO | VBAT_PWR_CTRL_RX_DPHY_ISO | VBAT_PWR_CTRL_DPHY_PLL_ISO);
+    /* ...and the USB PHY power/isolation, exactly as the pack's vbat_init does */
+    VBAT->PWR_CTRL &= ~VBAT_PWR_CTRL_UPHY_PWR_MASK;
+    VBAT->PWR_CTRL &= ~VBAT_PWR_CTRL_UPHY_ISO;
+    sys_busy_loop_us(1000);
 
-    memset(lcd_frame, 0, sizeof(lcd_frame));
-    SCB_CleanDCache_by_Addr((uint32_t *) lcd_frame, sizeof(lcd_frame));
+    {
+        extern volatile uint32_t g_clk20m_rc, g_clk20m_err;
+        printf("display: 20 MHz clock request at boot -> %lu/%lu, VBAT PWR_CTRL=0x%08lx\n",
+               (unsigned long)g_clk20m_rc, (unsigned long)g_clk20m_err,
+               (unsigned long)VBAT->PWR_CTRL);
+    }
 
-    ret = CDCdrv->Initialize(display_callback);
-    if (ret != ARM_DRIVER_OK) {
-        printf("Display: CDC200 Initialize failed (%d)\n", (int) ret);
-        return -1;
+    /* Diagnostics: run the steps CDC200 Initialize performs one by one and
+     * report each, so a failure names its step. Repeating them inside the
+     * driver afterwards is harmless (each returns OK once initialized). */
+    {
+        uint32_t htotal = RTE_PANEL_HSYNC_TIME + RTE_PANEL_HBP_TIME + RTE_PANEL_HFP_TIME + LCD_W;
+        uint32_t vtotal = RTE_PANEL_VSYNC_LINE + RTE_PANEL_VBP_LINE + RTE_PANEL_VFP_LINE + LCD_H;
+        uint32_t pixclk = htotal * vtotal * RTE_CDC200_DPI_FPS;
+        uint32_t freq = (uint32_t)(pixclk * (24 * 1.333f / (8 * RTE_ILI9806E_PANEL_DSI_N_LANES)) * 4 + 0.5f);
+        pin_steps("reset", &ARM_Driver_GPIO_(BOARD_LCD_RESET_GPIO_PORT), BOARD_LCD_RESET_GPIO_PIN);
+        pin_steps("backlight", &ARM_Driver_GPIO_(BOARD_LCD_BL_LED_GPIO_PORT), BOARD_LCD_BL_LED_GPIO_PIN);
+        int32_t r = DSI_DPHY_Initialize(freq, RTE_ILI9806E_PANEL_DSI_N_LANES);
+        printf("display: DPHY init (%lu Hz, %d lanes) -> %ld\n", (unsigned long)freq,
+               RTE_ILI9806E_PANEL_DSI_N_LANES, (long)r);
+        r = Driver_MIPI_DSI.Initialize(dsi_callback);
+        printf("display: DSI + panel init -> %ld\n", (long)r);
     }
-    ret = CDCdrv->PowerControl(ARM_POWER_FULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("Display: CDC200 PowerControl failed (%d)\n", (int) ret);
-        return -1;
+
+    int32_t ri = Driver_CDC200.Initialize(display_callback);
+    if (ri != ARM_DRIVER_OK) {
+        printf("display: CDC init failed (%ld)\n", (long)ri);
+        return -3;
     }
-    ret = CDCdrv->Control(CDC200_CONFIGURE_DISPLAY, (uint32_t) lcd_frame);
-    if (ret != ARM_DRIVER_OK) {
-        printf("Display: CDC200 configure failed (%d)\n", (int) ret);
-        return -1;
+    if (Driver_CDC200.PowerControl(ARM_POWER_FULL) != ARM_DRIVER_OK) {
+        printf("display: CDC power failed\n");
+        return -4;
     }
-    ret = CDCdrv->Start();
-    if (ret != ARM_DRIVER_OK) {
-        printf("Display: CDC200 Start failed (%d)\n", (int) ret);
-        return -1;
+    if (Driver_CDC200.Control(CDC200_CONFIGURE_DISPLAY, (uint32_t)lcd_image) != ARM_DRIVER_OK) {
+        printf("display: CDC configure failed\n");
+        return -5;
     }
-    printf("Display: %ux%u RGB888 panel started\n", (unsigned) LCD_WIDTH, (unsigned) LCD_HEIGHT);
+    if (Driver_CDC200.Start() != ARM_DRIVER_OK) {
+        printf("display: CDC start failed\n");
+        return -6;
+    }
+    printf("display: %dx%d, %d bytes/pixel, buffer at 0x%08lx\n", LCD_W, LCD_H, PIXEL_BYTES,
+           (unsigned long)lcd_image);
     return 0;
 }
 
-/*
-  Show an 8-bit RGB (HWC, or gray when channels == 1) image on the panel.
-
-  \param[in]   rgb       Pixel data, height x width x channels bytes
-  \param[in]   width     Image width in pixels
-  \param[in]   height    Image height in pixels
-  \param[in]   channels  1 (gray) or 3 (RGB)
-  \return      0 on success, -1 when the display is not available
-*/
-int board_display_image(const uint8_t *rgb, int width, int height, int channels)
+uint8_t *display_buffer(void)
 {
-    if (!display_ready) {
-        if (display_init() != 0) {
-            return -1;
-        }
-        display_ready = 1;
-    }
-    if (width <= 0 || height <= 0 || (channels != 1 && channels != 3)) {
-        return -1;
-    }
+    return fb_back;  /* = the shown buffer unless double buffering is on */
+}
 
-    /* Largest integer scale that fits, centred. */
-    int scale = LCD_WIDTH / width;
-    if (LCD_HEIGHT / height < scale) {
-        scale = LCD_HEIGHT / height;
-    }
-    if (scale < 1) {
-        scale = 1;
-    }
-    const int out_w = width * scale, out_h = height * scale;
-    const int x0 = (LCD_WIDTH - out_w) / 2, y0 = (LCD_HEIGHT - out_h) / 2;
+void display_enable_double_buffer(void)
+{
+    memcpy(lcd_image2, lcd_image, sizeof(lcd_image2));
+    fb_front = &lcd_image[0][0][0];
+    fb_back = &lcd_image2[0][0][0];
+    fb_double = 1;
+}
 
-    for (int y = 0; y < out_h && y0 + y < LCD_HEIGHT; y++) {
-        const uint8_t *row = rgb + (size_t)(y / scale) * width * channels;
-        uint8_t *dst = &lcd_frame[y0 + y][x0][0];
-        for (int x = 0; x < out_w && x0 + x < LCD_WIDTH; x++) {
-            const uint8_t *px = row + (x / scale) * channels;
-            /* CDC200 RGB888: little-endian 0x00RRGGBB in memory, i.e. B, G, R */
-            dst[0] = channels == 3 ? px[2] : px[0];
-            dst[1] = channels == 3 ? px[1] : px[0];
-            dst[2] = px[0];
-            dst += LCD_BPP;
-        }
-    }
-    /* The frame buffer is read by the display controller's DMA: push the
-       cached lines out (bulk SRAM is write-through, but be explicit). */
-    SCB_CleanDCache_by_Addr((uint32_t *) &lcd_frame[y0][0][0], (int32_t)(out_h * LCD_WIDTH * LCD_BPP));
-    return 0;
+int display_width(void)
+{
+    return LCD_W;
+}
+
+int display_height(void)
+{
+    return LCD_H;
+}
+
+int display_bytes_per_pixel(void)
+{
+    return PIXEL_BYTES;
+}
+
+void display_flush(void)
+{
+    SCB_CleanDCache_by_Addr((uint32_t *)fb_back, (int32_t)sizeof(lcd_image));
+    if (!fb_double) return;
+    /* Show the finished frame from the next vertical blank, and wait until the
+     * controller has switched (it clears the reload request) before the old
+     * front buffer is drawn into: no torn or half-drawn frames on screen. */
+    Driver_CDC200.Control(CDC200_FRAMEBUF_UPDATE_VSYNC, (uint32_t)fb_back);
+    uint32_t t0 = DWT->CYCCNT, limit = SystemCoreClock / 20U;  /* 50 ms */
+    while ((CDC->CDC_LAYER_CFG[0].CDC_L_REL_CTRL & (1UL << 1)) && (DWT->CYCCNT - t0) < limit) {}
+    uint8_t *t = fb_front;
+    fb_front = fb_back;
+    fb_back = t;
 }

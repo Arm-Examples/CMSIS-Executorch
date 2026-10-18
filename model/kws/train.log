@@ -1,0 +1,30 @@
+loading data (first run resamples every clip, a few minutes)...
+train 37010 val 4387 test 4808 per class [2948, 3134, 3037, 3019, 3106, 3111, 3228, 3130, 1632, 3364, 7301]
+params 23115
+epoch 1/14 loss 2.137 val 41.1% (142 s)
+epoch 2/14 loss 1.350 val 78.5% (133 s)
+epoch 3/14 loss 0.969 val 85.6% (133 s)
+epoch 4/14 loss 0.860 val 87.0% (132 s)
+epoch 5/14 loss 0.804 val 89.0% (133 s)
+epoch 6/14 loss 0.769 val 89.2% (131 s)
+epoch 7/14 loss 0.737 val 90.8% (130 s)
+epoch 8/14 loss 0.720 val 91.0% (132 s)
+epoch 9/14 loss 0.701 val 91.5% (131 s)
+epoch 10/14 loss 0.688 val 91.7% (130 s)
+epoch 11/14 loss 0.679 val 92.1% (130 s)
+epoch 12/14 loss 0.675 val 91.9% (130 s)
+epoch 13/14 loss 0.667 val 92.2% (128 s)
+epoch 14/14 loss 0.670 val 92.3% (131 s)
+best val 92.3%, test 91.1%
+confusion (rows = truth): up down left right go stop yes no happy _sile _unkn
+  up          385     0     1     0     2    10     0     1     1     2    23
+  down          0   350     2     0    16     3     2    12     1     2    18
+  left          1     0   393     1     0     0     4     2     1     2     8
+  right         0     1     4   369     0     0     0     1     0     2    19
+  go            2     9     5     0   353     3     4    14     0     1    11
+  stop         10     0     1     0     6   384     1     0     0     1     8
+  yes           0     0     7     0     2     0   397     3     0     1     9
+  no            1     4     2     1    12     2     1   370     0     1    11
+  happy         3     0     1     0     2     1     1     0   183     0    12
+  _silence_     1     0     0     0     0     0     0     0     0   433     3
+  _unknown_    26    11    10    18    28    10     9    10     0     8   762

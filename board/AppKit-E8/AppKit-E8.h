@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * CMSIS target header for the AppKit-E8 layer: only the USART used
+ * CMSIS target header for the headless AppKit-E8 layer: only the USART used
  * for stdio. See the pack's Boards/AppKit-e8/board_defs.h for
  * the full board pin-out; SW4 in position UART4 routes it to PRG USB.
  *---------------------------------------------------------------------------*/

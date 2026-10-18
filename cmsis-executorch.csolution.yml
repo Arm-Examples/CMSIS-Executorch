@@ -1,9 +1,8 @@
 # Copyright 2026 Arm Limited and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
-# pico-faces (a latent diffusion transformer that generates 128x128 faces) on
-# the Ethos-U85 with ExecuTorch, for the Corstone-320 (SSE-320) FVP, the
-# Alif Ensemble E8 DevKit (target-type DevKit-E8) and the Alif Ensemble E8
+# A minimal ExecuTorch-on-Ethos-U85 example for the Corstone-320 (SSE-320) FVP,
+# the Alif Ensemble E8 DevKit (target-type DevKit-E8) and the Alif Ensemble E8
 # AI/ML AppKit (target-type AppKit-E8). Three steps build it:
 #
 #   cbuild setup cmsis-executorch.csolution.yml --active SSE-320-U85
@@ -83,9 +82,9 @@ solution:
             start-pname: M55_HP
 
     # Alif Ensemble E8 AI/ML AppKit: the same E8 (M55_HP + Ethos-U85) in the
-    # WLCSP package, with the LCD on board. Same debug path as the DevKit: the
-    # on-board J-Link (SWD) on the PRG USB connector. Program the debug stubs
-    # with the AppKit variant of the SETOOLS task once; see README.md.
+    # WLCSP package. Same debug path as the DevKit: the on-board J-Link (SWD)
+    # on the PRG USB connector. Program the debug stubs with the AppKit
+    # variant of the SETOOLS task once; see README.md.
     - type: AppKit-E8
       board: Alif Semiconductor::AppKit-E8-AIML
       device: Alif Semiconductor::AE822FA0E5597BS0:M55_HP
@@ -119,7 +118,7 @@ solution:
   # keys under model: are passed through to create_ai_layer.py.
   # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
   mlops:
-    description: pico-faces rectified-flow face generator for Ethos-U85
+    description: Bunny decoder (int8, 30 pose dials in, RGB bunny out) for Ethos-U85
     npu:
       type: Ethos-U85 # explicit: the Ensemble pack lists an Ethos-U55 first
     vela:
@@ -127,8 +126,14 @@ solution:
       # configuration to .cmsis/ensemble_vela.ini and emits it, together with
       # --accelerator-config ethos-u85-256, for both targets. These names
       # come from that file (the FVP's Ethos_U85_SYS_DRAM_Mid is not in it).
-      system: Ethos_U85_SRAM_MRAM
-      memory: Shared_Sram
+      # SRAM only: the firmware copies the model into SRAM and the NPU reads it
+      # through its SRAM port (the EXT port bus-faulted outside low MRAM).
+      system: Ethos_U85_SRAM_Only
+      memory: Sram_Only
     model:
       clayer: $AI-Layer$
-      name: PicoFaces
+      name: BunnyDecoderV2
+      # Model parameters for create_ai_layer.py: the NHWC input shape and the
+      # number of samples the quantizer is calibrated with.
+      input-shape: 1x32
+      calibration-samples: 64
