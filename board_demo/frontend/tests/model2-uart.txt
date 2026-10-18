@@ -1,0 +1,11 @@
+Ethos-U version info:
+	Arch:       v2.0.0
+	MACs/cc:    256
+	Cmd stream: v1
+ExecuTorch Ethos-U85 example: 13072 byte model
+EEG_RESULT 0 3.41962433 -3.47223377 0
+EEG_RESULT 1 -0.946972847 0.894363284 1
+EEG_RESULT 2 -0.420876831 0.526096046 1
+EEG_RESULT 3 -0.631315231 0.526096046 1
+Execution_result: PASS (compare host reference separately)
+

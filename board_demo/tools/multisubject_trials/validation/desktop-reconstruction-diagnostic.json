@@ -1,0 +1,94 @@
+{
+  "trials": 1080,
+  "qdq_vs_saved_exact": false,
+  "qdq_vs_saved_max_error": 0.024768471717834473,
+  "qdq_vs_saved_changed_classes": 0,
+  "qdq_accuracy_correct": 804,
+  "diagnostic_tosa_accuracy_correct": 802,
+  "qdq_vs_diagnostic_tosa_changed_classes": 2,
+  "qdq_vs_diagnostic_tosa_001_failures": 507,
+  "qdq_vs_diagnostic_tosa_max_error": 0.049536943435668945,
+  "trial_step_histogram": {
+    "1": 501,
+    "0": 573,
+    "2": 6
+  },
+  "tosa_graph_sha256": "b5eb1395ce072ab73d46085538ff30e554464b1c645b49066df0f131236b94b5",
+  "output_scale": 0.024768464267253876,
+  "output_zero_point": -4,
+  "tosa_status": "PROVISIONAL reconstructed compiler graph; NOT validated against released PTE/FVP",
+  "physical_board_used": false,
+  "saved_qdq_differing_trial_count": 116,
+  "input_code_mismatching_trials": 0,
+  "normalized_and_wire_qdq_differences_identical": true,
+  "native_and_serialized_qdq_exact": true,
+  "platform": "macOS-15.6.1-arm64-arm-64bit",
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.14.0",
+    "torchao": "0.18.0",
+    "executorch": "1.5.1",
+    "ethos-u-vela": "5.1.0"
+  },
+  "status": "BLOCKED: released PTE backend validation not yet executed; reconstructed reference not approved",
+  "legacy_logit_tolerance": 0.01,
+  "provisional_class_disagreements": [
+    {
+      "index": 409,
+      "trial_id": "S4/1test/run3/cue2753",
+      "ground_truth": 0,
+      "saved_prediction": 0,
+      "local_qdq_prediction": 0,
+      "provisional_tosa_prediction": 1,
+      "saved_logits": [
+        0.07430539280176163,
+        0.07430539280176163
+      ],
+      "local_qdq_logits": [
+        0.07430539280176163,
+        0.07430539280176163
+      ],
+      "provisional_tosa_raw": [
+        -1,
+        0
+      ],
+      "provisional_tosa_logits": [
+        0.07430539280176163,
+        0.0990738570690155
+      ]
+    },
+    {
+      "index": 756,
+      "trial_id": "S7/1test/run2/cue50625",
+      "ground_truth": 0,
+      "saved_prediction": 0,
+      "local_qdq_prediction": 0,
+      "provisional_tosa_prediction": 1,
+      "saved_logits": [
+        0.12384232133626938,
+        0.12384232133626938
+      ],
+      "local_qdq_logits": [
+        0.12384232133626938,
+        0.12384232133626938
+      ],
+      "provisional_tosa_raw": [
+        0,
+        1
+      ],
+      "provisional_tosa_logits": [
+        0.0990738570690155,
+        0.12384232133626938
+      ]
+    }
+  ],
+  "file_sha256": {
+    "artifacts/multisubject-v4/bundle/tinyeegnet_int8.pte": "6caa8a9876d3cd0c36b39b3d4474a0fe7dbdbfb32a4d6f80ed4776623a19e02e",
+    "artifacts/multisubject-v4/bundle/tinyeegnet_float.pt": "987231fefed1815de280d0d11437716b6e7e59abb5cb0dd66f915c1d1432c9bd",
+    "artifacts/multisubject-v4/bundle/preprocess_params.json": "3d34f6326c67441e9e6b636454436c63951e81f6e221da977723700f1c8152f7",
+    "artifacts/multisubject-v4/bundle/calibration.npz": "212c94fe67195c64b1231b52497c5fffac05620e9062ad88935b78c5a3df4f7f",
+    "artifacts/multisubject-v4/bundle/offline_int8_predictions.json": "d41cf8bca4149071b737cbbf8ad73f49e1f1223a2c6ef3b3a88108ec7aa66a70",
+    "artifacts/multisubject-v4/numerical/reference_qdq.pt2": "f0e6bd7956abbd17b7e4d1847370746bcd8636afa02c3d2bbaa806a0b57d807c",
+    "artifacts/multisubject-v4/numerical/compiler_debug_provisional/output_tag0_TOSA-1.0+INT+int16+int4+cf.tosa": "b5eb1395ce072ab73d46085538ff30e554464b1c645b49066df0f131236b94b5"
+  }
+}

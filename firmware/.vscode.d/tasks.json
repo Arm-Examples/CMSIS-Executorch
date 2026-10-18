@@ -1,0 +1,119 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Setup Python virtual environment",
+            "type": "shell",
+            "command": "./setup_venv.sh",
+            "windows": {
+                "command": ".\\setup_venv.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Setup Python virtual environment (uv)",
+            "detail": "Same as above, but with uv (must be on PATH): uv creates .venv for the Python version you enter and can download that interpreter",
+            "type": "shell",
+            "command": "./setup_venv.sh",
+            "windows": {
+                "command": ".\\setup_venv.bat"
+            },
+            "args": ["--uv", "--python", "${input:setupPythonVersion}"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Create AI layer",
+            "detail": "Export model/model.py for the NPU in cmsis-executorch.cbuild-mlops.yml and write ai_layer/ (run a CMSIS build or 'cbuild setup' first)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/bin/python",
+            "args": ["create_ai_layer.py", "cmsis-executorch.cbuild-mlops.yml"],
+            "windows": {
+                "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)",
+            "detail": "Programs the ATOC/MRAM stubs with Alif SETOOLS so J-Link can load and debug the M55_HP core. Overwrites build/config/M55_HP_mram_cfg.json and build/images/M55_HP_mram_stub.bin in the SETOOLS tree, then runs app-gen-toc and app-write-mram; stops at the first failing step. Set SW4 to SEUART, set 'alif.setools.root' in your VS Code settings.",
+            "type": "shell",
+            "command": [
+                "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json' &&",
+                "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin' &&",
+                "cd '${config:alif.setools.root}' &&",
+                "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json' &&",
+                "./app-write-mram -p ${input:discoverCOM}"
+            ],
+            "windows": {
+                "command": [
+                    "cp './.alif/M55_HP_mram_cfg.json' '${config:alif.setools.root}/build/config/M55_HP_mram_cfg.json'; if (-not $?) { exit 1 };",
+                    "cp './.alif/M55_HP_mram_stub.bin' '${config:alif.setools.root}/build/images/M55_HP_mram_stub.bin'; if (-not $?) { exit 1 };",
+                    "cd '${config:alif.setools.root}'; if (-not $?) { exit 1 };",
+                    "./app-gen-toc -f 'build/config/M55_HP_mram_cfg.json'; if (-not $?) { exit 1 };",
+                    "./app-write-mram -p ${input:discoverCOM}"
+                ],
+                "options": {
+                    "shell": {
+                        "executable": "powershell.exe",
+                        "args": [
+                            "-Command"
+                        ]
+                    }
+                }
+            },
+            "linux": {
+                "options": {
+                    "shell": {
+                        "executable": "/bin/bash",
+                        "args": [
+                            "-c"
+                        ]
+                    }
+                }
+            },
+            "osx": {
+                "options": {
+                    "shell": {
+                        "executable": "/bin/bash",
+                        "args": [
+                            "-c"
+                        ]
+                    }
+                }
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "discoverCOM",
+            "type": "pickString",
+            "description": "Select COM Port for SETOOLS?",
+            "options": [
+                {
+                    "label": "Yes - Enable COM Port Discovery using command option",
+                    "value": "-d"
+                },
+                {
+                    "label": "No - COM port is already selected",
+                    "value": ""
+                }
+            ],
+            "default": ""
+        },
+        {
+            "id": "setupPythonVersion",
+            "type": "promptString",
+            "description": "Python version for uv (>=3.10,<3.14), e.g. 3.12 or 3.12.10",
+            "default": "3.12"
+        }
+    ]
+}

@@ -1,0 +1,83 @@
+/* Session summary inside the right (cursor) panel, plus the two run controls. Scoped to #sessionSummary and those
+ * buttons only; Jihyung's styles.css, panel geometry, the left panels and the four-trial controls are untouched. */
+/* Run controls beside Play/Reset: icon and label centred together; the stop square is drawn, not a glyph, so it sits on the label's centre line. */
+.controls .run-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:104px;padding:9px 14px;white-space:nowrap;line-height:1}
+.controls .run-btn[hidden]{display:none}
+.controls .run-btn:disabled{opacity:.45;cursor:not-allowed}
+.run-icon-stop{display:inline-block;width:9px;height:9px;border-radius:2px;background:currentColor;flex:none}
+/* Streaming mode on phones: the cursor-panel row is auto-sized and its footer status wraps to one or two lines depending
+ * on play state, which would move the panels below when the right panel switches views. Reserve the two-line height. */
+@media(max-width:720px){.edge-streaming .cursor-bottom{min-height:78px}}
+/* Covers the cursor panel's own box; the prediction elements stay mounted beneath, so the panel never moves or resizes. */
+#sessionSummary{position:absolute;inset:0;z-index:6;overflow:auto;padding:16px 20px 18px;background:radial-gradient(ellipse at 0% 100%,#4267f438,transparent 42%),radial-gradient(ellipse at 100% 0%,#5b7cdd22,transparent 40%),#050811;color:#f2f5fc;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;line-height:1.45;scrollbar-width:thin;scrollbar-color:#607ba655 transparent;opacity:0;transition:opacity .25s ease}
+#sessionSummary.is-visible{opacity:1}
+#sessionSummary[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){#sessionSummary{transition:none}}
+#sessionSummary .ss-body{display:flex;flex-direction:column;min-height:100%}
+#sessionSummary .ss-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid #b0c8ff26}
+#sessionSummary h2{margin:0;font-weight:400;font-size:20px;letter-spacing:-.3px;color:#f2f5fc}
+#sessionSummary .ss-sub{margin:10px 0 0;color:#aebfdd;font-size:12px}
+#sessionSummary .ss-pill{font-size:11px;font-weight:500;border-radius:999px;padding:5px 11px;border:1px solid #728bb944;background:#16234088;color:#bccff2;white-space:nowrap}
+#sessionSummary .ss-status-completed,#sessionSummary .ss-status-empty{border-color:#7fd9a866;background:#12302788;color:#a9ecc9}
+#sessionSummary .ss-status-interrupted{border-color:#ff9f8266;background:#3a1d1788;color:#ffc2b0}
+#sessionSummary .ss-status-paused{border-color:#9bbcff77;background:#284e9c66;color:#dbe8ff}
+#sessionSummary .ss-status-ending{border-color:#728bb944;color:#aebfdd}
+#sessionSummary .ss-alert{margin:12px 0 0;padding:8px 12px;border-radius:12px;border:1px solid #ff9f8266;background:#ff6a4a14;color:#ffd3c6;font-size:12px}
+#sessionSummary .ss-alert-soft{border-color:#728bb944;background:#16234055;color:#c9d6ee}
+/* Overview: an unboxed stat row (no nested cards); accuracy is the hero. */
+#sessionSummary .ss-tiles{display:grid;grid-template-columns:minmax(180px,1.5fr) repeat(2,minmax(110px,1fr));margin:14px 0 4px}
+#sessionSummary .ss-tile{display:flex;flex-direction:column;gap:2px;padding:2px 18px 2px 0;min-width:0}
+#sessionSummary .ss-tile+.ss-tile{border-left:1px solid #a2bcff22;padding-left:18px}
+#sessionSummary .ss-tile strong{font-size:26px;line-height:1.1;font-weight:450;letter-spacing:-.6px;font-variant-numeric:tabular-nums;color:#f2f5fc}
+#sessionSummary .ss-tile.ss-hero strong{font-size:44px;line-height:1;color:#e6efff;text-shadow:0 0 24px #6e9bff33}
+#sessionSummary .ss-tile span{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#aebfdd}
+#sessionSummary .ss-tile small{font-size:11px;color:#aebfdd;overflow-wrap:anywhere}
+#sessionSummary .ss-line{margin:8px 0 26px;font-size:12px;color:#aebfdd}
+/* Lower row: matrix (dominant) beside the unboxed EEG ranking. Both columns are flex stacks with the same gap, the
+ * heading has one fixed line-height and the sub-header rows (matrix corner labels / RMS unit) share padding and
+ * line-height, so the headings and the sub-headers align by construction. The table's outer border-spacing is
+ * cancelled with a negative margin so its first row starts at the same y as the RMS label. */
+/* The lower section takes the leftover panel height and centres its rows in it, so the space above and below it stays
+ * balanced and the action keeps a deliberate gap; nothing inside is stretched. */
+#sessionSummary .ss-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(200px,1fr);gap:22px;align-items:start;align-content:center;flex:1;min-height:0}
+#sessionSummary .ss-col{min-width:0}
+#sessionSummary .ss-h3{margin:0;font-weight:400;font-size:15px;letter-spacing:-.2px;color:#f2f5fc;line-height:24px}
+#sessionSummary .ss-matrix-panel,#sessionSummary .ss-eeg{display:flex;flex-direction:column;gap:8px}
+#sessionSummary .ss-matrix-wrap{overflow-x:auto;scrollbar-width:thin;margin:-6px -6px 0}
+#sessionSummary .ss-matrix{width:100%;margin:0;border-collapse:separate;border-spacing:6px;font-variant-numeric:tabular-nums;font-size:12px;table-layout:fixed}
+#sessionSummary .ss-matrix th{font-weight:400;color:#aebfdd;font-size:12px;padding:4px 6px;text-align:center;vertical-align:top}
+#sessionSummary .ss-matrix thead th:not(.ss-corner){color:#e4edff;line-height:14px}
+#sessionSummary .ss-matrix th[scope="row"]{text-align:right;color:#e4edff;width:104px;padding-right:10px;vertical-align:middle}
+#sessionSummary .ss-matrix th[scope="row"] span{display:block;font-size:13px}
+#sessionSummary .ss-matrix th[scope="row"] small{display:block;font-size:11px;color:#aebfdd;margin-top:2px;font-variant-numeric:tabular-nums}
+#sessionSummary .ss-matrix .ss-corner{width:104px;font-size:10px;line-height:14px;letter-spacing:.6px;text-transform:uppercase;color:#8fa4c4;text-align:right;padding:4px 10px 4px 6px}
+#sessionSummary .ss-matrix .ss-corner span{display:block;white-space:nowrap}
+#sessionSummary .ss-eeg-label{font-size:10px;line-height:14px;letter-spacing:.6px;text-transform:uppercase;color:#8fa4c4;padding:4px 0;margin:0}
+#sessionSummary .ss-matrix td{text-align:center;padding:20px 8px 16px;border-radius:14px;color:#f2f5fc;border:1px solid transparent;min-width:0}
+#sessionSummary .ss-matrix td strong{display:block;font-size:32px;line-height:1;font-weight:450;letter-spacing:-.8px;color:#f6f9ff}
+#sessionSummary .ss-matrix td small{display:block;margin-top:7px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#c9d6ee}
+#sessionSummary .ss-matrix td.ss-diag{background:linear-gradient(170deg,#4b7dff2e,#4b7dff12),#0d1526cc;border-color:#a5c5ff66;box-shadow:inset 0 0 22px #6e9bff14}
+#sessionSummary .ss-matrix td.ss-diag small{color:#c9dcff}
+#sessionSummary .ss-matrix td.ss-off{background:linear-gradient(170deg,#e9aa3c22,#e9aa3c0c),#120f0ccc;border-color:#e9aa3c55}
+#sessionSummary .ss-matrix td.ss-off small{color:#f1d2a0}
+#sessionSummary .ss-scope{margin:0;font-size:11px;color:#8fa4c4}
+#sessionSummary .ss-eeg{padding:0;border:0;background:none;box-shadow:none}
+#sessionSummary .ss-ranks{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:16px}
+/* Supporting line and note beneath the ranking; wraps within the column, never clipped. */
+#sessionSummary .ss-foot{display:flex;flex-direction:column;gap:5px;padding-top:10px;min-width:0}
+#sessionSummary .ss-foot p{overflow-wrap:anywhere}
+#sessionSummary .ss-rank{display:grid;grid-template-columns:16px minmax(40px,auto) minmax(40px,1fr) auto;align-items:center;gap:10px;min-width:0}
+#sessionSummary .ss-rank-n{font-size:11px;color:#8fa4c4;font-variant-numeric:tabular-nums}
+#sessionSummary .ss-rank-name{font-size:14px;color:#f2f5fc;white-space:nowrap}
+#sessionSummary .ss-bar{height:8px;border-radius:4px;background:#9ab6ff26;overflow:hidden}
+#sessionSummary .ss-bar>span{display:block;height:100%;border-radius:4px;background:#a5c5ff}
+#sessionSummary .ss-rank-value{font-size:12px;color:#cfe0ff;font-variant-numeric:tabular-nums;white-space:nowrap}
+#sessionSummary .ss-eeg-meta{margin:0;font-size:11px;color:#aebfdd}
+#sessionSummary .ss-eeg-unavailable{margin:0;font-size:12px;color:#c9d6ee}
+#sessionSummary .ss-actions{display:flex;justify-content:center;align-items:center;padding-top:24px}
+#sessionSummary .ss-btn{font:inherit;cursor:pointer;border-radius:12px;min-width:172px;padding:11px 22px;font-size:14px;font-weight:600;text-align:center;background:#284e9c99;border:1px solid #9bbcff77;color:#f2f7ff}
+#sessionSummary .ss-btn:hover{background:#34609f}
+#sessionSummary .ss-btn:focus-visible{outline:2px solid #a8c6f2;outline-offset:3px}
+@media(max-width:1000px){#sessionSummary{padding:14px 16px 16px}#sessionSummary .ss-grid{grid-template-columns:1fr;gap:18px}#sessionSummary .ss-matrix td strong{font-size:28px}}
+@media(max-width:720px){#sessionSummary .ss-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}#sessionSummary .ss-tile.ss-hero{grid-column:1/-1;border-bottom:1px solid #a2bcff22;padding-bottom:8px;margin-bottom:6px}#sessionSummary .ss-tile+.ss-tile.ss-hero~.ss-tile:nth-of-type(2){border-left:0;padding-left:0}#sessionSummary .ss-tile:nth-of-type(2){border-left:0;padding-left:0}#sessionSummary .ss-tile.ss-hero strong{font-size:38px}#sessionSummary .ss-matrix{border-spacing:4px}#sessionSummary .ss-matrix th[scope="row"],#sessionSummary .ss-matrix .ss-corner{width:78px;padding-right:6px}#sessionSummary .ss-matrix .ss-corner,#sessionSummary .ss-eeg-label{font-size:9px;letter-spacing:.3px}#sessionSummary .ss-matrix td{padding:12px 6px 10px}#sessionSummary .ss-matrix td strong{font-size:26px}#sessionSummary .ss-matrix td small{font-size:9px;letter-spacing:.3px}}
+@media(prefers-reduced-transparency:reduce){#sessionSummary{background:#10182a}}

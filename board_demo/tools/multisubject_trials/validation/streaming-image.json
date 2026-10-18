@@ -1,0 +1,46 @@
+{
+  "status": "compiled only; not loaded on physical E8",
+  "target": "DevKit-E8",
+  "processor": "M55_HP",
+  "model_sha256": "6caa8a9876d3cd0c36b39b3d4474a0fe7dbdbfb32a4d6f80ed4776623a19e02e",
+  "app_vector_base": "0x80200000",
+  "compiler": "AC6 6.24.0",
+  "toolbox": "2.15.0",
+  "memory_tool": "CMSIS get_memory_usage",
+  "rom_approx_bytes": 159980,
+  "ram_approx_bytes": 3371352,
+  "method_pool_bytes": 1048576,
+  "temp_pool_bytes": 2097152,
+  "input_float_buffer_bytes": 22528,
+  "physical_board_used": false,
+  "files": {
+    "artifacts/multisubject-v4/firmware/project/out/cmsis-executorch/DevKit-E8/Debug/cmsis-executorch.hex": {
+      "sha256": "37262cc19c74cc86303b0a0c20ebca326ba1b73d68fe47bf322ed3588dad9d56",
+      "bytes": 440036
+    },
+    "artifacts/multisubject-v4/firmware/project/out/cmsis-executorch/DevKit-E8/Debug/cmsis-executorch.axf": {
+      "sha256": "0f31b7e28241452a1b7eda202b9c34280f763472b75836567de9ed149b3dc592",
+      "bytes": 4085556
+    },
+    "artifacts/multisubject-v4/firmware/project/out/cmsis-executorch+DevKit-E8.cbuild-run.yml": {
+      "sha256": "496e5c7ac5dfb79368233ab16a18648befcdb68725803b3fe1c43e610bdf6da6",
+      "bytes": 4691
+    },
+    "artifacts/multisubject-v4/firmware/project/src/app_main.cpp": {
+      "sha256": "df4b1c71a352b84cfaa54104f3223f38c024a527ceb2eb1719da14e799ed1e0d",
+      "bytes": 4436
+    },
+    "artifacts/multisubject-v4/firmware/project/src/protocol.hpp": {
+      "sha256": "f94031924d47fd711f09d5570da633a86e41e47561c1cc1a0902a6eaf3c73cb8",
+      "bytes": 6312
+    },
+    "artifacts/multisubject-v4/firmware/project/board/DevKit-E8/retarget_stdio.c": {
+      "sha256": "c3dd12effe47ef2869d7338abf8741f5756c3cea6ef71b84c3bf45838712f8ec",
+      "bytes": 3044
+    },
+    "artifacts/multisubject-v4/bundle/tinyeegnet_int8.pte": {
+      "sha256": "6caa8a9876d3cd0c36b39b3d4474a0fe7dbdbfb32a4d6f80ed4776623a19e02e",
+      "bytes": 11456
+    }
+  }
+}

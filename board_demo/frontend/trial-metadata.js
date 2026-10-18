@@ -1,0 +1,58 @@
+/* Verified deployment profile; never derive task labels from predictions. */
+window.EdgeTrialMetadata = {
+  "id": "model2-four-window-20261017",
+  "model_sha256": "644bf8865ed515ed41c5418070a0b147008c4326b9da34d3232884459d9b3298",
+  "inputs_sha256": "038c1f93ea0818fb2c2b21da6521506e38d222280a1178b09ec5ce3e28d9c8fb",
+  "source": "artifacts/fvp-subject1-20261016-ready/reference.json",
+  "labels": [
+    0,
+    0,
+    1,
+    1
+  ],
+  "indices": [
+    0,
+    2,
+    1,
+    8
+  ],
+  "trials": [
+    {
+      "subject": 1,
+      "session": "0train",
+      "run": "0",
+      "cue_sample": 20544,
+      "start": 20794,
+      "stop": 21294,
+      "artifact": false
+    },
+    {
+      "subject": 1,
+      "session": "0train",
+      "run": "5",
+      "cue_sample": 750,
+      "start": 1000,
+      "stop": 1500,
+      "artifact": false
+    },
+    {
+      "subject": 1,
+      "session": "0train",
+      "run": "0",
+      "cue_sample": 4671,
+      "start": 4921,
+      "stop": 5421,
+      "artifact": false
+    },
+    {
+      "subject": 1,
+      "session": "0train",
+      "run": "4",
+      "cue_sample": 81163,
+      "start": 81413,
+      "stop": 81913,
+      "artifact": false
+    }
+  ],
+  "verification": "Export development_y, source manifest, reconstructed int8 windows, validation_vectors.npz and staged eeg_vectors.h agree. Input/model hashes match the physical-board reads recorded in results/e8-model2-uart-validation-20261017-1404/README.md. UART does not transmit model identity; select this profile only for the unchanged verified deployment."
+};

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-18T18:12:43.527505+00:00",
+  "physical_actions": "none",
+  "scope": "Exact multi-subject candidate and proven Model2 project sources/images/deployment settings; four-trial rollback archive; pinned release bundle; FVP evidence; required installed driver snapshots. EEG datasets and credentials excluded.",
+  "archive": {
+    "path": "artifacts/deployment-preservation/multisubject-v4-37262cc19c74-20261018/firmware-and-rollback.tar.gz",
+    "sha256": "faa349bb9e18735514a7fee4565f8207a014ec0dc95d603ce754691829af92c2",
+    "bytes": 9826583
+  },
+  "verified_member_files": 315,
+  "dataset_backup_required_separately": [
+    "artifacts/multisubject-v4/data",
+    "frontend/multisubject/data",
+    "Original raw A01E.mat\u2013A09E.mat recordings"
+  ],
+  "not_in_git": true
+}

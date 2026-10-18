@@ -90,3 +90,61 @@ fvp_stdout.log
 !.vscode/fvp.sh
 !.vscode/fvp.Dockerfile
 !.vscode/launch.json.mac
+
+# --- CorteX ARM (firmware/, host/, ml/, board_demo/) ---
+build/
+out/
+tmp/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.secrets*
+.DS_Store
+.claude/worktrees/
+
+# Model bundle: fetched by tools/fetch_model.sh from the Reproduce_Baselines release.
+# Committed: firmware/model/params.json (= preprocess_params.json), student.json, model.py,
+# and the .pte as a C array in firmware/ai_layer/model_pte.c.
+model/*.pte
+model/*.npz
+firmware/model/*.pte
+firmware/model/*.npz
+firmware/model/*.pt
+firmware/model/preprocess_params.json
+firmware/ai_layer/*.pte
+
+# Replay streams from host/export_replay.py (BCI IV 2a data; datasets are never committed)
+host/data/*.npz
+
+# CMSIS-Toolbox / CMSIS Solution outputs. RTE/_<build>_<target>/ headers are tracked.
+firmware/.cmsis/
+firmware/*.cbuild-idx.yml
+firmware/*.cbuild-pack.yml
+firmware/*.cbuild-mlops.yml
+firmware/.venv/
+firmware/.cmd.jlink
+*.update@*
+.clangd
+*.axf
+*.elf
+*.map
+*.o
+*.d
+!firmware/.vscode.d/
+*.bin
+!firmware/.alif/M55_HP_mram_stub.bin
+
+# Editor config: the CMSIS Solution extension regenerates these; only the macOS FVP wiring is kept.
+.vscode/launch.json
+firmware/.vscode/*
+!firmware/.vscode/fvp.sh
+!firmware/.vscode/fvp.Dockerfile
+!firmware/.vscode/launch.json.mac
+
+# ML training outputs (ml/*): runs, caches, exported bundles, generated reports
+ml/*/runs/
+ml/*/artifacts/
+ml/*/results/
+ml/*/mne_data/

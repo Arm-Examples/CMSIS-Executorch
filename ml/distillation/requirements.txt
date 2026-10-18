@@ -1,0 +1,16 @@
+# Pinned to CMSIS-Executorch/requirements.txt so the exported .pte loads in the
+# ExecuTorch 1.5.1 runtime pack used by Emulator_Deploy and Edge_Deploy.
+executorch==1.5.1
+torch==2.14.0
+torchao==0.18.0
+ethos-u-vela==5.1.0
+
+# Data and baselines
+moabb==1.7.2
+pyriemann==0.12  # Riemannian teacher (src/models/riemann.py)
+mne>=1.8
+numpy
+scipy
+scikit-learn
+pyyaml
+pytest

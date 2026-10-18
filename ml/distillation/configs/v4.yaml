@@ -1,0 +1,77 @@
+# Reproduce_Baselines v4 configuration: the v2 recipe + a Riemannian teacher member + one round of
+# self-training on the unlabelled BCI IV 2a session 1 (labels never read), then KD with session 1 as
+# extra unlabelled windows. Data pipeline, split (per-session 10 % holdout), loop, test block and
+# students identical to configs/v2.yaml. See the v4 plan.
+version: v4
+# Trained on Cho2017 + Lee2019_MI, tested on all 9 BCI IV 2a subjects (never trained on).
+# Pipeline constants (fs_model, window, crop_offset, train_window, window_start, filter) are
+# mirrored in src/data/cache125.py; src.data.splits125.v2_data refuses a mismatch.
+fs_model: 125                  # Hz, model input rate
+window: 256                    # model input samples (cue + 0.496 s .. cue + 2.544 s)
+window_start: 62               # samples after the cue at 125 Hz (0.5 s = 62.5 samples; epoch(tmin=0.5) rounds to 62)
+train_window: 306              # training trial samples (cue + 0.296 s ..), random crops of `window`
+crop_offset: 25                # canonical crop inside a training trial: X[..., 25:281]
+filter:
+  low: 7.0
+  high: 30.0
+  order: 4                     # Butterworth band-pass, causal sosfilt; 2a: designed at 250 Hz then [::2]
+reference: common_average_22   # subtract the per-sample mean of the 22 channels before filtering
+# Euclidean Alignment regularisation: R + ea_eps * trace(R) / 22 * I. CAR makes the 22x22
+# covariance rank-deficient by one (the all-ones direction), so eps must be > 0.
+ea_eps: 0.001
+datasets:
+  Cho2017:
+    subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52]
+    exclude: []
+  Lee2019_MI:
+    subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    exclude: []
+test:
+  dataset: BNCI2014_001
+  subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  session: 2
+  calib_trials: 24             # session 2 trials 1-24: unlabeled EA calibration; 25-144 = test
+training:
+  optimizer: adam
+  lr: 0.001
+  batch_size: 64
+  max_epochs: 300
+  patience: 30
+  dropout: 0.25
+  val_fraction: 0.1            # stratified 10 % of every training subject-session
+  lr_member:                   # v2 loop, per teacher member
+    shallow: 0.0003            # kept only if its best val loss beats lr_reference's, else retrained at lr
+  lr_reference: runs/v2/teacher_seed0
+distill:
+  alpha: 0.7                   # loss = (1 - alpha) CE + alpha T^2 KL
+  temperature: 4.0
+  noise_std: 0.05              # x input std
+  channel_dropout: 0.1
+  crop_jitter: 25              # samples, random crop of `window` inside `train_window`
+  target_unlabeled: true       # + self_training session windows (2a session 1, 1,296), KD only, no crop
+seeds: [0]
+members: [eegnet, shallow, deep, riemann]
+riemann:                       # src/models/riemann.py: OAS covariance -> TangentSpace(riemann) -> LogisticRegression
+  C: 1.0
+  ridge: 0.001                 # + ridge * trace / 22 * I after OAS (CAR rank deficiency, channel dropout)
+self_training:                 # src/train_teacher.py: round 0 ensemble pseudo-labels, round 1 retrains all members
+  dataset: BNCI2014_001
+  session: 1                   # 2a session 1: X only (labels never read for training); test = session 2
+  min_conf: 0.8                # keep windows whose ensemble max probability >= 0.8 (hard label, weight 1)
+  rounds: 1
+student:
+  wide32: {F1: 16, D: 2, F2: 32, kern_t: 32, kern_s: 16}
+  control: {F1: 8, D: 2, F2: 16, kern_t: 32, kern_s: 16}
+  wide64: {F1: 16, D: 2, F2: 32, kern_t: 64, kern_s: 16}
+report:
+  selection_candidates:        # variants compared on the test block (results_v4*.md, selection note)
+    - "v2 wide32 (release v0.3-distill)"
+    - "v4 joint (hard pseudo-labels)"
+    - "v4 round-0 teacher student (wide32_r0)"
+    - "v4soft joint (soft targets)"
+    - "v4soft student-ft (v2 wide32 + KD-only fine-tune on 2a session 1 + calibration)"
+  paired:                      # shipped variant vs its starting point, same seeds
+    new: runs/v4soft/student_wide32_ft
+    ref: runs/v2/student_wide32
+    seeds: [0, 1, 2]
+    label: fine-tuned student vs the v2 student it starts from
