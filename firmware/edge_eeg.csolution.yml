@@ -1,0 +1,131 @@
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Edge_Deploy firmware: real-time motor-imagery EEG decoding on the Alif Ensemble
+# E8 DevKit (target-type DevKit-E8, the submission) and the Corstone-320 FVP
+# (SSE-320-U85, self-test). Derived from the Arm CMSIS-Executorch starter via
+# Emulator_Deploy. The AI layer in ai_layer/ is committed (the v0.3-distill .pte as a
+# C array), so a build needs only:
+#
+#   cbuild edge_eeg.csolution.yml --active DevKit-E8 --packs
+#   cbuild edge_eeg.csolution.yml --context edge_eeg.SelfTest+SSE-320-U85 --packs
+#
+# Build types: Debug (the stream firmware) and SelfTest (-DSELFTEST: replays the
+# embedded A03 stream of tests/generated/selftest_vectors.h, prints Test_result).
+# Regenerating the AI layer from model/ (see create_ai_layer.py):
+#
+#   cbuild setup edge_eeg.csolution.yml --active SSE-320-U85
+#   python create_ai_layer.py edge_eeg.cbuild-mlops.yml --pte model/tinyeegnet_int8.pte
+#
+# The `mlops:` node below makes `cbuild setup` emit the *.cbuild-mlops.yml;
+# create_ai_layer.py reads the NPU and Vela settings from it, exports the model
+# from PyTorch in the project's venv and writes the AI layer.
+solution:
+  created-for: CMSIS-Toolbox@2.15.0
+  cdefault:
+  compiler: AC6
+
+  packs:
+    # Pinned exactly: the pack's C++ runtime and the Python exporter pinned in
+    # requirements.txt must be the same ExecuTorch version, or the .pte fails
+    # to load. `cbuild setup --packs` fetches it from the public index.
+    - pack: PyTorch::ExecuTorch@1.5.1
+    - pack: ARM::CMSIS
+    - pack: ARM::CMSIS-NN
+    - pack: ARM::CMSIS-Compiler
+    - pack: ARM::Cortex_DFP
+    # BSP of the Corstone-320 FVP target. The layer lists it too; naming it
+    # here keeps the mlops: simulator target resolvable when another
+    # target-type is active.
+    - pack: ARM::SSE_320_BSP@1.0.0
+    # DFP + BSP of the Alif Ensemble E8 DevKit target.
+    - pack: AlifSemiconductor::Ensemble@^2.2.0-0
+
+  target-types:
+    # Corstone-320 with an Ethos-U85 NPU, simulated on the Arm FVP.
+    - type: SSE-320-U85
+      board: SSE-320
+      device: SSE-320-FVP
+      variables:
+        - Board-Layer: $SolutionDir()$/board/Corstone-320/Board-U85.clayer.yml
+        - AI-Layer: $SolutionDir()$/ai_layer/ai_layer.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: edge_eeg.Debug
+          debugger:
+            name: Arm-FVP
+            # The model is its own GDB server (plugins/GDBServer.so, MDK FVP
+            # models 11.32.23+). On Windows and Linux the FVP from vcpkg runs
+            # as it is. On macOS, where Arm ships no FVP build, set this to
+            # ${workspaceFolder}/.vscode/fvp.sh, which runs the model in
+            # Docker, and copy .vscode/launch.json.mac to .vscode/launch.json.
+            model: FVP_Corstone_SSE-320
+            config-file: board/Corstone-320/fvp_config.txt
+            args: "--simlimit 60"
+
+    # Alif Ensemble E8 DevKit: Cortex-M55 high-performance core with the
+    # Ethos-U85 NPU, on real hardware through the on-board J-Link (SWD).
+    # Program the debug stubs with SETOOLS once before the first debug session;
+    # see README.md.
+    - type: DevKit-E8
+      board: Alif Semiconductor::DevKit-E8
+      device: Alif Semiconductor::AE822FA0E5597LS0:M55_HP
+      variables:
+        - Board-Layer: $SolutionDir()$/board/DevKit-E8/Board-U85.clayer.yml
+        - AI-Layer: $SolutionDir()$/ai_layer/ai_layer.clayer.yml
+      target-set:
+        - set:
+          images:
+            - project-context: edge_eeg.Debug
+          debugger:
+            name: J-Link Server
+            # SWD at 4 MHz is the pack's <debugProbe> setting for DevKit-E8.
+            # Alif's examples use JTAG at 1 MHz, but the generated "CMSIS Load"
+            # task then blocks on JLinkExe's interactive JTAG-chain prompt, and
+            # the DPv3 stays in SWD mode once anything has used SWD until the
+            # board is power-cycled, so JTAG connects fail with "TDO is constant high".
+            protocol: swd
+            clock: 4000000
+            start-pname: M55_HP
+
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: debug
+    # Same firmware with the built-in self-test (src/selftest.cpp) instead of the
+    # UART loop; for the FVP (no UART input) and as a board smoke test.
+    - type: SelfTest
+      debug: on
+      optimize: debug
+      define:
+        - SELFTEST
+
+  projects:
+    - project: ./edge_eeg.cproject.yml
+
+  # MLOps information: exported to edge_eeg.cbuild-mlops.yml by
+  # `cbuild setup ... --active SSE-320-U85`. Retarget the NPU here and
+  # create_ai_layer.py picks it up on its next run. The simulator and hardware
+  # targets come from the target-sets (Arm-FVP and J-Link Server), and the extra
+  # keys under model: are passed through to create_ai_layer.py.
+  # https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#mlops-information
+  mlops:
+    description: TinyEEGNet int8 motor-imagery classifier (left vs right hand) for Ethos-U85
+    npu:
+      type: Ethos-U85 # explicit: the Ensemble pack lists an Ethos-U55 first
+    vela:
+      # With the Ensemble pack in the solution, cbuild setup copies its Vela
+      # configuration to .cmsis/ensemble_vela.ini and emits it, together with
+      # --accelerator-config ethos-u85-256, for both targets. These names
+      # come from that file (the FVP's Ethos_U85_SYS_DRAM_Mid is not in it).
+      system: Ethos_U85_SRAM_MRAM
+      memory: Shared_Sram
+    model:
+      clayer: $AI-Layer$
+      name: TinyEEGNet
+      # Model parameters for create_ai_layer.py: the NCHW input shape
+      # (batch, 1, 22 EEG channels, 256 samples = 2.048 s at 125 Hz) and the number
+      # of calibration.npz windows the quantizer is calibrated with.
+      input-shape: 1x1x22x256
+      calibration-samples: 200

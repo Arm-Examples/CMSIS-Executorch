@@ -1,0 +1,26 @@
+/* Final video reference: presentation overrides. */
+body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}.cue-direction strong,.current-pred strong{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+/* Dominant prediction summary: direction, accuracy and correct count. */
+.prediction-summary{padding:23px 26px 21px;gap:20px;min-height:138px;align-items:center;background:linear-gradient(135deg,#3d62b925,#84a9ff07);border-bottom:1px solid #b1cbff55;box-shadow:inset 0 1px 0 #d4e3ff12;flex-wrap:wrap}
+.prediction-summary .eyebrow{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:1.6px;font-weight:400;color:#b8cbed}.current-pred{margin-top:12px;gap:12px}.prediction-summary .current-pred strong{font-size:38px;font-weight:450;letter-spacing:-1px;line-height:1.1}.prediction-summary .current-pred #directionIcon{font-size:38px}.prediction-summary .current-pred #predDesc{display:none}.prediction-summary .totals{gap:28px;margin-left:auto}.prediction-summary .totals>div{gap:7px;min-width:80px}.prediction-summary .totals strong{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:38px;line-height:1;font-weight:400;letter-spacing:-1.2px;color:#f3f7ff}.prediction-summary .totals span{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:11px;color:#b8cbed;font-weight:400;letter-spacing:.3px}.prediction-summary .model-bar{height:3px}
+@media(max-width:1100px){.prediction-summary{padding:20px;gap:18px;min-height:130px}.prediction-summary .current-pred strong,.prediction-summary .current-pred #directionIcon{font-size:31px}.prediction-summary .totals{gap:22px}.prediction-summary .totals strong{font-size:32px}.prediction-summary .totals>div{min-width:74px}}
+@media(max-width:720px){.prediction-summary{padding:17px;min-height:120px;gap:14px}.prediction-summary .current-pred strong,.prediction-summary .current-pred #directionIcon{font-size:28px}.prediction-summary .totals{gap:16px}.prediction-summary .totals strong{font-size:29px}.prediction-summary .totals>div{min-width:64px}.prediction-summary .eyebrow,.prediction-summary .totals span{font-size:10px}.shell{grid-template-rows:auto auto minmax(480px,auto) auto auto 34px}}
+/* Consistent typography across HTML controls and SVG labels. */
+*,*::before,*::after{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif!important}
+/* Give cursor movement stronger visual emphasis. */
+.target{width:116px;height:130px;border-radius:26px;gap:12px}
+.target-icon{font-size:36px}
+.target-name{font-size:11px;letter-spacing:1.8px}
+.mouse svg{width:39px;height:52px}
+@media(max-width:1100px){.target{width:100px;height:114px}.target-icon{font-size:32px}}
+@media(max-width:720px){.target{width:92px;height:108px}.target-icon{font-size:30px}.mouse svg{width:39px;height:52px}}
+
+/* The existing JS already maps anatomical arms to the viewer's side. */
+.person.raiseR .armR{color:#61e8ff;filter:drop-shadow(0 0 6px #61e8ff66)}
+.person.raiseL .armL{color:#ffca70;filter:drop-shadow(0 0 6px #ffca7066)}
+.map-scale,.scale-labels{display:none}
+.controls{flex-wrap:wrap;min-width:0}.controls .spacer{min-width:0}
+#participant{width:210px;min-width:0}
+@media(max-width:1100px){.controls .optional{display:none}.controls .time{min-width:0}.controls .meter{width:65px}}
+@media(max-width:720px){.controls{height:auto;gap:8px}.controls .spacer{display:none}.controls .time{margin-left:auto}.header .brand{flex-wrap:wrap}.prediction-summary{flex-wrap:wrap}.prediction-summary .totals{gap:14px}.shell{height:auto;min-height:100dvh}.top-grid{min-width:0}.figure-block:nth-child(2) svg.brain-topomap{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.person .armL,.person .armR,.target,.model-bar span{transition:none}}

@@ -1,0 +1,26 @@
+# Reproduce_Baselines default configuration.
+# Never change seed, window or fs silently (AGENTS.md); they are cross-repo contracts.
+dataset: BNCI2014_001          # BCI Competition IV 2a via MOABB
+subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+classes: [left_hand, right_hand] # 0 = left hand (769), 1 = right hand (770)
+fs: 250.0
+n_channels: 22
+filter:
+  low: 7.0
+  high: 30.0
+  order: 4                      # Butterworth band-pass, causal sosfilt (board-reproducible)
+window:
+  cue_offset: 2.0               # s from trial marker (fixation) to cue
+  tmin: 0.5                     # s after cue
+  tmax: 2.5                     # s after cue -> 500 samples at 250 Hz
+calibration_trials: 24          # first 24 trials of session 2 = unlabeled EA calibration block
+training:
+  optimizer: adam
+  lr: 0.001
+  batch_size: 16
+  max_epochs: 300
+  patience: 30
+  dropout: 0.25
+  val_fraction: 0.2             # per-subject mode: stratified 80/20 split of session 1
+seeds: [0, 1, 2]
+seed: 0

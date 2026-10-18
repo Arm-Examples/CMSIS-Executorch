@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 730" width="1000" height="730" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9a9a9a"/></marker><linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs>
+<rect x="24" y="24" width="300" height="138" rx="16" fill="rgba(124,92,255,0.13)" stroke="rgba(124,92,255,0.75)" stroke-width="1.5"/><rect x="25.5" y="25.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(44,44) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12h3l2-5 3 10 3-13 3 11 2-3h6" stroke-dasharray="56 56" ><animate attributeName="stroke-dashoffset" values="0;-112" dur="2.4s" repeatCount="indefinite"/></path></g>
+<text x="86" y="67" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">EEG REPLAY</text>
+<rect x="248" y="42" width="58" height="22" rx="11" fill="rgba(124,92,255,0.28)" stroke="rgba(124,92,255,0.75)" stroke-width="1"/>
+<text x="277" y="57.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">HOST</text>
+<text x="46" y="108" font-size="14.5" font-weight="600" fill="#3a3a3a">BCI IV 2a · session 2</text>
+<text x="46" y="134" font-size="13" fill="#6b6b6b">held-out trials, sample by sample</text>
+<rect x="350" y="24" width="300" height="138" rx="16" fill="rgba(124,92,255,0.13)" stroke="rgba(124,92,255,0.75)" stroke-width="1.5"/><rect x="351.5" y="25.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(370,44) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="11" rx="1.5"/><path d="M1 19h22"/></g>
+<text x="412" y="67" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">HOST BRIDGE</text>
+<rect x="574" y="42" width="58" height="22" rx="11" fill="rgba(124,92,255,0.28)" stroke="rgba(124,92,255,0.75)" stroke-width="1"/>
+<text x="603" y="57.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">HOST</text>
+<text x="372" y="108" font-size="14.5" font-weight="600" fill="#3a3a3a">bridge.py</text>
+<text x="372" y="134" font-size="13" fill="#6b6b6b">raw samples only; no filtering, no ML</text>
+<rect x="676" y="24" width="300" height="138" rx="16" fill="rgba(6,182,212,0.13)" stroke="rgba(6,182,212,0.75)" stroke-width="1.5"/><rect x="677.5" y="25.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(696,44) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v5M16 3v5M5 8h14v3a7 7 0 0 1-14 0zM12 18v3"/></g>
+<text x="738" y="67" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">UART LINK</text>
+<rect x="900" y="42" width="58" height="22" rx="11" fill="rgba(6,182,212,0.28)" stroke="rgba(6,182,212,0.75)" stroke-width="1"/>
+<text x="929" y="57.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">BOARD</text>
+<text x="698" y="108" font-size="14.5" font-weight="600" fill="#3a3a3a">921600 baud · 0xAA55 frames</text>
+<text x="698" y="134" font-size="13" fill="#6b6b6b">22 ch × int16 per sample, 250 Hz</text>
+<rect x="676" y="230" width="300" height="138" rx="16" fill="rgba(244,63,94,0.13)" stroke="rgba(244,63,94,0.75)" stroke-width="1.5"/><rect x="677.5" y="231.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(696,250) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M9 13l1.5-3 2 4 1.5-2"/></g>
+<text x="738" y="273" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">PREPROCESSING</text>
+<rect x="900" y="248" width="58" height="22" rx="11" fill="rgba(244,63,94,0.28)" stroke="rgba(244,63,94,0.75)" stroke-width="1"/>
+<text x="929" y="263.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">M55</text>
+<text x="698" y="314" font-size="14.5" font-weight="600" fill="#3a3a3a">CAR · 7–30 Hz · 125 Hz · EA</text>
+<text x="698" y="340" font-size="13" fill="#6b6b6b">int8 window 22 × 256 · Figure 2</text>
+<rect x="350" y="230" width="300" height="138" rx="16" fill="rgba(245,158,11,0.13)" stroke="rgba(245,158,11,0.75)" stroke-width="1.5"/><rect x="351.5" y="231.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(370,250) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1" fill="#4b4b4b" stroke="none"><animate attributeName="opacity" values="1;0.25;1" dur="0.8s" repeatCount="indefinite"/></rect></g>
+<text x="412" y="273" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">ETHOS-U85 NPU</text>
+<rect x="574" y="248" width="58" height="22" rx="11" fill="rgba(245,158,11,0.28)" stroke="rgba(245,158,11,0.75)" stroke-width="1"/>
+<text x="603" y="263.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">U85</text>
+<text x="372" y="314" font-size="14.5" font-weight="600" fill="#3a3a3a">TinyEEGNet-wide int8 · ExecuTorch</text>
+<text x="372" y="340" font-size="13" fill="#6b6b6b">22 × 256 → 2 logits in 0.32 ms</text>
+<rect x="24" y="230" width="300" height="138" rx="16" fill="rgba(244,63,94,0.13)" stroke="rgba(244,63,94,0.75)" stroke-width="1.5"/><rect x="25.5" y="231.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(44,250) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"><animate attributeName="opacity" values="1;1;0;1" keyTimes="0;0.6;0.8;1" dur="3s" repeatCount="indefinite"/></path></g>
+<text x="86" y="273" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">MOTION GATE</text>
+<rect x="248" y="248" width="58" height="22" rx="11" fill="rgba(244,63,94,0.28)" stroke="rgba(244,63,94,0.75)" stroke-width="1"/>
+<text x="277" y="263.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">M55</text>
+<text x="46" y="314" font-size="14.5" font-weight="600" fill="#3a3a3a">IMU &gt; 0.25 g in last 500 ms</text>
+<text x="46" y="340" font-size="13" fill="#6b6b6b">suppresses the prediction</text>
+<rect x="24" y="436" width="300" height="138" rx="16" fill="rgba(6,182,212,0.13)" stroke="rgba(6,182,212,0.75)" stroke-width="1.5"/><rect x="25.5" y="437.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(44,456) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="2"/><path d="M12 11V3M10 5l2-2 2 2M13.7 14l6.3 4M17.5 18.6l2.5-.6-.6-2.4M10.3 14L4 18M6.5 18.6L4 18l.6-2.4"/><circle cx="12" cy="13" r="8" stroke-dasharray="2 3"><animate attributeName="opacity" values="0.9;0.1;0.9" dur="1.5s" repeatCount="indefinite"/></circle></g>
+<text x="86" y="479" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">IMU</text>
+<rect x="248" y="454" width="58" height="22" rx="11" fill="rgba(6,182,212,0.28)" stroke="rgba(6,182,212,0.75)" stroke-width="1"/>
+<text x="277" y="469.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">BOARD</text>
+<text x="46" y="520" font-size="14.5" font-weight="600" fill="#3a3a3a">ICM-42670-P · I3C</text>
+<text x="46" y="546" font-size="13" fill="#6b6b6b">100 Hz accel, on the board</text>
+<rect x="350" y="436" width="300" height="138" rx="16" fill="rgba(6,182,212,0.13)" stroke="rgba(6,182,212,0.75)" stroke-width="1.5"/><rect x="351.5" y="437.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(370,456) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6" stroke="none"><animate attributeName="fill" values="#2da44e;#1f6feb;#cf222e" calcMode="discrete" dur="3s" repeatCount="indefinite"/></circle><circle cx="12" cy="9" r="6"/><path d="M9.5 15v6M14.5 15v6"/></g>
+<text x="412" y="479" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">OUTPUT</text>
+<rect x="574" y="454" width="58" height="22" rx="11" fill="rgba(6,182,212,0.28)" stroke="rgba(6,182,212,0.75)" stroke-width="1"/>
+<text x="603" y="469.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">BOARD</text>
+<text x="372" y="520" font-size="14.5" font-weight="600" fill="#3a3a3a">LEDs · UART JSON</text>
+<text x="372" y="546" font-size="13" fill="#6b6b6b">green left · blue right · red motion</text>
+<rect x="676" y="436" width="300" height="138" rx="16" fill="rgba(124,92,255,0.13)" stroke="rgba(124,92,255,0.75)" stroke-width="1.5"/><rect x="677.5" y="437.5" width="297" height="69.0" rx="14.5" fill="url(#sheen)"/>
+<g transform="translate(696,456) scale(1.25)" fill="none" stroke="#4b4b4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="1.5"/><path d="M8 21h8M12 17v4"/><path d="M5 13l3-3 3 2 4-5 4 3"/></g>
+<text x="738" y="479" font-size="16" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">DEMO UI</text>
+<rect x="900" y="454" width="58" height="22" rx="11" fill="rgba(124,92,255,0.28)" stroke="rgba(124,92,255,0.75)" stroke-width="1"/>
+<text x="929" y="469.5" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle" fill="#2b2b2b">HOST</text>
+<text x="698" y="520" font-size="14.5" font-weight="600" fill="#3a3a3a">demo_ui.py · measure.py</text>
+<text x="698" y="546" font-size="13" fill="#6b6b6b">class, confidence, latency, motion</text>
+<rect x="670" y="224" width="312" height="150" rx="20" fill="none" stroke="rgba(244,63,94,0.75)" stroke-width="2" stroke-dasharray="8 6"><animate attributeName="stroke-dashoffset" from="0" to="-28" dur="1.6s" repeatCount="indefinite"/></rect>
+<path d="M328,93.0 H346" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path>
+<path d="M654,93.0 H672" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path>
+<path d="M826.0,166 V226" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path><text x="836.0" y="200" font-size="12.5" fill="#6b6b6b" text-anchor="start">frames · 250 Hz</text>
+<path d="M672,299.0 H654" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path>
+<path d="M346,299.0 H328" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path>
+<path d="M174.0,432 V372" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path><text x="184.0" y="406" font-size="12.5" fill="#6b6b6b" text-anchor="start">100 Hz accel</text>
+<path d="M274,372 V402.0 H500.0 V432" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path><text x="510.0" y="394.0" font-size="12.5" fill="#6b6b6b" text-anchor="start">cls · conf · motion</text>
+<path d="M654,505.0 H672" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ah)"><animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.6s" repeatCount="indefinite"/></path>
+<rect x="24" y="598" width="952" height="48" rx="12" fill="rgba(234,179,8,0.13)" stroke="rgba(234,179,8,0.75)" stroke-width="1.5"/><rect x="25.5" y="599.5" width="949" height="24.0" rx="10.5" fill="url(#sheen)"/>
+<text x="46" y="628" font-size="15" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">OFFLINE BUILD</text>
+<text x="210" y="628" font-size="14.5" font-weight="600" fill="#3a3a3a">ml/: 4 teachers → student → int8 → Vela → .pte</text>
+<text x="954" y="628" font-size="13" text-anchor="end" fill="#6b6b6b">release v0.5-distill</text>
+<rect x="24" y="656" width="952" height="48" rx="12" fill="rgba(234,179,8,0.13)" stroke="rgba(234,179,8,0.75)" stroke-width="1.5"/><rect x="25.5" y="657.5" width="949" height="24.0" rx="10.5" fill="url(#sheen)"/>
+<text x="46" y="686" font-size="15" font-weight="700" letter-spacing="0.4" fill="#2b2b2b">VERIFY</text>
+<text x="210" y="686" font-size="14.5" font-weight="600" fill="#3a3a3a">FVP self-test bit-exact · replay 1,080/1,080 trials</text>
+<text x="954" y="686" font-size="13" text-anchor="end" fill="#6b6b6b">latency · NPU cycles · accuracy</text>
+</svg>

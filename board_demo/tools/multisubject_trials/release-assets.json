@@ -1,0 +1,54 @@
+{
+  "release": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/tag/v0.5-distill",
+  "tag": "v0.5-distill",
+  "assets": [
+    {
+      "name": "calibration.npz",
+      "bytes": 4505856,
+      "sha256": "212c94fe67195c64b1231b52497c5fffac05620e9062ad88935b78c5a3df4f7f",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/calibration.npz"
+    },
+    {
+      "name": "deployment.md",
+      "bytes": 4045,
+      "sha256": "e3f8827e5f42d62e5e64e7de5293e72356407ec59995aae3cd4e96f24a62b18b",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/deployment.md"
+    },
+    {
+      "name": "op_placement.md",
+      "bytes": 1350,
+      "sha256": "ebbe2fbf9ccd172c8a0e367583af9d505344df2901cdd95785a2d6078be61775",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/op_placement.md"
+    },
+    {
+      "name": "preprocess_params.json",
+      "bytes": 121188,
+      "sha256": "3d34f6326c67441e9e6b636454436c63951e81f6e221da977723700f1c8152f7",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/preprocess_params.json"
+    },
+    {
+      "name": "student.json",
+      "bytes": 64,
+      "sha256": "162a7dc32bd4741bd7b2a2fff72d4792445d76a30c0e3b0aeae6ac8af92242f9",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/student.json"
+    },
+    {
+      "name": "test_vectors.npz",
+      "bytes": 113694,
+      "sha256": "250241cb0967b99e04c355c86c3f8ae4671ed42e71a1f0d65f82fea5affb98c3",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/test_vectors.npz"
+    },
+    {
+      "name": "tinyeegnet_float.pt",
+      "bytes": 20398,
+      "sha256": "987231fefed1815de280d0d11437716b6e7e59abb5cb0dd66f915c1d1432c9bd",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/tinyeegnet_float.pt"
+    },
+    {
+      "name": "tinyeegnet_int8.pte",
+      "bytes": 11456,
+      "sha256": "6caa8a9876d3cd0c36b39b3d4474a0fe7dbdbfb32a4d6f80ed4776623a19e02e",
+      "asset_url": "https://github.com/ArmExecuTorchEEG/Reproduce_Baselines/releases/download/v0.5-distill/tinyeegnet_int8.pte"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+/* Hardware controls only. Cindy's styles.css and all original panel geometry are unchanged. */
+#hardwareControls{position:relative;z-index:20;font-size:11px}
+#hardwareControls>summary{cursor:pointer;list-style:none;white-space:nowrap}
+#hardwareControls>summary::-webkit-details-marker{display:none}
+#hardwareControls>summary:focus-visible{outline:2px solid #a8c6f2;outline-offset:3px}
+#hardwareControls .hardware-dock-panel{position:absolute;right:0;top:calc(100% + 12px);width:min(480px,calc(100vw - 40px));max-height:75vh;overflow:auto;padding:16px;background:#080c17f5;border:1px solid #a2bcff66;border-radius:16px;box-shadow:0 14px 35px #00000066;color:#d6e4f7;line-height:1.6}
+#hardwareControls .hardware-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#hardwareControls .btn,#hardwareControls select{font:inherit;background:#1a2336;border-color:#637da777;color:#e4edff}
+#hardwareControls .btn:hover{background:#273957}
+#hardwareControls select{display:block;width:100%;max-width:none;margin-top:5px}
+#hardwareControls p{margin:10px 0;overflow-wrap:anywhere}
+#hardwareControls pre{white-space:pre-wrap;font-size:10px;overflow-wrap:anywhere}
+@media(max-width:720px){#hardwareControls{position:fixed;right:14px;bottom:14px;z-index:20}#hardwareControls .hardware-dock-panel{top:auto;bottom:calc(100% + 10px);width:calc(100vw - 28px)}#hardwareControls>summary{background:#101a31f5}}

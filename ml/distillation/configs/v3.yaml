@@ -1,0 +1,84 @@
+# Reproduce_Baselines v3 configuration: robust retrain of the v2 teacher-student model.
+# Same data pipeline, test protocol and students as configs/v2.yaml; adds a signal-quality gate,
+# cross-subject validation, AdamW + label smoothing + cosine/warm-up + EMA, shared on-the-fly
+# augmentation (EA-matrix mixing, amplitude jitter) and mixup under KD. See the v3 plan.
+version: v3
+# Trained on Cho2017 + Lee2019_MI, tested on all 9 BCI IV 2a subjects (never trained on).
+# Pipeline constants (fs_model, window, crop_offset, train_window, window_start, filter) are
+# mirrored in src/data/cache125.py; src.data.splits125.v2_data refuses a mismatch.
+fs_model: 125                  # Hz, model input rate
+window: 256                    # model input samples (cue + 0.496 s .. cue + 2.544 s)
+window_start: 62               # samples after the cue at 125 Hz (0.5 s = 62.5 samples; epoch(tmin=0.5) rounds to 62)
+train_window: 306              # training trial samples (cue + 0.296 s ..), random crops of `window`
+crop_offset: 25                # canonical crop inside a training trial: X[..., 25:281]
+filter:
+  low: 7.0
+  high: 30.0
+  order: 4                     # Butterworth band-pass, causal sosfilt; 2a: designed at 250 Hz then [::2]
+reference: common_average_22   # subtract the per-sample mean of the 22 channels before filtering
+# Euclidean Alignment regularisation: R + ea_eps * trace(R) / 22 * I. CAR makes the 22x22
+# covariance rank-deficient by one (the all-ones direction), so eps must be > 0.
+ea_eps: 0.001
+datasets:
+  Cho2017:
+    subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52]
+    exclude: []
+  Lee2019_MI:
+    subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    exclude: []
+test:
+  dataset: BNCI2014_001
+  subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  session: 2
+  calib_trials: 24             # session 2 trials 1-24: unlabeled EA calibration; 25-144 = test
+quality:                       # src/data/quality.py, per training subject-session (Cho2017, Lee2019_MI)
+  ptp_uv: 100.0                # any channel |x - mean| > 100 uV after the 7-30 Hz filter
+  potato_z: 2.5                # whitened-covariance distance z-score within the subject-session
+  potato_iterations: 2
+  flat_uv: 0.1                 # any channel std < 0.1 uV
+  max_flagged_fraction: 0.2    # drop the whole subject-session above this; kept sessions keep all trials
+validation:
+  val_subjects:                # whole held-out subjects (both sessions); replaces val_fraction
+    Cho2017: [48, 49, 50, 51, 52]
+    Lee2019_MI: [19, 20]
+augment:                       # src/augment.py, teachers and student, per batch on the fly
+  crop_jitter: 25              # random crop of `window` from `train_window` at crop_offset +- 25
+  noise_std: 0.05              # x input std (inputs are unit scale)
+  channel_dropout: 0.2
+  amp_low: 0.8                 # amplitude jitter x U(0.8, 1.2) per trial
+  amp_high: 1.2
+  ea_mix_p: 0.1                # re-align a trial with another training subject-session's EA matrix
+training:
+  loop: v3                     # src/train_v3.py (teachers and student)
+  optimizer: adamw
+  lr: 0.001                    # student lr
+  batch_size: 64
+  max_epochs: 300              # student
+  patience: 30                 # student, on cross-subject val KL
+  dropout: 0.25
+  val_fraction: 0.1            # unused while validation.val_subjects is set
+  teacher:
+    lr: 0.001
+    lr_shallow: 0.0003
+    weight_decay: 0.001
+    label_smoothing: 0.1
+    ema: 0.999
+    warmup: 5                  # epochs, then cosine to 0 at max_epochs
+    max_epochs: 300
+    patience: 40
+distill:
+  alpha: 0.7                   # loss = (1 - alpha) CE + alpha T^2 KL
+  temperature: 4.0
+  noise_std: 0.05              # v2 keys, informational; v3 uses the augment section
+  channel_dropout: 0.2
+  crop_jitter: 25
+  mixup_alpha: 0.4             # lam ~ Beta(0.4, 0.4)
+  mixup_p: 0.5                 # per labelled trial
+  weight_decay: 0.0001
+  ema: 0.999
+  warmup: 5
+seeds: [0]
+student:
+  wide32: {F1: 16, D: 2, F2: 32, kern_t: 32, kern_s: 16}
+  control: {F1: 8, D: 2, F2: 16, kern_t: 32, kern_s: 16}
+  wide64: {F1: 16, D: 2, F2: 32, kern_t: 64, kern_s: 16}

@@ -1,0 +1,21 @@
+seed: 42
+fs: 250
+window: [1.0, 3.0]
+protocol: participant1-session-held-out-v1
+filter_hz: [7, 30]
+filter_prototype_order: 4
+artifact_policy: retain_all
+normalization: training_only_channel_mean_std
+model:
+  dropout: 0.5
+  activation: relu
+training:
+  epochs: 200
+  early_stop: 20
+  batch_size: 64
+  learning_rate: 0.001
+  optimizer: Adam
+  loss: CrossEntropyLoss
+  checkpoint_metric: validation_loss
+  device: cpu
+  threads: 4

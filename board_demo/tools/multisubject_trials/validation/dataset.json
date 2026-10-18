@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "source_revision": "ad61c79de17243f5befce069a1e9ca458057f43e",
+  "model_sha256": "6caa8a9876d3cd0c36b39b3d4474a0fe7dbdbfb32a4d6f80ed4776623a19e02e",
+  "params_sha256": "3d34f6326c67441e9e6b636454436c63951e81f6e221da977723700f1c8152f7",
+  "desktop_reference_sha256": "d41cf8bca4149071b737cbbf8ad73f49e1f1223a2c6ef3b3a88108ec7aa66a70",
+  "exported_vectors_sha256": "250241cb0967b99e04c355c86c3f8ae4671ed42e71a1f0d65f82fea5affb98c3",
+  "eligible_trials": 1080,
+  "class_counts": [
+    540,
+    540
+  ],
+  "artifact_flagged": 94,
+  "original_ids_unique": true,
+  "all_labels_match_saved_reference": true,
+  "known_20_input_elements_exact": 112640,
+  "known_20_logits_exact": true,
+  "all_observed_int8_reconstruction_exact": true,
+  "all_256_int8_codes_roundtrip_exact": true,
+  "saved_qdq_correct": 804,
+  "saved_qdq_accuracy": 0.7444444444444445,
+  "reference_scope": "Saved desktop Q/DQ results; this preparation does not run model inference.",
+  "assets": {
+    "inputs.bin": {
+      "bytes": 6082560,
+      "sha256": "dabac8f5e51796d4678656a1acb2157533e8e712f8bf0714474e459226f2a9c8"
+    },
+    "eeg.f32": {
+      "bytes": 24330240,
+      "sha256": "b72e5a152bac0173c3fc3e75e11894b597707845fd6b23d30adea145815dedd1"
+    },
+    "metadata.json": {
+      "bytes": 819601,
+      "sha256": "aa245a5773e51dd9ada104e391e8d4265faa4513b39e3584ff74ba8230967ba2"
+    }
+  },
+  "windows_sha256": "92314290f3de7e7188f04950ad616fd81332ce20b84fe4de1b723a5975ec8aac",
+  "per_subject": [
+    {
+      "subject": 1,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 1,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 105
+    },
+    {
+      "subject": 2,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 1,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 75
+    },
+    {
+      "subject": 3,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 5,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 119
+    },
+    {
+      "subject": 4,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 24,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 89
+    },
+    {
+      "subject": 5,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 5,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 85
+    },
+    {
+      "subject": 6,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 33,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 68
+    },
+    {
+      "subject": 7,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 4,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 79
+    },
+    {
+      "subject": 8,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 9,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 113
+    },
+    {
+      "subject": 9,
+      "eligible": 120,
+      "class_counts": [
+        60,
+        60
+      ],
+      "artifact_flagged": 12,
+      "ea_calibration_max_abs_error": 0.0,
+      "saved_qdq_correct": 71
+    }
+  ],
+  "sources": [
+    {
+      "file": "A01E.mat",
+      "sha256": "53d415f39c3d7b0c88b894d7b08d99bcdfe855ede63831d3691af1a45607fb62",
+      "bytes": 43772146
+    },
+    {
+      "file": "A02E.mat",
+      "sha256": "d63c454005d3a9b41d8440629482e855afc823339bdd0b5721842a7ee9cc7b12",
+      "bytes": 44218409
+    },
+    {
+      "file": "A03E.mat",
+      "sha256": "d4229267ec7624fa8bd3af5cbebac17f415f7c722de6cb676748f8cb3b717d97",
+      "bytes": 42316292
+    },
+    {
+      "file": "A04E.mat",
+      "sha256": "81916dff2c12997974ba50ffc311da006ea66e525010d010765f0047e771c86a",
+      "bytes": 41730824
+    },
+    {
+      "file": "A05E.mat",
+      "sha256": "8b357470865610c28b2f1d351beac247a56a856f02b2859d650736eb2ef77808",
+      "bytes": 44392496
+    },
+    {
+      "file": "A06E.mat",
+      "sha256": "bf67a40621b74b6af7a986c2f6edfff7fc2bbbca237aadd07b575893032998d1",
+      "bytes": 43395510
+    },
+    {
+      "file": "A07E.mat",
+      "sha256": "b9aaec73dcee002fab84ee98e938039a67bf6a3cbf4fc86d5d8df198cfe4c323",
+      "bytes": 42242294
+    },
+    {
+      "file": "A08E.mat",
+      "sha256": "0eedbd89790c7d621c8eef68065ddecf80d437bbbcf60321d9253e2305f294f7",
+      "bytes": 46282127
+    },
+    {
+      "file": "A09E.mat",
+      "sha256": "5d79649a42df9d51215def8ffbdaf1c3f76c54b88b9bbaae721e8c6fd972cc36",
+      "bytes": 44780912
+    }
+  ],
+  "upstream_source_sha256": {
+    "src/data/cache125.py": "2b8a1c6d9945a649bc066c4add994bd0cf0a59b9fa1119480b29a9c44a3c5854",
+    "src/data/align.py": "50cacc07f0d14cc70ae69c2ad8cc3b01f976e1e6d3de5019129a204fd26e45b1",
+    "src/data/preprocess.py": "4addf755b63d2716f1f53d76770289a0c97584e7eb6963122ea8ba3d1db18ef3",
+    "src/data/download.py": "0c97c72f871d96ecf654e4f59dca962bb212e78031527080f35bb7355e812718",
+    "src/data/external.py": "12dae1db42380e6428c0c070af7091b467877126f3ca9cc2240656498a447b50",
+    "src/train.py": "d22294d1f3e3dfc9c19b9b4c6022776c65cd8cc44dcae0a20c1898f65a2f227d",
+    "src/quantize.py": "7a78a4974ec5a40e6355a225ddb8f2060e810b0aaeb0ab1d4a92230c69e7d0e5"
+  },
+  "versions": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "mne": "1.13.2",
+    "moabb": "1.7.2"
+  },
+  "license": "Local preparation only; redistribution is not authorized by this script."
+}

@@ -1,0 +1,9 @@
+# Host side of Edge_Deploy (bridge, demo UI, measure, tests).
+numpy>=1.26
+pyserial>=3.5        # bridge.py with a real board (not needed for --board sim)
+matplotlib>=3.8      # demo_ui.py window (not needed for --headless)
+pytest>=8            # host/tests
+# Only for the one-off data steps (export_replay.py, make_vectors.py, pipeline_ref.py):
+# they read the raw BCI IV 2a GDF files through Reproduce_Baselines' MOABB loader.
+scipy>=1.11
+# mne>=1.8 and moabb>=1.1 come from Reproduce_Baselines/requirements.txt (export_replay.py only).

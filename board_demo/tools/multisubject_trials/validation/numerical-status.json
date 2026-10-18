@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "status": "FVP backend validated on all1080 prepared inputs; physical deployment not performed",
+  "model_sha256": "6caa8a9876d3cd0c36b39b3d4474a0fe7dbdbfb32a4d6f80ed4776623a19e02e",
+  "eligible_trials": 1080,
+  "class_counts": [
+    540,
+    540
+  ],
+  "artifact_flagged": 94,
+  "actual_fvp_cases": 1080,
+  "additional_published_cases": 20,
+  "additional_reordered_cases": 14,
+  "reordered_unique_trials": 9,
+  "reordered_results_float32_bit_exact": true,
+  "input_ids_and_crc_verified": true,
+  "tosa_raw_output_values_checked": 2160,
+  "tosa_raw_mismatches": 0,
+  "tosa_001_failures": 0,
+  "tosa_reference_status": "Independently executed reconstructed integer graph now agrees with unchanged release PTE FVP outputs for all2160 values and reordered cases; this is empirical pool coverage, not PTE byte identity",
+  "output_scale": 0.024768464267253876,
+  "output_zero_point": -4,
+  "retained_qdq_tolerance": 0.01,
+  "saved_qdq_001_failures": 498,
+  "saved_qdq_max_abs_logit_error": 0.049536943435668945,
+  "saved_qdq_class_agreement": 1078,
+  "saved_qdq_class_mismatches": 2,
+  "saved_qdq_vs_fvp_trial_step_histogram": {
+    "1": 497,
+    "0": 582,
+    "2": 1
+  },
+  "fvp_correct": 802,
+  "saved_qdq_correct": 804,
+  "classification_disagreements": [
+    {
+      "index": 409,
+      "trial_id": "S4/1test/run3/cue2753",
+      "request": 170,
+      "ground_truth": 0,
+      "prediction": 1,
+      "logits": [
+        0.07430539280176163,
+        0.0990738570690155
+      ],
+      "raw_int8": [
+        -1,
+        0
+      ],
+      "saved_qdq_logits": [
+        0.07430539280176163,
+        0.07430539280176163
+      ],
+      "saved_qdq_prediction": 0,
+      "saved_qdq_max_error": 0.024768464267253876,
+      "saved_qdq_001_pass": false,
+      "tosa_raw": [
+        -1,
+        0
+      ],
+      "tosa_integer_exact": true,
+      "tosa_001_pass": true
+    },
+    {
+      "index": 756,
+      "trial_id": "S7/1test/run2/cue50625",
+      "request": 37,
+      "ground_truth": 0,
+      "prediction": 1,
+      "logits": [
+        0.0990738570690155,
+        0.12384232133626938
+      ],
+      "raw_int8": [
+        0,
+        1
+      ],
+      "saved_qdq_logits": [
+        0.12384232133626938,
+        0.12384232133626938
+      ],
+      "saved_qdq_prediction": 0,
+      "saved_qdq_max_error": 0.024768464267253876,
+      "saved_qdq_001_pass": false,
+      "tosa_raw": [
+        0,
+        1
+      ],
+      "tosa_integer_exact": true,
+      "tosa_001_pass": true
+    }
+  ],
+  "physical_board_used": false,
+  "trained_weights_changed": false,
+  "files": {
+    "artifacts/multisubject-v4/fvp-validation/published20.log": {
+      "sha256": "b170dc670c91cf56938ea06d39a9a46eccff259d940cad55b004a4c0bcfd9c0d",
+      "bytes": 7071
+    },
+    "artifacts/multisubject-v4/fvp-validation/published20-expected.json": {
+      "sha256": "89e26a6e49c135b498f82260325eb8ca13a60b33de4b1fface467477a7979a12",
+      "bytes": 6137
+    },
+    "artifacts/multisubject-v4/fvp-validation/published20-comparison.json": {
+      "sha256": "fe68dff12155418d42974a3fa683bc413cc6ea9330719f15387a845b534c314e",
+      "bytes": 12542
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0000.log": {
+      "sha256": "4124000e04cde205df12f7d9630449eb9b9019053c87b8f700d4a38072689d3c",
+      "bytes": 80845
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0000-expected.json": {
+      "sha256": "d24e09056c6947f71b8757e31cc62a3461d797439811e630bf409ee6ec635310",
+      "bytes": 66352
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0000-comparison.json": {
+      "sha256": "60749aba8434675f25a4bcc5a73a2ef216102f0e63c2211b615cb3c988a002d5",
+      "bytes": 144122
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0240.log": {
+      "sha256": "67ad263b27be2e71f2c57e2e6a6d39de8d47d50de6798eb9a54ddcdf87319d22",
+      "bytes": 80860
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0240-expected.json": {
+      "sha256": "9d3e195fd427adf76939edc96186873b357489e4552f989c19eaaa422c43cefb",
+      "bytes": 66484
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0240-comparison.json": {
+      "sha256": "90f33fb4188bda2d8872e547a8bcbfa5c1f460e304c8ef61656b0209a1b7114d",
+      "bytes": 144378
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0480.log": {
+      "sha256": "7b9610a945a2ac225800333dd33f0512eb84ea882e5db73ef3e01982b5385a49",
+      "bytes": 81074
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0480-expected.json": {
+      "sha256": "3192f0cc558b393aad2d3f466ea4ba0daa9a5154e7bb351ecbec874bd81db4d7",
+      "bytes": 66477
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0480-comparison.json": {
+      "sha256": "388ec4dd0d91f1ad6e46a6ba8c266404763df4a770dfdba998eaaaa28e6f01e2",
+      "bytes": 144025
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0720.log": {
+      "sha256": "c0e2090616e6445c0a801eca0ce2b801f63fc64bf9c752358a159d0728f1b3eb",
+      "bytes": 80975
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0720-expected.json": {
+      "sha256": "9fb05ff0343fd4957ea366b97164da331cfd98086e8347ff570a808cd7fd5161",
+      "bytes": 66471
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0720-comparison.json": {
+      "sha256": "b723c3ef8fb050e0cedb0678ea6a486b425cb932c471fff478b8edaa304eedbe",
+      "bytes": 144082
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0960.log": {
+      "sha256": "93a29a72731cc82031c64e424d30092489a0602cf40e58342e36d48130aaeeef",
+      "bytes": 40696
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0960-expected.json": {
+      "sha256": "ab08b8a85aa1a31419d717a1969374ba731b111ea300bafe36fad24385fa9e60",
+      "bytes": 33592
+    },
+    "artifacts/multisubject-v4/fvp-validation/batch-0960-comparison.json": {
+      "sha256": "fac9b18eb1e22a2b917a1b484ebc884f23130e3154417504a72cfe09c5c9438d",
+      "bytes": 72549
+    },
+    "artifacts/multisubject-v4/fvp-validation/reordered.log": {
+      "sha256": "538c8e4adf432f95bf458a0930768462efc657cec8546d64c8e552865981559a",
+      "bytes": 5092
+    },
+    "artifacts/multisubject-v4/fvp-validation/reordered-expected.json": {
+      "sha256": "3d72bdf6c80a2aa37e62bb3acb8df1db7667cd0048a856028ec4198eb0234531",
+      "bytes": 4484
+    },
+    "artifacts/multisubject-v4/fvp-validation/reordered-comparison.json": {
+      "sha256": "b18230892ae8d68c7c834a2091d3a0b9a09af9210de45a5ef5b482e55014a2ea",
+      "bytes": 8990
+    }
+  }
+}

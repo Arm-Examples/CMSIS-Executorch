@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+# Copyright 2026 Arm Limited and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+"""Create the AI layer of the CMSIS solution from its MLOps information.
+
+    python create_ai_layer.py <solution>.cbuild-mlops.yml
+    python create_ai_layer.py <solution>.cbuild-mlops.yml --pte <program>.pte
+
+Step 2 of the three-step flow:
+
+    cbuild setup <solution>.csolution.yml --active <target>   # writes *.cbuild-mlops.yml
+    python create_ai_layer.py <solution>.cbuild-mlops.yml     # this script
+    cbuild <solution>.csolution.yml --active <target>         # compile and link
+
+The *.cbuild-mlops.yml is what CMSIS-Toolbox generates from the `mlops:` node
+of the csolution. This script reads the NPU and Vela settings from it, exports
+the PyTorch model in model/model.py for that NPU (quantize, delegate to
+Ethos-U, compile with Vela) and writes the complete AI layer into the
+directory of the clayer named under `model.clayer`. The extra keys of the
+`model:` node (input-shape, calibration-samples) are model parameters that
+CMSIS-Toolbox passes through to this script:
+
+    ai_layer.clayer.yml   runtime, kernel utilities and registration, Ethos-U
+                          backend and the operator components the exported
+                          program actually uses
+    model_pte.c / .h      the ExecuTorch program as a C array
+    model.pte             the program itself, for inspection
+
+With --pte the export is skipped: the given, already exported program is
+packaged into the same AI layer (C array, header, clayer with the operator
+components it uses). The mlops: node then only supplies the clayer location
+and the description; its NPU and Vela settings must match how that .pte was
+compiled.
+
+The script runs itself in the solution's .venv (see setup_venv.py) when it is
+started with an interpreter that has no torch.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+PACK = "PyTorch::ExecuTorch"
+SYMBOL = "model_pte"
+
+
+def run_in_venv() -> None:
+    """Re-run under the project's .venv unless this interpreter already is it.
+
+    Deciding by "does torch import" is not enough: a torch installed for the
+    host interpreter would keep the export outside the environment with the
+    pinned executorch. sys.prefix is the venv directory when running inside it
+    (comparing interpreter paths does not work: venv symlinks resolve to the
+    base interpreter).
+    """
+    venv = HERE / ".venv"
+    if Path(sys.prefix).resolve() == venv.resolve():
+        return
+    python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    if not python.is_file():
+        sys.exit(
+            f"{venv} does not exist.\n"
+            "Create it first: ./setup_venv.sh (Linux/macOS) or setup_venv.bat (Windows)"
+        )
+    print(f"[ai_layer] running in {python}", flush=True)
+    sys.exit(subprocess.run([str(python), __file__, *sys.argv[1:]]).returncode)
+
+
+def pack_root() -> Path:
+    """The CMSIS pack root: $CMSIS_PACK_ROOT, else cpackget's default."""
+    if env := os.environ.get("CMSIS_PACK_ROOT"):
+        return Path(env)
+    if os.name == "nt":
+        return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData/Local")) / "Arm/Packs"
+    return Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "arm/packs"
+
+
+def executorch_version(mlops_file: Path) -> str:
+    """The ExecuTorch pack version cbuild setup resolved, from <solution>.cbuild-pack.yml.
+
+    The file is a lock file that keeps earlier resolutions, so an unversioned
+    selector can still point at an older pack; the entry selected by the
+    csolution's exact pin (PyTorch::ExecuTorch@<version>) is the one in use.
+    """
+    import yaml
+
+    pack_file = mlops_file.with_name(mlops_file.name.replace(".cbuild-mlops.yml", ".cbuild-pack.yml"))
+    fallback = None
+    for entry in yaml.safe_load(pack_file.read_text())["cbuild-pack"]["resolved-packs"]:
+        name, _, version = entry["resolved-pack"].partition("@")
+        selectors = entry.get("selected-by-pack", [])
+        if name != PACK or not selectors:
+            continue
+        if f"{PACK}@{version}" in selectors:
+            return version
+        fallback = fallback or version
+    if fallback:
+        return fallback
+    sys.exit(f"{pack_file}: {PACK} is not among the resolved packs")
+
+
+def executorch_pack(version: str) -> Path:
+    """Directory of the installed ExecuTorch pack of that version."""
+    vendor, _, pack = PACK.partition("::")
+    return pack_root() / vendor / pack / version
+
+
+# Vela options that are arguments of EthosUCompileSpec, and the ones the export
+# sets itself: the configuration file comes from vela.ini of the cbuild-mlops.yml.
+SPEC_OPTIONS = ("accelerator-config", "system-config", "memory-mode")
+EXPORT_OPTIONS = ("config", "output-format", "output-dir")
+
+
+def vela_options(options: str) -> tuple[dict[str, str], list[str]]:
+    """Split vela.options of the cbuild-mlops.yml: the EthosUCompileSpec arguments, and every other option.
+
+    The other options are the `misc:` of the csolution's mlops: node (for
+    example `--optimise Size`); they reach Vela as extra flags, written as
+    `--name=value`.
+    """
+    tokens = shlex.split(options)
+    spec, extra = {}, []
+    while tokens:
+        token = tokens.pop(0)
+        if not token.startswith("--"):
+            sys.exit(f"vela options: unexpected '{token}' in '{options}'")
+        name, has_value, value = token[2:].partition("=")
+        if not has_value and tokens and not tokens[0].startswith("-"):
+            value = tokens.pop(0)
+        if name in EXPORT_OPTIONS:
+            sys.exit(
+                f"vela options: --{name} is set by the export; "
+                "the configuration file is vela: ini: of the mlops: node"
+            )
+        if name in SPEC_OPTIONS:
+            if name in spec:
+                sys.exit(f"vela options: --{name} is given twice in '{options}'")
+            spec[name] = value
+        else:
+            extra.append(f"--{name}={value}" if value else f"--{name}")
+    return spec, extra
+
+
+def compile_spec(mlops: dict, mlops_dir: Path):
+    """EthosUCompileSpec from the npu: and vela: nodes of the cbuild-mlops.yml."""
+    from executorch.backends.arm.ethosu import EthosUCompileSpec
+
+    npu = mlops.get("npu")
+    if not npu:
+        sys.exit("the solution's mlops: node names no NPU; this example needs an Ethos-U")
+    vela = mlops.get("vela", {})
+    spec, extra = vela_options(vela.get("options", ""))
+
+    target = spec.get("accelerator-config") or f"{npu['type'].lower()}-{npu.get('macs', 256)}"
+    kwargs = {
+        "target": target,
+        "system_config": spec.get("system-config"),
+        "memory_mode": spec.get("memory-mode"),
+        "extra_flags": extra,
+    }
+    if vela.get("ini"):
+        # ExecuTorch stores the path in the compile spec, and the spec ends up
+        # in the .pte. A path relative to the working directory keeps the
+        # program identical between checkouts; Vela resolves it from there.
+        kwargs["config_ini"] = os.path.relpath(mlops_dir / vela["ini"])
+    print(f"[ai_layer] Vela: {kwargs}")
+    return EthosUCompileSpec(**kwargs)
+
+
+def model_params(mlops: dict) -> dict:
+    """The extra keys of the model: node, as keyword arguments for model/model.py."""
+    params = {}
+    for key, value in mlops["model"].items():
+        if key == "input-shape":
+            params["input_shape"] = tuple(int(d) for d in re.split(r"[x,]", str(value)))
+        elif key == "calibration-samples":
+            params["calibration_samples"] = int(value)
+        elif key not in ("clayer", "name"):
+            print(f"[ai_layer] warning: ignoring unknown model key {key!r}", file=sys.stderr)
+    if params:
+        print(f"[ai_layer] model parameters: {params}")
+    return params
+
+
+def export_model(spec, params: dict) -> bytes:
+    """Quantize model/model.py, delegate it to the Ethos-U and return the .pte."""
+    import torch
+    from executorch.backends.arm.ethosu import EthosUPartitioner
+    from executorch.backends.arm.quantizer import EthosUQuantizer, get_symmetric_quantization_config
+    from executorch.exir import EdgeCompileConfig, ExecutorchBackendConfig, to_edge_transform_and_lower
+    from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
+
+    sys.path.insert(0, str(HERE / "model"))
+    from model import get_calibration_inputs, get_model
+
+    model = get_model(**{k: v for k, v in params.items() if k == "input_shape"})
+    samples = get_calibration_inputs(**params)
+    example = (samples[0],)
+    # check_guards=False: otherwise the module carries a `_guards_fn`
+    # call_module node, and the Ethos-U quantizer's DecomposeAvgPool2dPass
+    # fails on it in prepare_pt2e for models with AvgPool2d.
+    graph = torch.export.export(model, example).module(check_guards=False)
+
+    # Quantize the whole graph so the partitioner can move every node into the
+    # Ethos-U delegate; only a float<->int8 boundary stays on the CPU.
+    quantizer = EthosUQuantizer(spec)
+    quantizer.set_global(get_symmetric_quantization_config(is_per_channel=True))
+    prepared = prepare_pt2e(graph, quantizer)
+    with torch.no_grad():
+        for sample in samples:
+            prepared(sample)  # calibrate
+    quantized = convert_pt2e(prepared)
+
+    edge = to_edge_transform_and_lower(
+        torch.export.export(quantized, example),
+        partitioner=[EthosUPartitioner(spec)],
+        compile_config=EdgeCompileConfig(_check_ir_validity=False),
+    )
+    program = edge.to_executorch(ExecutorchBackendConfig(extract_delegate_segments=False))
+    return bytes(program.buffer)
+
+
+def components(pte: bytes, pack: Path) -> tuple[list[str], list[str]]:
+    """Runtime, kernel utils and registration, backend, plus one operator component per operator the .pte uses.
+
+    The pack's "Extension Tensor" is not selected: its tensor_ptr_maker.cpp
+    needs std::random_device, which the LLVM embedded toolchain lacks; the
+    runner wraps its input in a TensorImpl instead.
+    """
+    pdsc = next(pack.glob("*.pdsc"))
+    available = set(re.findall(r'Csub="([^"]+)"', pdsc.read_text()))
+    family = {"aten": "Portable", "quantized_decomposed": "Quantized", "cortex_m": "Cortex-M"}
+
+    selected, unknown = set(), []
+    for ns, op in sorted(set(re.findall(rb"(aten|quantized_decomposed|cortex_m)::(\w+)", pte))):
+        ns, op = ns.decode(), op.decode()
+        candidates = [
+            f"{family[ns]} {op}",
+            f"{family[ns]} {re.sub(r'_(per_tensor|per_channel|byte|copy)$', '', op)}",
+        ]
+        if match := next((c for c in candidates if c in available), None):
+            selected.add(match)
+        else:
+            unknown.append(f"{ns}::{op}")
+    if unknown:
+        print(f"[ai_layer] warning: no component in {pack.name} for {unknown}", file=sys.stderr)
+
+    return ["Runtime", "Kernel Utils", "Kernel Registration", "Backend EthosU"], sorted(selected)
+
+
+def c_array(pte: bytes) -> str:
+    rows = [", ".join(f"0x{b:02x}" for b in pte[i : i + 16]) for i in range(0, len(pte), 16)]
+    return (
+        "// Generated by create_ai_layer.py -- do not edit.\n"
+        f"__attribute__((aligned(16))) const unsigned char {SYMBOL}[] = {{\n  "
+        + ",\n  ".join(rows)
+        + f"\n}};\nconst unsigned long {SYMBOL}_size = sizeof({SYMBOL});\n"
+    )
+
+
+HEADER = f"""// Generated by create_ai_layer.py -- do not edit.
+#pragma once
+#ifdef __cplusplus
+extern "C" {{
+#endif
+extern const unsigned char {SYMBOL}[];
+extern const unsigned long {SYMBOL}_size;
+#ifdef __cplusplus
+}}
+#endif
+"""
+
+
+def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Path, version: str) -> str:
+    lines = [
+        f"# Generated by create_ai_layer.py from {mlops_file.name} -- do not edit.",
+        f"# Re-run `python create_ai_layer.py {mlops_file.name}` after changing",
+        "# model/model.py or the csolution's mlops: node.",
+        "layer:",
+        "  type: AI",
+        f"  description: {mlops.get('description', mlops['model'].get('name', 'AI layer'))}",
+        "",
+        "  packs:",
+        f"    - pack: {PACK}@{version}",
+        "",
+        "  define:",
+        "    - ET_LOG_ENABLED: 0",
+        "",
+        "  add-path:",
+        "    - .",
+        "",
+        "  components:",
+        *[f"    - component: Machine Learning:ExecuTorch:{c}" for c in runtime],
+        *[f"    - component: Machine Learning:ExecuTorch Operators:{c}" for c in operators],
+        "",
+        "  groups:",
+        f"    - group: {mlops['model'].get('name', 'Model')}",
+        "      files:",
+        f"        - file: ./{SYMBOL}.c",
+        f"        - file: ./{SYMBOL}.h",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    prebuilt = None
+    if len(args) == 3 and args[1] == "--pte":
+        prebuilt = Path(args.pop()).resolve()
+        args.pop()
+    if len(args) != 1 or not args[0].endswith(".cbuild-mlops.yml"):
+        sys.exit(f"usage: {Path(__file__).name} <solution>.cbuild-mlops.yml [--pte <program>.pte]")
+    if prebuilt and not prebuilt.is_file():
+        sys.exit(f"--pte: {prebuilt} does not exist")
+    run_in_venv()
+
+    import yaml
+
+    mlops_file = Path(sys.argv[1]).resolve()
+    mlops = yaml.safe_load(mlops_file.read_text())["cbuild-mlops"]
+    layer_file = mlops_file.parent / mlops["model"]["clayer"]
+    layer_dir = layer_file.parent
+
+    if prebuilt:
+        pte = prebuilt.read_bytes()
+        print(f"[ai_layer] packaging prebuilt {prebuilt} (export skipped)")
+    else:
+        pte = export_model(compile_spec(mlops, mlops_file.parent), model_params(mlops))
+    version = executorch_version(mlops_file)
+    runtime, operators = components(pte, executorch_pack(version))
+
+    layer_dir.mkdir(parents=True, exist_ok=True)
+    (layer_dir / "model.pte").write_bytes(pte)
+    (layer_dir / f"{SYMBOL}.c").write_text(c_array(pte), newline="\n")
+    (layer_dir / f"{SYMBOL}.h").write_text(HEADER, newline="\n")
+    layer_file.write_text(clayer(mlops, runtime, operators, mlops_file, version), newline="\n")
+
+    print(f"[ai_layer] {len(pte)} byte program, operators: {operators}")
+    print(f"[ai_layer] wrote {layer_file}")
+
+
+if __name__ == "__main__":
+    main()

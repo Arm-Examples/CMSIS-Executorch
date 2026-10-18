@@ -1,0 +1,3 @@
+# Generated real EEG assets stay local; only this exclusion rule is tracked.
+*
+!.gitignore

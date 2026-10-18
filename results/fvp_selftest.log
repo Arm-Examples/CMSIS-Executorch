@@ -1,0 +1,43 @@
+
+Warning: load application failed: 'out/edge_eeg/SSE-320-U85/SelfTest/edge_eeg.axf' (instance 'Corstone_SSE_320_Main.mps4_board.subsystem.cpu0'):
+E_error_opening_file: out/edge_eeg/SSE-320-U85/SelfTest/edge_eeg.axf: error while loading 'ELF' file: Failed to write bytes at address range [0x12200000..0x122248C7] when loading image "out/edge_eeg/SSE-320-U85/SelfTest/edge_eeg.axf".
+ (call=IrisGI->component.Corstone_SSE_320_Main.mps4_board.subsystem.cpu0.image_loadFile(instId:36 /*0x24u*/, path:"out/edge_eeg/SSE-320-U85/SelfTest/edge_eeg.axf"))
+In file: (unknown):0
+Ethos-U version info:
+	Arch:       v2.0.0
+	MACs/cc:    256
+	Cmd stream: v1
+# edge_eeg firmware, params v2 sha256 3d34f6326c67441e, cpu 25000000 Hz
+# model loaded: pte 11456 B, load_cycles 1925
+SELFTEST stream A03 session 2: 13381 samples (53.52 s at 250 Hz), 5 trials, window 22x256, 20.48 counts/uV
+# reset
+# subject 3
+{"t":65,"seq":3134,"trial":0,"subject":3,"cls":1,"raw_cls":1,"conf":0.84,"logits":[-0.668749,0.965970],"lat_us":5537,"motion":0,"label":1,"imu":0}
+{"t":109,"seq":5142,"trial":1,"subject":3,"cls":0,"raw_cls":0,"conf":0.95,"logits":[1.436571,-1.411802],"lat_us":5539,"motion":0,"label":0,"imu":0}
+{"t":154,"seq":7208,"trial":2,"subject":3,"cls":0,"raw_cls":0,"conf":0.98,"logits":[1.981477,-2.031014],"lat_us":5532,"motion":0,"label":0,"imu":0}
+{"t":238,"seq":11310,"trial":3,"subject":3,"cls":0,"raw_cls":0,"conf":0.91,"logits":[1.139349,-1.188886],"lat_us":5539,"motion":0,"label":0,"imu":0}
+{"t":283,"seq":13380,"trial":4,"subject":3,"cls":1,"raw_cls":1,"conf":0.98,"logits":[-1.709024,2.080551],"lat_us":5536,"motion":0,"label":1,"imu":0}
+trial 0 idx 33 label 1: window_mismatch 0/5632 max_diff 0 seq 3134 argmax 1 board_exp 1 offline 1 logits -0.668749 0.965970 ref -0.668749 0.965970 err 0.000000 npu_cycles 128056 cpu_cycles 33265 lat_us 5537 PASS
+trial 1 idx 34 label 0: window_mismatch 0/5632 max_diff 0 seq 5142 argmax 0 board_exp 0 offline 0 logits 1.436571 -1.411802 ref 1.411802 -1.411802 err 0.024769 npu_cycles 128056 cpu_cycles 33320 lat_us 5539 PASS
+trial 2 idx 35 label 0: window_mismatch 0/5632 max_diff 0 seq 7208 argmax 0 board_exp 0 offline 0 logits 1.981477 -2.031014 ref 2.006246 -2.031014 err 0.024769 npu_cycles 128056 cpu_cycles 33144 lat_us 5532 PASS
+trial 3 idx 36 label 0: window_mismatch 0/5632 max_diff 0 seq 11310 argmax 0 board_exp 0 offline 0 logits 1.139349 -1.188886 ref 1.164118 -1.213655 err 0.024769 npu_cycles 128056 cpu_cycles 33317 lat_us 5539 PASS
+trial 4 idx 37 label 1: window_mismatch 0/5632 max_diff 0 seq 13380 argmax 1 board_exp 1 offline 1 logits -1.709024 2.080551 ref -1.709024 2.105319 err 0.024768 npu_cycles 128056 cpu_cycles 33234 lat_us 5536 PASS
+summary: inferences 5 window_mismatch_total 0 (required 0; PV_TOLERANCE 1 informational) max_logit_err 0.024769 frame_errors 0 gap_samples 0 stream_cycles 7091092 method_pool 28812 temp_pool 98688 pte 11456
+bench preprocess_cycles_per_sample=243 window_cycles=99720 (EA 22x22x256 + quantize)
+Test_result: PASS
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+
+--- Corstone_SSE_320_Main statistics: -----------------------------------------
+Simulated time                          : 2.494002s
+User time at initialisation             : 0.114645s
+User time                               : 2.941731s
+System time at initialisation           : 0.079066s
+System time                             : 0.003889s
+Wall time at initialisation             : 0.271934s
+Wall time                               : 2.945078s
+Performance index                       : 0.85
+mps4_board.subsystem.cpu0               :  20.96 MIPS (    61725049 Inst)
+Memory highwater mark at initialisation : 0x17033000 bytes ( 0.360 GiB )
+Memory highwater mark                   : 0x17eb3000 bytes ( 0.374 GiB )
+-------------------------------------------------------------------------------
