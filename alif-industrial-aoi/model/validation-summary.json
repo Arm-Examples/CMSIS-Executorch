@@ -1,0 +1,147 @@
+{
+  "description": "Historical results extracted from the original calibration reports; no new evaluation was run during submission packaging.",
+  "model_sha256": "f468ea2feae405abd7cfb9c0e95a7e9a357fd42698646846dba5ec081411ec7a",
+  "versions": {
+    "torch": "2.10.0",
+    "torchvision": "0.25.0",
+    "torchao": "0.15.0",
+    "executorch": "1.1.0",
+    "ethos-u-vela": "5.0.0"
+  },
+  "source_reports": [
+    {
+      "path": "evaluation.json",
+      "sha256": "0f548acc0c21d9867c3a5b7813b387cfe62f0c5202341177b83c88e5adbc6feb"
+    },
+    {
+      "path": "tosa_verification.json",
+      "sha256": "34704e3e8d08a223347662fd5a8883eac0957329fec2e4146380369f5fc404f8"
+    }
+  ],
+  "results": [
+    {
+      "image": "cat.bmp",
+      "image_sha256": "30600df720ba8527cfbb3e412269d1fa3e4cec41e36f28d48aef90b4b097cf7f",
+      "acceptable_indices": [
+        281,
+        282,
+        285
+      ],
+      "fp32_top1": {
+        "index": 281,
+        "label": "tabby",
+        "logit": 6.348172187805176,
+        "probability": 0.24829691648483276
+      },
+      "pt2e_top1": {
+        "index": 281,
+        "label": "tabby",
+        "logit": 6.322322368621826,
+        "probability": 0.23835024237632751
+      },
+      "tosa_top1": {
+        "index": 281,
+        "label": "tabby",
+        "logit": 6.322322368621826,
+        "probability": 0.23929129540920258,
+        "current_lcd_percent": 63
+      },
+      "tosa_status": "GraphStatus.TOSA_VALID",
+      "tosa_top1_correct": true,
+      "tosa_maximum_error_vs_fp32": 0.17799127101898193,
+      "saturated_output_count": 0
+    },
+    {
+      "image": "dog.bmp",
+      "image_sha256": "de46b7888b0bf8c415c7df4ea96903051167df8dbd8d569a32c4ca0944d9d514",
+      "acceptable_indices": [
+        254
+      ],
+      "fp32_top1": {
+        "index": 262,
+        "label": "Brabancon griffon",
+        "logit": 5.895877838134766,
+        "probability": 0.19268310070037842
+      },
+      "pt2e_top1": {
+        "index": 262,
+        "label": "Brabancon griffon",
+        "logit": 5.939151763916016,
+        "probability": 0.1887643039226532
+      },
+      "tosa_top1": {
+        "index": 262,
+        "label": "Brabancon griffon",
+        "logit": 5.900834560394287,
+        "probability": 0.1849556714296341,
+        "current_lcd_percent": 59
+      },
+      "tosa_status": "GraphStatus.TOSA_VALID",
+      "tosa_top1_correct": false,
+      "tosa_maximum_error_vs_fp32": 0.5048714876174927,
+      "saturated_output_count": 0
+    },
+    {
+      "image": "kimono.bmp",
+      "image_sha256": "b4f8f4175d8b61a659983caa5e10883f7e3535a41da9382efcb10fd50783f8c5",
+      "acceptable_indices": [
+        614
+      ],
+      "fp32_top1": {
+        "index": 614,
+        "label": "kimono",
+        "logit": 7.450117588043213,
+        "probability": 0.42555415630340576
+      },
+      "pt2e_top1": {
+        "index": 614,
+        "label": "kimono",
+        "logit": 7.050347805023193,
+        "probability": 0.33027809858322144
+      },
+      "tosa_top1": {
+        "index": 614,
+        "label": "kimono",
+        "logit": 7.050347805023193,
+        "probability": 0.3283410966396332,
+        "current_lcd_percent": 70
+      },
+      "tosa_status": "GraphStatus.TOSA_VALID",
+      "tosa_top1_correct": true,
+      "tosa_maximum_error_vs_fp32": 0.5691019892692566,
+      "saturated_output_count": 1
+    },
+    {
+      "image": "tiger.bmp",
+      "image_sha256": "aa4304903a3cd4c049915639416f084cee7a24204d88d698b78f3d7821cf3bb4",
+      "acceptable_indices": [
+        292
+      ],
+      "fp32_top1": {
+        "index": 292,
+        "label": "tiger",
+        "logit": 5.946653842926025,
+        "probability": 0.24409477412700653
+      },
+      "pt2e_top1": {
+        "index": 292,
+        "label": "tiger",
+        "logit": 5.939151763916016,
+        "probability": 0.24192935228347778
+      },
+      "tosa_top1": {
+        "index": 292,
+        "label": "tiger",
+        "logit": 5.900834560394287,
+        "probability": 0.23570680618286133,
+        "current_lcd_percent": 59
+      },
+      "tosa_status": "GraphStatus.TOSA_VALID",
+      "tosa_top1_correct": true,
+      "tosa_maximum_error_vs_fp32": 0.12122112512588501,
+      "saturated_output_count": 0
+    }
+  ],
+  "compiled_npu_execution_at_report_time": "BLOCKED: Failed to execute method forward, error: 0x20",
+  "limitations": "Four sample images only; pre-Vela TOSA reference does not execute the U85 command stream. Deployment reported by project author separately."
+}

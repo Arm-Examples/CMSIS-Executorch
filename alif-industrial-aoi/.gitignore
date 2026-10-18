@@ -1,0 +1,14 @@
+work/
+build*/
+.venv/
+__pycache__/
+*.pyc
+*.bin
+*.axf
+*.pte
+*.pt2
+*.npy
+*.log
+
+# Include only the original calibrated model; other generated PTEs stay ignored.
+!/model/mv2_cal60_imagenet_v2_ethos-u85-256_shared_sram.pte

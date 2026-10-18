@@ -1,0 +1,81 @@
+--- a/source/hal/source/components/lvgl_port/source/alif/include/lv_conf.h
++++ b/source/hal/source/components/lvgl_port/source/alif/include/lv_conf.h
+@@ -1,3 +1,6 @@
++/* SPDX-FileCopyrightText: Copyright 2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
++ * SPDX-License-Identifier: Apache-2.0
++ */
+ /* This file was ported to work on Alif Semiconductor devices. */
+ 
+ /* Copyright (C) 2023 Alif Semiconductor - All Rights Reserved.
+@@ -791,7 +794,7 @@
+ 
+ #define LV_USE_BAR        1
+ 
+-#define LV_USE_BUTTON        0
++#define LV_USE_BUTTON        1
+ 
+ #define LV_USE_BUTTONMATRIX  1
+ 
+--- a/source/hal/source/platform/alif/include/platform_drivers.h
++++ b/source/hal/source/platform/alif/include/platform_drivers.h
+@@ -11,7 +11,7 @@
+  */
+ 
+ /*
+- * Copyright (c) 2021-2022 Arm Limited. All rights reserved.
++ * SPDX-FileCopyrightText: Copyright 2021-2022, 2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
+  * SPDX-License-Identifier: Apache-2.0
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+@@ -73,6 +73,8 @@
+ extern uint32_t enable_audio_peripheral_clocks(void);
+ 
+ extern bool run_requested(void);
++/** As run_requested, also reports an accepted BUTTON1 press (not continuous inference). */
++extern bool run_requested_with_button(bool* button_triggered);
+ extern void init_trigger_rx(void);
+ extern void init_trigger_tx(void);
+ 
+--- a/source/hal/source/platform/alif/source/platform_drivers.c
++++ b/source/hal/source/platform/alif/source/platform_drivers.c
+@@ -11,7 +11,7 @@
+  */
+ 
+ /*
+- * Copyright (c) 2022 Arm Limited. All rights reserved.
++ * SPDX-FileCopyrightText: Copyright 2022, 2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
+  * SPDX-License-Identifier: Apache-2.0
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+@@ -605,6 +605,14 @@
+ 
+ bool run_requested(void)
+ {
++    return run_requested_with_button(NULL);
++}
++
++bool run_requested_with_button(bool* button_triggered)
++{
++    if (button_triggered) {
++        *button_triggered = false;
++    }
+ #if BOARD_BUTTON_COUNT < 2
+ 
+     bool ret = true;
+@@ -631,10 +639,15 @@
+         // Edge detector - run inference on the positive edge of the button pressed signal
+         ret = !last_btn1 && new_btn1;
+     }
+-    if (new_btn2 && last_btn2 != new_btn2)
++    if (!button_triggered && new_btn2 && last_btn2 != new_btn2)
+     {
+         // Switch single shot and continuous inference mode
+         do_inference_once ^= 1;
++    }
++    if (button_triggered) {
++        /* Explicit requests: center or the original direction triggers SINGLE.
++         * Leave legacy mode toggling to callers of run_requested(). */
++        *button_triggered = (!last_btn1 && new_btn1) || (!last_btn2 && new_btn2);
+     }
+     last_btn1 = new_btn1;
+     last_btn2 = new_btn2;

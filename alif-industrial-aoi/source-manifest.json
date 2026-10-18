@@ -1,0 +1,74 @@
+[
+  {
+    "source": "source/app/use_case/alif_img_class/include/AnimalClasses.hpp",
+    "source_sha256": "7f5f20b8df8bcae7c655672dcd85ab0f9c4ee4ba596662cb5ac142f433a9651e",
+    "submission_sha256": "7f5f20b8df8bcae7c655672dcd85ab0f9c4ee4ba596662cb5ac142f433a9651e",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/include/AnimalFonts.hpp",
+    "source_sha256": "c501f4c0d932843eb97f19e158c31ba29410e6ecba6ab8dd3c224d4e897ef129",
+    "submission_sha256": "c501f4c0d932843eb97f19e158c31ba29410e6ecba6ab8dd3c224d4e897ef129",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/include/AnimalTouch.hpp",
+    "source_sha256": "b7f5a02869f134f4c6da715b9ab66791ee9de83b61c59fccc8463c2aabd2511e",
+    "submission_sha256": "b7f5a02869f134f4c6da715b9ab66791ee9de83b61c59fccc8463c2aabd2511e",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/include/AnimalUi.hpp",
+    "source_sha256": "691ee2ea62cee90d7c412d9e2d2151e93d065378ae4d79cfcb90eb936e10871a",
+    "submission_sha256": "691ee2ea62cee90d7c412d9e2d2151e93d065378ae4d79cfcb90eb936e10871a",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/include/UseCaseHandler.hpp",
+    "source_sha256": "7064cc4a84681a97ec1177d9fd70bd500422addbf5f88492acdd180d8f4ffd7e",
+    "submission_sha256": "7064cc4a84681a97ec1177d9fd70bd500422addbf5f88492acdd180d8f4ffd7e",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/src/AnimalFonts.cc",
+    "source_sha256": "9dc30da52d555d9f2217d36688c542aa312b047405de8acda38764fbbdf34e01",
+    "submission_sha256": "9dc30da52d555d9f2217d36688c542aa312b047405de8acda38764fbbdf34e01",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/src/AnimalTouch.cc",
+    "source_sha256": "97224eeed626a8f1644c7142a0ea3eec9e8e8c992d6a742ea0b712847b069739",
+    "submission_sha256": "97224eeed626a8f1644c7142a0ea3eec9e8e8c992d6a742ea0b712847b069739",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/src/AnimalUi.cc",
+    "source_sha256": "d49c7629b8dbfb41875bfd3b5eb156dffc01695eb1498ce1482be10e09146eb7",
+    "submission_sha256": "d49c7629b8dbfb41875bfd3b5eb156dffc01695eb1498ce1482be10e09146eb7",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/src/MainLoop.cc",
+    "source_sha256": "421eb73e6ba372362bfc610fe501a04fbfbefb92d5bb91c88e96d8d0954b5b6e",
+    "submission_sha256": "6d7efb3ffe681c07340bec63e227476d74076903b14fb3762f5eefbe0e9e9f0e",
+    "adaptation": "Removed disabled experimental speech integration"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/src/UseCaseHandler.cc",
+    "source_sha256": "745547052c814b6728af9318d94be227b854df665fe56c10317b3352ade025a1",
+    "submission_sha256": "4aa1e27aed435bdcf9357f62fab93fe71831b2123dc4241b3328e98ebae4604d",
+    "adaptation": "Removed disabled experimental speech integration"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/touch/Integrate.cmake",
+    "source_sha256": "1ff43638c9c40303a33952e134643096e595856b60e4f769412a8819f4f74662",
+    "submission_sha256": "1ff43638c9c40303a33952e134643096e595856b60e4f769412a8819f4f74662",
+    "adaptation": "Unchanged"
+  },
+  {
+    "source": "source/app/use_case/alif_img_class/usecase.cmake",
+    "source_sha256": "e6aadf7577f3d02d06ec7147e00dbb2e3567e2eaff5ca4c3572fec94c34f2c18",
+    "submission_sha256": "6c7dbd13e5602ed5d4c8104c7d3b4060863fa298ba64a2715732f3dcf6593291",
+    "adaptation": "Removed disabled experimental speech integration"
+  }
+]

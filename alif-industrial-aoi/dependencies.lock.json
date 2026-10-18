@@ -1,0 +1,247 @@
+{
+  "repository": "https://github.com/alifsemi/alif_ml-embedded-evaluation-kit.git",
+  "revision": "d7c39929fe482c1ce17b7be03edfab1db03acf06",
+  "submodules": [
+    {
+      "path": "dependencies/Arm-2D",
+      "revision": "e1a0284e8c4e5ad95a4a878c80a650237fd3dd5a",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/Arm-2D/examples/common/loader/freetype_loader/freetype",
+      "revision": "f238830d77d7a42427e5fc9401e2955259afc652",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/Arm-2D/examples/common/loader/freetype_loader/freetype/subprojects/dlg",
+      "revision": "395ccad2c1e0daae535c4d20bb0a3f2424648e17",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/aipl",
+      "revision": "bab26fa539cba98d42f58957d5f58f42c282aba4",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/alif_dave2d-driver",
+      "revision": "93c45ebdc55211e87ababd8a88d34a73a1910f78",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/alif_lvgl-dave2d",
+      "revision": "d9bd380f852ee32291ad5b15f7612b126d1028f3",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/avh",
+      "revision": "11012b599bd77fd901e7f57c17a3420624db47d1",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/cmsis-6",
+      "revision": "fdbbc52f24a14ba7ba06a8db9421721a7f604e48",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/cmsis-alif",
+      "revision": "11c3cdfbd3983815181ec4c39359c01ab916b816",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/cmsis-dsp",
+      "revision": "e366b0761557f07c759c9e238a44b3b10bb1914b",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/cmsis-nn",
+      "revision": "a3f311a4d528842840f1ac040b0b3959deb780ba",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/core-driver",
+      "revision": "03567073fe2b9802c0bd73f9534da6f8a03924d1",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/core-platform",
+      "revision": "02d02901842fb26c077adc1061c2650d89f9f0e5",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/cortex-dfp",
+      "revision": "cd38dbb875f7195e70460eee51faa7ab180c24a1",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch",
+      "revision": "17adba19d0051b4a184f7ff7e7a0612cf8bd3000",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/arm/third-party/ethos-u-core-driver",
+      "revision": "7bf44c54527e718b99d588ce520cf2f96343adb1",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/cadence/utils/FACTO",
+      "revision": "1db37fc79d0d59638cbb794fa49d878aafc24461",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/vulkan/third-party/Vulkan-Headers",
+      "revision": "10739e8e00a7b6f74d22dd0a547f1406ff1f5eb9",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/vulkan/third-party/VulkanMemoryAllocator",
+      "revision": "a6bfc237255a6bac1513f7c1ebde6d8aed6b5191",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/vulkan/third-party/volk",
+      "revision": "49ba6858c13516019d699d94c31d5814025dd005",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/xnnpack/third-party/FP16",
+      "revision": "4dfe081cf6bcd15db339cf2680b9281b8451eeb3",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/xnnpack/third-party/FXdiv",
+      "revision": "b408327ac2a15ec3e43352421954f5b1967701d1",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/xnnpack/third-party/XNNPACK",
+      "revision": "3131afead790c5c69a9aa12273dfc40399789ad7",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/xnnpack/third-party/cpuinfo",
+      "revision": "8a9210069b5a37dd89ed118a783945502a30a4ae",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/backends/xnnpack/third-party/pthreadpool",
+      "revision": "c2ba5c50bb58d1397b693740cf75fad836a0d1bf",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers",
+      "revision": "37e1c7ed13fa04accd696c776c2f05b4b12fe61d",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers/third-party/abseil-cpp",
+      "revision": "7d96b2e93d9a84530748b68abd2f97595c51ecf4",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers/third-party/json",
+      "revision": "e6cafa573aac6ed9227f752a5371c0b3f436307d",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers/third-party/pcre2",
+      "revision": "2e03e323339ab692640626f02f8d8d6f95bff9c6",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers/third-party/pcre2/deps/sljit",
+      "revision": "98802d939be3f0ccc2c538d611ec4c728564e8cf",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers/third-party/re2",
+      "revision": "6dcd83d60f7944926bfd308cc13979fc53dd69ca",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/extension/llm/tokenizers/third-party/sentencepiece",
+      "revision": "d8f741853847553169444afc12c00f4bbff3e9ce",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/kernels/optimized/third-party/eigen",
+      "revision": "729443409942a1816ddf74b95224003b83f4925c",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/shim",
+      "revision": "b295819bb0ec636b4e3359828e05476d2437650a",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/third-party/ao",
+      "revision": "861156873fdc084c03be6e99512312a6e3cb0909",
+      "differs_from_parent_pin": true
+    },
+    {
+      "path": "dependencies/executorch/third-party/flatbuffers",
+      "revision": "595bf0007ab1929570c7671f091313c8fc20644e",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/third-party/flatcc",
+      "revision": "896db54787e8b730a6be482c69324751f3f5f117",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/third-party/gflags",
+      "revision": "a738fdf9338412f83ab3f26f31ac11ed3f3ec4bd",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/third-party/googletest",
+      "revision": "b66cffcd5f5d6ee34a4f96d57bf016d9a22cb023",
+      "differs_from_parent_pin": true
+    },
+    {
+      "path": "dependencies/executorch/third-party/ios-cmake",
+      "revision": "b36d5bce6f9a2d11d9f144bd5882ba31cfdca420",
+      "differs_from_parent_pin": true
+    },
+    {
+      "path": "dependencies/executorch/third-party/json",
+      "revision": "ac0133ea89a8fd730a9cc9649c5226a9995dc3e1",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/executorch/third-party/pocketfft",
+      "revision": "c90e55b3d529f8efa40ed01a20de22405f45fc65",
+      "differs_from_parent_pin": true
+    },
+    {
+      "path": "dependencies/executorch/third-party/prelude",
+      "revision": "e8affb9d1fc9770db29a5ffc49b103f7e6eb079f",
+      "differs_from_parent_pin": true
+    },
+    {
+      "path": "dependencies/executorch/third-party/pybind11",
+      "revision": "d1a9692ebf46c1a7d7af73ea8a92fbb3ab4fde6f",
+      "differs_from_parent_pin": true
+    },
+    {
+      "path": "dependencies/lvgl",
+      "revision": "85aa60d18b3d5e5588d7b247abf90198f07c8a63",
+      "differs_from_parent_pin": false
+    },
+    {
+      "path": "dependencies/tensorflow",
+      "revision": "64b3de836daf42ef5094d06035742c058e7638f6",
+      "differs_from_parent_pin": true
+    }
+  ],
+  "model_python_versions": {
+    "torch": "2.10.0",
+    "torchvision": "0.25.0",
+    "torchao": "0.15.0",
+    "executorch": "1.1.0",
+    "ethos-u-vela": "5.0.0"
+  },
+  "notes": [
+    "Observed working checkout revisions; not a fully resolved Python environment lock.",
+    "TensorFlow checkout has untracked files; ExecuTorch has untracked dog.jpg. Neither is included."
+  ]
+}
