@@ -6,7 +6,7 @@
 
 > Built for the [**Arm + ExecuTorch: Edge AI Challenge**](https://arm-executorch.devpost.com/) · San Francisco State University · October 17–18, 2026 · Team **CorteX ARM**
 
-> **Hackathon submission.** Same content as [ArmExecuTorchEEG/CorteX-ARM](https://github.com/ArmExecuTorchEEG/CorteX-ARM) at release [`v1.0-submission`](https://github.com/ArmExecuTorchEEG/CorteX-ARM/releases/tag/v1.0-submission) (commit `c94b891`). The starter files of this branch (`src/`, `board/`, `model/`, `ai_layer/`, …) are unchanged; our project is in `firmware/`, `host/`, `ml/`, `board_demo/`, `docs/` and `results/`.
+> **Hackathon submission.** Same content as [ArmExecuTorchEEG/CorteX-ARM](https://github.com/ArmExecuTorchEEG/CorteX-ARM) at release [`v1.0-submission`](https://github.com/ArmExecuTorchEEG/CorteX-ARM/releases/tag/v1.0-submission) (commit `a511e26`). The starter files of this branch (`src/`, `board/`, `model/`, `ai_layer/`, …) are unchanged; our project is in `firmware/`, `host/`, `ml/`, `board_demo/`, `docs/` and `results/`.
 
 <p align="center">
 <img alt="board: Alif Ensemble E8" src="https://img.shields.io/badge/board-Alif%20Ensemble%20E8-0091BD?style=flat-square&labelColor=4a4a4a&logo=arm&logoColor=white"> <img alt="CPU: Cortex-M55" src="https://img.shields.io/badge/CPU-Cortex--M55-7B3FE4?style=flat-square&labelColor=4a4a4a&logo=arm&logoColor=white"> <img alt="NPU: Ethos-U85" src="https://img.shields.io/badge/NPU-Ethos--U85-E8318A?style=flat-square&labelColor=4a4a4a&logo=arm&logoColor=white"> <img alt="runtime: ExecuTorch 1.5.1" src="https://img.shields.io/badge/runtime-ExecuTorch%201.5.1-EE4C2C?style=flat-square&labelColor=4a4a4a&logo=pytorch&logoColor=white"> <img alt="NPU compiler: Vela" src="https://img.shields.io/badge/NPU%20compiler-Vela-F39C12?style=flat-square&labelColor=4a4a4a&logo=arm&logoColor=white"> <img alt="simulator: Arm FVP Corstone-320" src="https://img.shields.io/badge/simulator-Arm%20FVP%20Corstone--320-16A085?style=flat-square&labelColor=4a4a4a&logo=arm&logoColor=white">
@@ -267,7 +267,7 @@ python -m pytest host/tests -q                       # host tests
 |---|---|
 | Moamen Soliman | EEG Model Architecture, Training & Optimization |
 | Philippine Chauvet | Embedded AI Engineering, Firmware & Hardware Integration |
-| Jihyung Ku | Frontend Engineering & UI/UX Design |
+| Cindy Ku | Frontend Engineering & UI/UX Design |
 
 ## Credits
 

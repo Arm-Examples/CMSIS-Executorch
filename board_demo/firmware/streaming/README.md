@@ -111,7 +111,7 @@ Opt-in streaming preview: `http://127.0.0.1:8000/?stream=1`.
 Do not connect the streaming preview to hardware until deployment is authorized.
 Opening either URL never opens a serial port or starts inference.
 
-Jihyung's stylesheet and SVG design references remain unchanged. Minimal guarded
+Cindy's stylesheet and SVG design references remain unchanged. Minimal guarded
 GUI hooks permit continuous playback and genuine Session2 EEG buffers. The public
 ArmEEGDemo/ArmEEGHardware APIs remain available. The default playback completion
 at four remains intact; opt-in streaming uses no fixed trial-count limit.

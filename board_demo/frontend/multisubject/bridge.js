@@ -24,7 +24,7 @@ function completed(record){
  $('latestResult').textContent='S'+record.subject_id+' · '+record.trial_id+' · actual hardware class '+record.class_id+' · logits ['+record.logits.join(', ')+']';
  window.dispatchEvent(new CustomEvent('edgebci:trial-completed',{detail:record}));
 }
-// Correct the prerecorded metadata while preserving Jihyung's renderer, layout and colors.
+// Correct the prerecorded metadata while preserving Cindy's renderer, layout and colors.
 const drawEEG=ArmEEGDemo.onEEGFrame;
 ArmEEGDemo.onEEGFrame=(channels,metadata={})=>{
  drawEEG(channels,metadata);

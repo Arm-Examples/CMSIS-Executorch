@@ -3,6 +3,6 @@
   "source_commit": "e3934895c5e873de867e28f86ed6f13f5fd5d0ed",
   "source_path": "frontend/styles.css",
   "sha256": "45659bef129ea009a66344d638c5ddaaf982875fe50cc598f53fd78df5da00dd",
-  "scope": "Jihyung panel-size adjustment only; session-summary implementation is not present in this source commit",
+  "scope": "Cindy panel-size adjustment only; session-summary implementation is not present in this source commit",
   "original_reference_manifest": "cindy-source-manifest.json"
 }

@@ -44,7 +44,7 @@ assert.equal(await tab.evaluate("document.getElementById('trace-POz').style.disp
 const errors=tab.events.filter(m=>m.method==='Runtime.exceptionThrown'||m.method==='Log.entryAdded'&&m.params.entry.level==='error');assert.deepEqual(errors,[]);
 await fs.writeFile(outputDir+'/browser-results.json',JSON.stringify({samples,finalAccuracy:'75%',correct:'3 / 4',cursorPredictions:[0,1,1,1],taskCues:[0,0,1,1],webSerial:'fake port only; settings/buttons/capture/disconnect verified',errors},null,2));
 await tab.close();
-// No responsive overrides to Jihyung's original panels: compare original layout at each size.
+// No responsive overrides to Cindy's original panels: compare original layout at each size.
 for(const width of [390,720,900]){
  const original=await page(sourceURL,width,844);
  const actual=await page(testURL,width,844);

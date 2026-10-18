@@ -1,5 +1,5 @@
 /* Session summary inside the right (cursor) panel, plus the two run controls. Scoped to #sessionSummary and those
- * buttons only; Jihyung's styles.css, panel geometry, the left panels and the four-trial controls are untouched. */
+ * buttons only; Cindy's styles.css, panel geometry, the left panels and the four-trial controls are untouched. */
 /* Run controls beside Play/Reset: icon and label centred together; the stop square is drawn, not a glyph, so it sits on the label's centre line. */
 .controls .run-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:104px;padding:9px 14px;white-space:nowrap;line-height:1}
 .controls .run-btn[hidden]{display:none}

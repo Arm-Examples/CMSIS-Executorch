@@ -10,13 +10,13 @@ live right-panel summary; Resume restores the cursor; End Run shows a final
 summary with confusion matrix and top three EEG channels. The existing dark glass
 panels, 38/62 desktop split, electrode diagram and three EEG columns already match.
 
-`final-design.css` supplies presentation overrides without changing Jihyung's saved
+`final-design.css` supplies presentation overrides without changing Cindy's saved
 base stylesheet or SVG assets. Viewer-side cue colors follow the checkpoint's
 existing anatomical-to-viewer mapping. Genuine EEG retains its progressive sample
 reveal, fixed trial axis and amplitude scale; the recording's synthetic sine waves
 and preview/walkthrough banners are not substituted into the real application.
 
-The summary calculations, EEG accumulator, view and CSS were copied from Jihyung's
+The summary calculations, EEG accumulator, view and CSS were copied from Cindy's
 `origin/feature/session-summary` commit `5fade3e` (see Git for the full source).
 `summary/multisubject-view.js` observes the current controller and calls the existing
 `EdgeMultisubjectSession.endRun()` and Reset/Play buttons. It does not wrap or replace

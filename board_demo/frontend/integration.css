@@ -1,4 +1,4 @@
-/* Hardware controls only. Jihyung's styles.css and all original panel geometry are unchanged. */
+/* Hardware controls only. Cindy's styles.css and all original panel geometry are unchanged. */
 #hardwareControls{position:relative;z-index:20;font-size:11px}
 #hardwareControls>summary{cursor:pointer;list-style:none;white-space:nowrap}
 #hardwareControls>summary::-webkit-details-marker{display:none}

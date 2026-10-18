@@ -1,6 +1,6 @@
 # EdgeBCI · Model 2 UART visualization
 
-Jihyung's newer dark interface is now the presentation layer. Her `styles.css` is
+Cindy's newer dark interface is now the presentation layer. Her `styles.css` is
 byte-identical, and her index structure, human/scalp SVGs, 22 electrodes, three
 waveform columns, target design, type, borders and desktop panel geometry are
 preserved. Public `ArmEEGDemo` and `ArmEEGHardware` methods remain available.
@@ -128,7 +128,7 @@ and 1.8-second trial playback, pause/resume/reset, immutable logits, independent
 verified task cues, unknown-profile neutrality, PASS/failure handling, and errors.
 No real serial port is opened by these tests.
 
-## Jihyung Ku design merge and preservation
+## Cindy Ku design merge and preservation
 
 Original reference folder: `/Users/philippinechauvet/Desktop/cindy-new-ui/`.
 None of its six supplied files, including `Newer UI.pdf`, were changed. Their
@@ -142,14 +142,14 @@ push was made. The archive remains the complete restore source for the old UI.
 
 Implementation:
 
-- `index.html`, `styles.css`, `gui.js`: Jihyung's presentation, with focused queue,
+- `index.html`, `styles.css`, `gui.js`: Cindy's presentation, with focused queue,
   return-state and retained-result hooks in the GUI. The stylesheet is unchanged.
 - `integration.css`, `hardware-controls.js`: only the collapsible UART controls.
   It occupies the header on desktop; on mobile the one integration widget moves
   outside the filtered shell to keep its popup in the viewport. Original panels
   and breakpoints are not overridden.
 - `hardware-adapter.js`: the working adapter retained, forwarding full trial,
-  logits and matching ground-truth fields, with Jihyung's full 22-channel list.
+  logits and matching ground-truth fields, with Cindy's full 22-channel list.
 - `playback.js`, `uart-parser.js`, `serial-transport.js`: retained transport and
   delayed visualization. Saved replay is visibly labeled separately from hardware.
 - `model2-trials.json`, `trial-metadata.js`: existing verified deployment profile.
@@ -205,7 +205,7 @@ relative per-window channel RMS, not a cortical/clinical measurement.
 
 `recorded-eeg/model2-eeg-data.js`, `recorded-eeg/provenance.json`,
 `recorded-eeg.js`, and `tools/export-recorded-eeg.py` supply the display-only data.
-Jihyung's EEG renderer, montage and styling are retained. The existing UART transport,
+Cindy's EEG renderer, montage and styling are retained. The existing UART transport,
 parser, hardware adapter, playback queue, ground-truth metadata and all styling
 files are byte-identical to the working version before this EEG change. Cursor,
 arm, prediction, scoring and timing logic are unchanged; regression tests still
@@ -224,7 +224,7 @@ including UART, EEG panels, cursor, task arms and accuracy. Automated tests use
 saved physical UART output and simulated serial transport; they do not rerun the
 board. Earlier verification notes above describe checks at their original time.
 
-Jihyung’s six untouched originals are preserved in `design-reference/cindy-new-ui/`,
+Cindy’s six untouched originals are preserved in `design-reference/cindy-new-ui/`,
 including the PDF. For portable reference checks:
 
 ```sh

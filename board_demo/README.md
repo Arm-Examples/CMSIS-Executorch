@@ -15,4 +15,4 @@ Build: `python tools/multisubject_trials/prepare_firmware.py` creates the CMSIS 
 
 ## Source
 
-Copied from `ArmExecuTorchEEG/Reproduce_Baselines`, branch `demo/edgebci-multisubject-working`, commit `19dc889` (2026-10-18), plus the `frontend/` changes of branch `feature/final-ui-design` commit `08c93bc` (final demo design and session summaries), by Philippine Chauvet, with the UI by Jihyung Ku. Left out: the processed EEG excerpts `frontend/recorded-eeg/model2-eeg-data.js` (dataset content; regenerate with `frontend/tools/export-recorded-eeg.py`) and the design PDF in `frontend/design-reference/`.
+Copied from `ArmExecuTorchEEG/Reproduce_Baselines`, branch `demo/edgebci-multisubject-working`, commit `19dc889` (2026-10-18), plus the `frontend/` changes of branch `feature/final-ui-design` commit `08c93bc` (final demo design and session summaries), by Philippine Chauvet, with the UI by Cindy Ku. Left out: the processed EEG excerpts `frontend/recorded-eeg/model2-eeg-data.js` (dataset content; regenerate with `frontend/tools/export-recorded-eeg.py`) and the design PDF in `frontend/design-reference/`.

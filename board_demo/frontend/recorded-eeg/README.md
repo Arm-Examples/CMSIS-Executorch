@@ -72,7 +72,7 @@ processing parameters and expected per-channel RMS. Each sample hash covers the
 Fz, FC3, FC1, FCz, FC2, FC4, C5, C3, C1, Cz, C2, C4, C6, CP3, CP1, CPz,
 CP2, CP4, P1, Pz, P2, POz.
 
-Samples are passed by channel **name** to Jihyung's existing montage coordinates.
+Samples are passed by channel **name** to Cindy's existing montage coordinates.
 Her 22 electrodes and three waveform columns (8/7/7), colors, spacing, SVGs, and
 stylesheet are unchanged. Her waveform renderer retains the full 500-sample
 buffer and projects it to 160 SVG points, with independent channel peak scaling;

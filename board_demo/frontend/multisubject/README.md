@@ -31,7 +31,7 @@ board. Disconnect/errors retain capture and stop scheduling without retry.
 
 ## Session-summary interface
 
-Jihyung's `feature/session-summary` is not merged. Presentation CSS/SVG, cursor,
+Cindy's `feature/session-summary` is not merged. Presentation CSS/SVG, cursor,
 person, accuracy and timing remain unchanged. `window.EdgeStreamingController`
 continues to expose the controller. Its existing `records` are preserved; new
 `completedRecords` contains immutable standardized records with these extra fields:
@@ -58,6 +58,6 @@ prior connections, handshake and raw UART frames, with no synthetic predictions.
 in-flight request (or its bounded timeout), cancels delayed visualization, retains
 all completed results, and emits `edgebci:run-ended`. It does not close/reset the
 board. Play thereafter requires Reset. End Run is an integration API, not a new
-visual control, so Jihyung's future session-summary control can call it directly.
+visual control, so Cindy's future session-summary control can call it directly.
 A pending failed request remains unresolved in the exported state; no result is
 fabricated. Export before closing/reloading the page; capture is held in RAM.

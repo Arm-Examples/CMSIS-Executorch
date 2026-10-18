@@ -13,7 +13,7 @@ Implemented in separate directories:
 - Continuous seeded selection without replacement, reshuffled cycles, one actual
   response per request, safe Pause/Resume/Reset, retained captures and distinct
   unique/repeated metrics. No fixed inference limit.
-- Separate frontend profile/controller/bridge. Jihyung's GUI/CSS, animations and
+- Separate frontend profile/controller/bridge. Cindy's GUI/CSS, animations and
   public hardware APIs are preserved. Immutable completed-trial and End Run APIs
   are available for her session-summary work; that branch is not merged.
 
@@ -24,7 +24,7 @@ Implemented in separate directories:
   behavior, exact input reconstruction and 1,200-request reuse soak passed.
 - JS controller/native parser interoperability: 1,081 simulated requests, full pool
   plus reshuffle, passed. This endpoint uses a clearly identified toy test callback.
-- Production Jihyung Ku GUI synchronization with genuine prerecorded EEG and simulated
+- Production Cindy Ku GUI synchronization with genuine prerecorded EEG and simulated
   UART passed: exact scalp RMS, independent ground truth/prediction, cursor,
   accuracy, controls, safe End Run, reset archives and disconnect retention.
 - Existing connection/error regression tests passed; no fabricated predictions.

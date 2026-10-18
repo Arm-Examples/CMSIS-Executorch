@@ -1,6 +1,6 @@
 /* Keep the mobile hardware controls outside the design's filtered shell.
  * A backdrop-filter makes that shell the containing block for fixed descendants.
- * Moving this one integration widget preserves Jihyung's responsive panel layout.
+ * Moving this one integration widget preserves Cindy's responsive panel layout.
  */
 (()=>{
  'use strict';
