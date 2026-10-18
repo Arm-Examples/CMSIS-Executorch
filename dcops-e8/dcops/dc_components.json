@@ -1,0 +1,146 @@
+[
+  {
+    "class_id": 0,
+    "class_name": "server rack",
+    "description": "Full server rack enclosure (42U or 48U OCP Open Rack V3). Houses compute trays, switch trays, power shelves, and cooling infrastructure.",
+    "specs": "NVL72: 48U OCP Open Rack V3, 600mm x 1068mm, 120kW nominal power, direct liquid cooling required.",
+    "troubleshooting": "Check physical integrity of rack frame. Verify all trays are properly seated. Inspect cable management for obstructions. Check door seals for air containment.",
+    "led_status": "Rack-level LEDs on management panel: Green = all systems nominal, Amber = degraded (one or more components in warning state), Red = critical failure requiring immediate attention.",
+    "maintenance": "Quarterly: inspect door hinges and seals. Semi-annual: verify rack grounding connections. Check seismic bracing if applicable."
+  },
+  {
+    "class_id": 1,
+    "class_name": "compute tray",
+    "description": "1RU compute tray containing 2x Grace CPUs, 4x Blackwell B200 GPUs, 4x ConnectX-7 NICs, 2x BlueField-3 DPUs. Connected via NVLink to switch trays.",
+    "specs": "NVL72: 18 compute trays per rack. Each tray: 2x Grace CPU (72-core ARM), 4x B200 GPU, 192GB HBM3e per GPU, 4x 3.84TB NVMe, 1x 1.92TB boot drive.",
+    "troubleshooting": "If tray LED amber: check BMC log via management port. If tray not responding: reseat tray, check NVLink blind-mate connectors at rear. GPU thermal throttling: verify liquid cooling flow rate and coolant temperature. Memory errors: check ECC logs via nvidia-smi.",
+    "led_status": "Front panel LED: Solid green = healthy and operational, Blinking green = booting/initializing, Solid amber = warning (thermal, power, or memory event), Blinking amber = firmware update in progress, Solid red = critical hardware failure, Off = no power to tray.",
+    "maintenance": "Check cold plate contact. Verify NVLink connector seating. Monitor GPU temperatures (target <85°C under load). Check NVMe drive health via SMART data."
+  },
+  {
+    "class_id": 2,
+    "class_name": "NVLink switch tray",
+    "description": "1RU NVLink switch tray providing all-to-all GPU connectivity. Contains 2x NVSwitch chips with 72 NVLink ports each. 9 switch trays connect all 72 GPUs in the rack.",
+    "specs": "NVL72: 9 switch trays, 2x NVSwitches per tray, 57.6 TB/s bisection bandwidth, NVOS 2.0+ management, passive copper cable backplane.",
+    "troubleshooting": "If NVLink errors: check cable cartridge seating at rear. If switch unreachable: verify serial console (RJ45, RS232, 115200 baud). Bandwidth degradation: check for link retraining events in NVOS logs.",
+    "led_status": "Status LED: Green = all links up, Amber = some links degraded or retraining, Red = switch failure or firmware error. Port LEDs: Green = link active, Off = no link.",
+    "maintenance": "Verify NVLink cable cartridge connections quarterly. Monitor switch temperatures. Check NVOS firmware version matches across all 9 trays."
+  },
+  {
+    "class_id": 3,
+    "class_name": "network switch",
+    "description": "Top-of-rack (TOR) Ethernet or InfiniBand switch for management and data networking. Connects compute trays to external fabric.",
+    "specs": "Typically Spectrum-X or ConnectX-based. 400GbE or 800GbE ports. OSFP/QSFP connectors. Manages both in-band and out-of-band traffic.",
+    "troubleshooting": "Port flapping: check cable integrity and SFP/OSFP transceiver seating. High latency: verify switch firmware and routing tables. Link down: swap cable, test with known-good transceiver.",
+    "led_status": "System LED: Green = normal operation, Amber = minor fault, Red = critical. Per-port LED: Green = link up at full speed, Amber = link up at reduced speed, Off = no link, Blinking = traffic activity.",
+    "maintenance": "Update firmware regularly. Monitor port error counters. Clean optical connectors with approved cleaning kit. Check fan speeds and airflow."
+  },
+  {
+    "class_id": 4,
+    "class_name": "power shelf",
+    "description": "Power distribution shelf converting AC to 50-51V DC. Contains 6x 5.5kW PSUs in N+N redundancy. 8 power shelves per NVL72 rack.",
+    "specs": "NVL72: 8 power shelves, 6x 5.5kW PSUs each (33kW per shelf), N+N redundancy, bus bar distribution, RJ45 daisy-chain for power brake and current sharing.",
+    "troubleshooting": "PSU failure: check individual PSU LED. Load imbalance: verify current sharing via RJ45 daisy-chain. Overtemp: check datacenter ambient temperature and airflow. Unexpected shutdown: check power brake chain integrity.",
+    "led_status": "Per-PSU LED: Green = healthy output, Amber = PSU in standby or reduced output, Red = PSU fault (over-current, over-temp, or fan failure), Off = no AC input. Shelf LED: Green = all PSUs OK, Amber = redundancy lost (one PSU failed).",
+    "maintenance": "Monthly: check PSU fan operation. Quarterly: verify input voltage and current readings. Annually: thermal scan bus bar connections for hotspots."
+  },
+  {
+    "class_id": 5,
+    "class_name": "cable",
+    "description": "Data center cabling including copper NVLink cables, fiber optic network cables, and power cables. NVL72 uses 5000+ copper cables in cable cartridges.",
+    "specs": "NVLink: passive copper via blind-mate cable cartridges. Network: 400G OSFP/QSFP fiber. Management: Cat6 RJ45. Power: bus bar to tray connections.",
+    "troubleshooting": "Link errors: reseat cable at both ends. Intermittent connectivity: check cable bend radius (no kinks). Fiber: inspect and clean connector end-faces. Copper NVLink: check cable cartridge seating at rear of rack.",
+    "led_status": "Cables have no LEDs. Check connected port LEDs for link status. Fiber cables with integrated transceivers may have activity LEDs.",
+    "maintenance": "Inspect cable bend radius quarterly. Check cable ties for over-tightening. Verify cable labels match port assignments. Replace damaged cables immediately."
+  },
+  {
+    "class_id": 6,
+    "class_name": "network port",
+    "description": "Physical network port on switches, NICs, or DPUs. Includes OSFP (400G/800G), QSFP (100G/200G), and RJ45 (1G management) connectors.",
+    "specs": "Compute tray: 4x 400G OSFP (ConnectX-7), 2x 400G OSFP (BlueField-3), 1x 1GbE RJ45 (BMC), 2x 1GbE RJ45 (BlueField BMC). NVLink switch: 2x RJ45 (NVOS COMe), 1x RJ45 (BMC).",
+    "troubleshooting": "No link: clean connector, reseat cable, try different port. CRC errors: replace cable or transceiver. Speed negotiation failure: check both ends support same speed. Intermittent: check transceiver temperature.",
+    "led_status": "Green = link active at full speed, Amber = link at reduced speed or error condition, Blinking green = active traffic, Off = no link established.",
+    "maintenance": "Clean optical connectors before each insertion. Inspect for bent pins on copper connectors. Monitor port error counters via switch management interface."
+  },
+  {
+    "class_id": 7,
+    "class_name": "LED indicator",
+    "description": "Status LED on server components indicating operational health. Found on compute trays, switches, PSUs, drives, and management modules.",
+    "specs": "Standard DC LED color code: Green = normal/healthy, Amber/Yellow = warning/degraded, Red = critical/failure, Blue = identification/locator, Blinking = activity or state change, Off = no power.",
+    "troubleshooting": "Amber LED: check component logs for warning events. Red LED: immediate attention required — check BMC/IPMI for fault details. Blinking pattern: count blinks per cycle for error code (varies by vendor). No LED: verify power delivery to component.",
+    "led_status": "Solid green = operating normally, Blinking green = booting or activity, Solid amber = non-critical warning, Blinking amber = firmware update or degraded, Solid red = critical hardware fault, Blinking red = identification mode or urgent alert, Off = no power.",
+    "maintenance": "Document LED states during walkthrough. Compare against baseline. Report any amber or red LEDs immediately. Use locator LED (blue) to identify specific components for service."
+  },
+  {
+    "class_id": 8,
+    "class_name": "label",
+    "description": "Serial number label, asset tag, or nameplate on server components. Used for inventory tracking, warranty, and service identification.",
+    "specs": "Contains: serial number, part number, model number, manufacture date, MAC address (on network components), asset tag (customer-applied).",
+    "troubleshooting": "If label is damaged or unreadable: check BMC/IPMI for electronic serial number. Cross-reference with DCIM/asset management system. For warranty claims, serial number is required.",
+    "led_status": "Labels do not have LEDs. Located on front or side of components.",
+    "maintenance": "Verify labels are legible and match asset database. Replace damaged labels. Scan barcode/QR code during inventory audit. Update DCIM records if discrepancies found."
+  },
+  {
+    "class_id": 9,
+    "class_name": "fan",
+    "description": "Cooling fan for air-cooled components (networking, storage, management modules). GPUs and CPUs use liquid cooling; fans handle supplemental airflow.",
+    "specs": "Variable speed fans controlled by BMC based on thermal sensors. Hot-swappable in most configurations. Airflow direction: front-to-back.",
+    "troubleshooting": "High noise: check for obstructions or failed bearing. Fan failure: BMC will report via alert; component may thermal throttle. All fans high speed: check ambient temperature, coolant system, or blocked airflow.",
+    "led_status": "Fan module LED: Green = running at normal speed, Amber = running at high speed (thermal event), Red = fan failure detected, Off = fan not spinning.",
+    "maintenance": "Monthly: listen for abnormal sounds (bearing wear). Quarterly: check fan RPM via BMC. Clean air filters if present. Replace failed fans immediately to prevent thermal damage."
+  },
+  {
+    "class_id": 10,
+    "class_name": "cooling manifold",
+    "description": "Liquid cooling manifold distributing coolant to compute tray cold plates. Inlet and outlet manifolds at rear of rack with quick-disconnect fittings.",
+    "specs": "NVL72: Direct liquid cooling (DLC) required for 120kW+ rack density. Coolant: facility water or dielectric fluid. Temperature: 25-45°C inlet recommended. Flow rate: per vendor specification.",
+    "troubleshooting": "Leak detected: immediately isolate manifold section, power down affected trays. High GPU temps with normal ambient: check coolant flow rate and inlet temperature. Blocked flow: check for air bubbles in lines, bleed system. Pressure drop: inspect quick-disconnect fittings.",
+    "led_status": "Leak detection sensor LED: Green = no leak detected, Red = leak detected (immediate action required). Flow sensor may have green (normal flow) or red (low/no flow) indicators.",
+    "maintenance": "Monthly: inspect quick-disconnect fittings for drips. Quarterly: check coolant quality (pH, conductivity). Semi-annual: pressure test system. Check leak detection sensors are functional."
+  },
+  {
+    "class_id": 11,
+    "class_name": "cable cartridge",
+    "description": "Pre-assembled NVLink copper cable cartridge providing blind-mate connections between compute trays and NVLink switch trays at the rear of the rack.",
+    "specs": "NVL72: Contains bundled passive copper NVLink cables. Blind-mate connectors for tool-free insertion. Each cartridge connects multiple compute tray NVLink ports to switch tray ports.",
+    "troubleshooting": "NVLink errors on multiple GPUs: reseat cable cartridge. Cartridge not seating: check for bent pins or debris in connector. Intermittent NVLink failures: inspect cartridge for physical damage.",
+    "led_status": "Cable cartridges typically do not have LEDs. Check NVLink switch tray port LEDs for link status on connected ports.",
+    "maintenance": "Inspect blind-mate connectors for bent pins before insertion. Verify cartridge is fully seated (click). Do not force insertion. Document cartridge serial numbers for tracking."
+  },
+  {
+    "class_id": 12,
+    "class_name": "power connector",
+    "description": "Power connection point including bus bar connectors, power shelf output connectors, and tray power input connectors.",
+    "specs": "NVL72: Bus bar distributes 50-51V DC from power shelves to compute and switch trays. Narrower bus bar connector design to maximize rear panel space.",
+    "troubleshooting": "No power to tray: check bus bar connector seating, verify power shelf output. Intermittent power: inspect connector for corrosion or loose contact. Voltage drop: check bus bar connections with multimeter.",
+    "led_status": "Power connectors may have a small LED near the plug: Green = power present, Off = no power. Check power shelf LEDs for upstream status.",
+    "maintenance": "Annual: thermal scan all bus bar connections for hotspots. Check connector torque specifications. Inspect for signs of arcing or discoloration. Verify grounding connections."
+  },
+  {
+    "class_id": 13,
+    "class_name": "drive bay",
+    "description": "NVMe drive bay/slot for storage drives. Compute trays have 4x 3.84TB E1.S NVMe data drives and 1x 1.92TB M.2 boot drive.",
+    "specs": "NVL72 compute tray: 4x 3.84TB E1.S NVMe (software RAID 0 for data cache), 1x 1.92TB M.2 NVMe (boot). Hot-swappable E1.S drives.",
+    "troubleshooting": "Drive not detected: reseat drive in bay. SMART errors: schedule drive replacement. Degraded RAID: identify failed drive via LED, replace, and rebuild. Boot failure: check M.2 drive health.",
+    "led_status": "Drive bay LED: Solid green = drive healthy and active, Blinking green = drive I/O activity, Solid amber = drive predicted failure (SMART warning), Blinking amber = drive rebuilding/initializing, Solid red = drive failed, Off = empty bay or no power.",
+    "maintenance": "Monitor SMART attributes monthly. Check drive firmware versions. Maintain hot spare inventory. Test drive replacement procedure annually."
+  },
+  {
+    "class_id": 14,
+    "class_name": "management port",
+    "description": "Out-of-band management port (BMC/IPMI) providing remote access to component management controllers. RJ45 1GbE or serial console.",
+    "specs": "Compute tray: 1x BMC RJ45 (1GbE), 2x BlueField BMC RJ45. NVLink switch: 2x COMe RJ45 (NVOS), 1x BMC RJ45, 1x RS232 serial console (RJ45, 115200 baud).",
+    "troubleshooting": "Cannot reach BMC: verify management network connectivity, check IP assignment (DHCP or static). Serial console no output: verify baud rate 115200, 8N1. BMC unresponsive: AC power cycle the component.",
+    "led_status": "Management port LED: Link LED green = network connected, Activity LED blinking = network traffic. Same as standard Ethernet port indicators.",
+    "maintenance": "Verify BMC firmware is current. Check management network connectivity. Ensure BMC credentials are documented and secured. Test remote access quarterly."
+  },
+  {
+    "class_id": 15,
+    "class_name": "DPU",
+    "description": "Data Processing Unit (NVIDIA BlueField-3) providing hardware-accelerated networking, security, and storage services. Also includes ConnectX-7 NICs.",
+    "specs": "NVL72 compute tray: 2x BlueField-3 DPU (dual 400G InfiniBand/Ethernet), 4x ConnectX-7 NIC (single 400G OSFP). DPU offloads encryption, firewalling, and storage virtualization.",
+    "troubleshooting": "DPU not responding: check OSFP transceiver seating and cable. Reduced throughput: verify DPU firmware and driver versions match. BlueField BMC unreachable: check dedicated management port.",
+    "led_status": "DPU/NIC port LED: Green = link up at full speed, Amber = link up at reduced speed, Blinking = traffic activity, Off = no link. DPU module LED: Green = healthy, Amber = warning, Red = fault.",
+    "maintenance": "Update BlueField firmware with each service release. Monitor DPU temperature. Verify OSFP transceiver compatibility. Check DPU offload configuration matches network policy."
+  }
+]

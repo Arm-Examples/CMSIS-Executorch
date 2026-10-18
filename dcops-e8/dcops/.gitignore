@@ -1,0 +1,7 @@
+data/*
+!data/dc_components/
+!data/board_captures/
+!data/README.md
+models/
+runs/
+.venv*/

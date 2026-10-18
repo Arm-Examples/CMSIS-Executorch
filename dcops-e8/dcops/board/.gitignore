@@ -1,0 +1,4 @@
+__pycache__/
+# camera frames can contain faces: never commit snapshots
+snapshots/
+measurements/*-sim.*

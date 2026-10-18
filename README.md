@@ -1,242 +1,184 @@
-# pico-faces on Ethos-U85 with ExecuTorch: hackathon guide
+# DCSM-Simplified
 
-The Arm ExecuTorch example, on its `hackathon` branch: a generative model on
-a microcontroller. [pico-faces](https://github.com/cpldcpu/pico-faces) by
-cpldcpu, a latent diffusion transformer (2.5M parameters) with a small
-decoder, generates 128x128 faces; exported through ExecuTorch, every layer of
-it runs on the Ethos-U85 NPU while the Cortex-M drives the sampling loop. One
-CMSIS solution runs it on the **Alif Ensemble E8 DevKit** or the **Ensemble E8
-AI/ML AppKit** (Cortex-M55 HP core; the faces appear on the board's LCD, a new
-one per joystick press) and on the **Corstone-320 FVP**; you switch between
-them by target-type. The model is
-exported from PyTorch in three steps: the CMSIS-Toolbox describes the target,
-`create_ai_layer.py` turns that into the AI layer, the toolbox builds the
-application. This page takes you from an empty machine to a debug session on
-the board. Everything about the example itself is in
-[documentation/example.md](documentation/example.md).
+*DataCenter Service Management, Simplified.* An offline data-center component identifier on the
+**Alif Ensemble E8 DevKit**: Cortex-M55 HP at 400 MHz plus an Ethos-U85-256 NPU.
 
-## 1. Host tools
+Point the camera at a component and the NPU names it. Then your voice holds the part, runs an
+inspection checklist and pages through its specs, troubleshooting, LED codes and maintenance.
+There's no phone, no network, no cloud, and no stored images.
 
-1. Install [VS Code](https://code.visualstudio.com/).
-2. Install the extensions **Keil Studio Pack** (`Arm.keil-studio-pack`, which
-   brings the CMSIS Solution extension 1.72.0 or newer with CMSIS-Toolbox
-   2.15) and **Python** (`ms-python.python`). Sign in with an
-   Arm account when Keil Studio asks; the free Keil MDK Community license is
-   enough.
-3. Nothing else by hand: when you open the project, the Arm Tools Environment
-   Manager offers to install the tools pinned in `vcpkg-configuration.json`
-   (CMSIS-Toolbox, Arm Compiler 6, GCC, CMake, Ninja, and on Linux and
-   Windows the Corstone-320 FVP; macOS runs it in Docker, see step 6). Accept.
-4. Optional: the **CMSIS Developer Assistant** extension lets an AI agent
-   (Claude Code or GitHub Copilot Chat) build, flash and debug the board
-   through an MCP server. Install it, install one of the agents, run
-   **CMSIS Developer Assistant: Configure Agents and Skills** from the command
-   palette and pick at least the `cmsis-debug-live` and `cmsis-help` skills.
+| | |
+|---|---|
+| **Landing page and slides** | https://abhijitbetigeri.github.io/executorch-alife8/ |
+| **Demo video** | https://abhijitbetigeri.github.io/executorch-alife8/demo.mp4 (also on the landing page, under Demo) |
+| **Full repository** | https://github.com/abhijitbetigeri/executorch-alife8 at commit [`db9df28b`](https://github.com/abhijitbetigeri/executorch-alife8/tree/db9df28b8f85ac7f6d77d2aa8e0e8e1779662e4b) |
+| **Trained models** | https://huggingface.co/abhijitbetigeri/dcops-e8 (deployed `.pte` files, PyTorch weights, ablations, teachers) |
+| **Team** | Abhijit Betigeri, Nissan Pow |
 
-## 2. Alif and SEGGER tools (board only)
+This pull request carries our project code in [`dcops-e8/`](dcops-e8). The firmware is built on Arm's
+ML Embedded Evaluation Kit (MLEK) rather than this starter, so the files keep their MLEK paths. The
+full repository builds as-is (see [Build and run](#build-and-run)).
 
-1. **Alif SETOOLS** V1.110.00 or later (V1.112.00 is current) from the
-   [Alif software and tools page](https://alifsemi.com/support/software-tools/ensemble/)
-   (login required). Unpack it; on Linux and macOS make the tools executable
-   and install the Python packages its README lists. Add the root directory
-   (the one with `app-gen-toc` and `app-write-mram`) to your VS Code user
-   settings:
+## What it does
 
-   ```json
-   "alif.setools.root": "/absolute/path/to/setools"
-   ```
+1. **Point.** A MobileNetV2 on the Ethos-U85 identifies the part in **7.9 ms**. The LCD shows its name,
+   a confidence and an info card. Labels are smoothed over frames and gated by confidence, so an
+   unsure model shows nothing rather than guessing.
+2. **Hold and check.** Say **"yes"** (or "go"). The part is held and an inspection checklist opens.
+   "Yes" and "no" mark each item. A "no" on item 1 ("is this the right part?") rejects the
+   identification, so the human corrects the model.
+3. **Look it up.** Say **"on"** (or "go" or "right"). The device pages through specs, troubleshooting,
+   LED codes and maintenance for that exact part. This is on-device retrieval keyed by what the
+   camera saw.
 
-2. **SEGGER J-Link Software** V8.42 or later from
-   [segger.com](https://www.segger.com/downloads/jlink/). The board has an
-   on-board J-Link.
+| Say | Action |
+|---|---|
+| `yes` / `go` / `on` | Hold the identified part and open its checklist |
+| `yes` / `no` | Mark the selected item as pass or fail, then advance |
+| `on` / `go` / `right`, `left` | Next or previous knowledge page |
+| `up` / `down` | Move the cursor |
+| `stop` | Back to live scanning |
 
-## 3. Board
+The demo shows 5 rack-level classes: power shelf, network port, fan, power connector and drive bay,
+plus background. These are the ones the board camera separates reliably on held-out data. The model
+knows 16; the build option `CLS_ALLOWED_MASK` selects which ones are shown.
 
-- Connect a USB cable to **PRG USB** (USB-C in the corner of the DevKit,
-  Micro-USB on the AppKit). It powers the board and carries the J-Link and a
-  USB-to-UART bridge. Leave the other USB device connector unconnected.
-- DevKit: jumpers at their defaults, **JP5 on 1-2**, **JP7 on 3-4**. Never
-  move jumpers with power applied.
-- **SW4** (on both boards) selects what the UART bridge is connected to:
+## How it meets the judging criteria
 
-  | SW4 | Connected to | Used for |
-  |-----|--------------|----------|
-  | `SEUART` (default) | Secure Enclave UART | SETOOLS (step 5) |
-  | `UART2` (AppKit only, middle position) | Application UART2 | Not used here |
-  | `UART4` | Application UART4, 115200 8N1 | The example's console (step 6) |
+| Criterion | Evidence |
+|---|---|
+| **Functionality and reliability (20)** | The full pipeline runs on the board in one firmware image. Board output matches the PC on the same captured frame, with an identical top-3. On held-out board-camera frames, 79% are labelled correctly, 7% wrongly and the rest blank, and no background frame gets a label. Voice accepts synonyms for robustness in noise. A flash guard refuses images that would overwrite the boot table. |
+| **Performance and efficiency (20)** | Vision inference: **7.9 ms** on the NPU. Voice: **0.34 ms** on the NPU plus 3.3 ms for MFCC on the M55. Full frame: **124 ms (8.0 FPS)**, down from 274 ms after we removed per-frame UART logging. Both models fit in 2.4 MB of MRAM, with about 195 KB of headroom. Power was not measured. |
+| **Effective use of hardware (15)** | Both models run 100% on the Ethos-U85; only quantize and dequantize stay on the CPU. The Cortex-M55 handles image resizing, audio features, smoothing, retrieval and the UI. The camera, PDM microphone and LCD are all used. The HE core is left free for always-on voice, which is our next step. |
+| **Multimodal and sensor integration (15)** | Vision decides *what* the part is. Voice confirms it, drives the checklist and pages the knowledge base, and is only accepted once vision is confident. A "no" on the first item corrects the model. |
+| **Innovation and use-case value (10)** | An offline, hands-free servicing aid for air-gapped data-center floors. The roadmap goes from rack-level units down to the 21 part types on a board. |
+| **Technical ambition and integration (10)** | We distilled a ConvNeXt teacher into custom students, built a board-camera fine-tuning loop, ran two ExecuTorch models in one image, added on-device retrieval, and found and documented a Vela miscompile. |
+| **Engineering quality and demo (10)** | A one-command reproducible build, a guarded flash script, offline tests for the board tools (27 passing), public data, models and slides, and the documentation in `dcops-e8/dcops/docs/`. |
 
-- With the board attached, run these once: in the SETOOLS directory
-  `updateSystemPackage -d` (SW4 on `SEUART`; picks the serial port, checks the
-  system firmware, offers to make the E8 the default target: answer yes), and
-  J-Link Commander (`JLinkExe`, `JLink.exe` on Windows), which updates the
-  on-board J-Link firmware and installs its serial-port drivers.
+## Architecture and workload placement
 
-## 4. Project
-
-```bash
-git clone https://github.com/Arm-Examples/CMSIS-Executorch.git
-cd CMSIS-Executorch
-git checkout hackathon
+```mermaid
+flowchart LR
+  CAM[MT9M114 camera] --> PRE[Crop + resize 160x160<br/>Cortex-M55, 1.75 ms]
+  PRE --> CLS[MobileNetV2<br/>Ethos-U85, 7.9 ms]
+  CLS --> POST[Softmax + EMA + gate<br/>Cortex-M55]
+  POST --> LCD[LCD: label, card, checklist, pages]
+  MIC[PDM microphone] --> MFCC[MFCC 49x10<br/>Cortex-M55, 3.3 ms]
+  MFCC --> KWS[DS-CNN keyword spotter<br/>Ethos-U85, 0.34 ms]
+  KWS --> UI[Voice UI + 15 KB knowledge base<br/>Cortex-M55]
+  POST --> UI
+  UI --> LCD
 ```
 
-Open the folder in VS Code and accept the tool activation and the pack
-installation (`PyTorch::ExecuTorch`, `AlifSemiconductor::Ensemble`, CMSIS).
-In the CMSIS view open **Manage Solution**, choose the target-type
-of your board, **DevKit-E8** or **AppKit-E8** (**SSE-320-U85** for the FVP),
-and click **Apply**.
+| Stage | Runs on | Time |
+|---|---|---|
+| Camera crop and resize to 160×160 RGB | Cortex-M55 HP | 1.75 ms |
+| MobileNetV2 classifier | **Ethos-U85** (100% of layers) | **7.9 ms** |
+| Softmax, EMA smoothing, confidence gate, class mask | Cortex-M55 HP | under 1 ms |
+| MFCC, 49 frames × 10 coefficients, every 0.5 s | Cortex-M55 HP | 3.3 ms |
+| DS-CNN keyword spotter | **Ethos-U85** (100% of layers) | **0.34 ms** |
+| Knowledge-page retrieval and LVGL UI | Cortex-M55 HP | — |
+| Full frame, including camera and LCD | — | **124 ms, 8.0 FPS** |
 
-The model data is generated rather than committed, so a fresh checkout
-needs Python once before the first build:
+To run two ExecuTorch programs side by side, we changed MLEK's `EtModel` from one static `Method` to
+one per instance (`dcops-e8/source/lib/mlek/fwk/executorch/EtModel.cc`).
 
-1. **Terminal > Run Task > Setup Python virtual environment** (several GB of
-   PyTorch, takes a while; the **(uv)** variant of the task uses uv and can
-   download the Python version it asks for). It also downloads the
-   pico-faces checkpoints (about 60 MB, checked by SHA-256) into
-   `model/pico_faces/`.
-2. **Terminal > Run Task > Create AI layer** exports the model for the NPU
-   and writes `ai_layer/` (a few minutes). It reads
-   `cmsis-executorch.cbuild-mlops.yml`, which the CMSIS Solution extension
-   writes when it loads the solution (click **Build** once if the file is
-   missing). Run the task again after changing `model/model.py`.
+## Models
 
-## 5. Prepare the board once
+| Model | Job | Params | Size | Accuracy | Runs on |
+|---|---|---|---|---|---|
+| YOLOv8n-seg | Auto-labeller for the first training crops | 3.3 M | 6.8 MB fp16 | box mAP50 0.749 | GPU, offline |
+| 2× ConvNeXt-Base | Teacher | 2 × 87.6 M | 701 MB | 97.2% on human-labelled val | GPU, training |
+| **MobileNetV2**, 160 px, NHWC | Vision: 16 parts + background | **2.25 M** | **2.3 MB int8** | 91.2% on photos; 84.8% on held-out board-camera frames (demo classes) | **Ethos-U85** |
+| **DS-CNN** | Voice: 10 keywords + silence + unknown | **79 k** | **93 KB int8** | 94.7% test | **Ethos-U85** |
 
-The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
-debugger needs that table to point at a debug stub.
+**NPU, per inference (measured on the E8):**
 
-1. SW4 to **SEUART**, PRG USB attached.
-2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**,
-   or the **(AppKit-E8, ...)** task for the AppKit. Choose COM port
-   discovery (`-d`) the first time; SETOOLS remembers the port. The task
-   selects the board's part in SETOOLS (`tools-config -p 'E8
-   (AE822FA0E5597LS0) ...' -r A0` for the DevKit, `AE822FA0E5597BS0` for the
-   AppKit: the part goes into the table of contents,
-   and the Secure Enclave does not boot a table built for another part),
-   copies the configuration and stub from `.alif/` into the SETOOLS tree and
-   runs `app-gen-toc` and `app-write-mram`. If `app-write-mram` reports a
-   different revision of the board, answer `y`: only the part number decides
-   whether the table boots.
-3. SW4 to **UART4**.
+| | Vision | Voice |
+|---|---|---|
+| Compute | 152.9 M MACs | 9.1 M MACs |
+| NPU latency | 7.9 ms | 0.34 ms |
+| Effective throughput | 19.4 GMAC/s | 26.8 GMAC/s |
+| Layers on NPU | 100% | 100% |
+| On-chip SRAM (Vela) | 755 KiB | 51 KiB |
+| Weights in MRAM | 2,280 KiB | 89 KiB |
+| int8 matches float top-1 | 98.4–100% of calibration frames | 88.3% of clips |
 
-Repeat this after another project has reprogrammed the table.
+## How the models were made: distilled, fine-tuned, exported with ExecuTorch
 
-## 6. Build, run, debug
+1. **Teacher.** Two ConvNeXt-Base models were trained out-of-fold on 19,203 component crops from
+   2,056 labelled data-center photos.
+2. **Student.** A MobileNetV2 was distilled from the teacher (α 0.7, T 4) with simulated board-camera
+   augmentation. Ablations on board-like images: 91.3% with both, **80.4% without distillation** and
+   **75.8% without the augmentation**. In a resolution sweep, 160 px beat 128 and 192.
+3. **Board-camera fine-tune.** On the real camera the student scored only about a third right. We
+   recorded **1,330 frames from the E8's own camera** while a phone showed a slideshow timed to the
+   clock: the laptop reads each frame over J-Link and labels it from the clock. The test set is split
+   by slide, so test slides are never trained on, and we mixed in 1,503 replay crops of the original
+   photos. Held-out accuracy across all classes rose from **35.5% to 73.0%**. A final pass trained over
+   the 6 shown classes and reached **84.8%** top-1 on held-out demo-class frames. The capture tools are
+   in `dcops-e8/dcops/board_capture/` and the job is `dcops-e8/dcops/jobs/finetune_board.py`.
+4. **Keyword spotter.** A DS-CNN was distilled and trained with the board's automatic gain emulated.
+5. **Export** (`dcops-e8/dcops/export/`): `torch.export`, then PT2E int8 with `EthosUQuantizer`
+   (symmetric, per channel, calibrated on board frames), then `EthosUPartitioner`, then TOSA, then Vela
+   4.5.0 for the U85-256 (Shared_Sram), then Cortex-M passes, producing a `.pte`. We pinned ExecuTorch
+   **1.1.0** to match the MLEK runtime.
+6. **Vela miscompile.** ExecuTorch 1.1 lowers a conv → permute → reshape tail into transposes that
+   cancel out, and Vela miscompiled them. We documented the bug and its workaround in
+   [`dcops-e8/docs/blazeface-vela-bug.md`](dcops-e8/docs/blazeface-vela-bug.md).
 
-1. With SW4 on **UART4**, open the **Serial Monitor** panel on the PRG USB
-   port, 115200 baud.
-2. In the CMSIS view click **Build**, then **Debug** (or **Run**). Keil Studio
-   starts the J-Link GDB server over SWD, loads the image into MRAM and stops
-   at `main`; continue with F5. The console shows the Ethos-U banner, the
-   program and its two methods, the timings of the boot demo, the CRC of the
-   image, an ASCII preview of the face and the pass marker:
+**Why retrieval rather than a generating LLM.** About 195 KB of memory is left after the two models,
+a tiny language model needs about 15 MB, and the voice model knows 10 words, not sentences. So
+answers come only from a 15 KB knowledge base compiled into the firmware, and are never invented.
 
-   ```text
-   Ethos-U version info:
-       Arch:       v2.0.0
-       MACs/cc:    256
-       Cmd stream: v1
-   ExecuTorch pico-faces (m3_long_cfg, a16w8/a8w8): 2796016 byte program
-   Methods:
-     dit_step  2 input(s), 1 output(s), 16384 planned byte(s)
-     decode    1 input(s), 1 output(s), 245760 planned byte(s)
-   Generating: seed 3, 4 steps, class 1, w 4.0
-   Display: 480x800 RGB888 panel started
-     dit_step: 8 call(s), 68 ms total (8 ms each)
-     decode:   3 ms
-     total:    78 ms at 400 MHz (wall clock; not meaningful on the FVP)
-     dit_step: NPU 27132 kcycles, active 95%, MAC active 39%, 32 MAC/cycle, read 21279 kB on AXI0 + 0 kB on AXI1
-     decode:   NPU 1303 kcycles, active 50%, MAC active 37%, 83 MAC/cycle, read 434 kB on AXI0 + 0 kB on AXI1
-   Image: 128x128x3, CRC32 6b938c66
-     |::::::::.......  .    ..........|
-     |::::::::...........     .....   |
-     ...
-   Test_result: PASS
-   Interactive: send "G <seed> [k_steps] [class] [w]" (viewer/view_serial.py) or "I"
-   Joystick: left = one new image, right = start/stop continuous generation
-   ```
+## Build and run
 
-   A face with guidance takes 78 ms: eight `dit_step` calls of 8.5 ms on the
-   NPU and a 3 ms decode. The same face appears on the LCD, scaled to
-   384 x 384 in the centre of the screen; it is bit for bit the image the FVP
-   produces. (The CRC depends on the exported program, which can differ
-   slightly between the machines that run **Create AI layer**.)
-3. Press the **SW2 joystick** to the left for a new face (the next seed; class
-   and guidance follow from it), to the right to generate faces back to back
-   until you press right again. Each one is reported on the console.
-4. Or request faces from the host with pico-faces' viewer (close the Serial
-   Monitor first, the viewer needs the port; in a clone of
-   [pico-faces](https://github.com/cpldcpu/pico-faces),
-   `pip install pyserial pillow`):
+```sh
+git clone https://github.com/abhijitbetigeri/executorch-alife8 && cd executorch-alife8
+git checkout db9df28b && git submodule update --init --recursive --depth 1
+ARM_GCC_BIN=<arm-none-eabi-gcc bin dir> scripts/alif/build_dcops_demo.sh      # -> build-fusion/
+scripts/alif/flash_e8_hp.sh build-fusion/bin/mlek_alif_object_detection.axf    # guarded J-Link flash
+```
 
-   ```bash
-   python viewer/view_serial.py --port /dev/tty.usbmodemXXXX --seed 3 --steps 4 --class 1 --cfg 4 --show
-   ```
+- **Power-cycle after flashing.** Unplug PRG USB for about 10 s; the MT9M114 camera needs it.
+- **Camera side.** The camera faces the same side as the LCD. Hold a part, or a photo of one,
+  5–7 cm away.
+- **Build options.** `CLS_ALLOWED_MASK` (default `0x13250`), `CLS_CONF_THRESHOLD` (0.6) and
+  `KWS_THRESHOLD` (0.5) are environment overrides for the build script.
+- **Retraining.** Notebooks are in `dcops/colab/` and run on a GPU. Export needs an ExecuTorch 1.1.0
+  environment; see `dcops/docs/README_SECTION.md`.
 
-   Classes are 0 (female, neutral), 1 (female, smiling), 2 (male, neutral),
-   3 (male, smiling) and 4 (unconditional); `--cfg` is the guidance strength
-   (0 = plain), `--steps` 8, 4, 2 or 1.
-5. Set a breakpoint after `generate()` in `src/app_main.cpp` and inspect the
-   timings in `tm`, or ask the CMSIS Developer Assistant to do it: "Build for
-   the DevKit-E8, load it, break after the first generate() and show me the
-   NPU cycles per method."
+## What's in `dcops-e8/`
 
-**FVP instead of the board:** choose the **SSE-320-U85** target-type and click
-**Run** or **Debug**; the same output appears in the terminal (a run takes a
-few minutes), and the image lands in `out/fvp_image.bin`.
-`python3 model/verify_export.py --compare out/fvp_image.bin <reference.png>`
-compares it with the host's rendering of the same seed (see
-[documentation/example.md](documentation/example.md)). On macOS, where Arm
-ships no FVP build, the FVP runs in Docker: set `model:` in the csolution's
-SSE-320-U85 target-set to `${workspaceFolder}/.vscode/fvp.sh`, copy
-`.vscode/launch.json.mac` to `.vscode/launch.json`, and keep Docker Desktop
-running (the first run builds the image, about 100 MB).
+| Path | Contents |
+|---|---|
+| `source/app/use_case/alif_object_detection/` | Classifier mode, info cards and knowledge pages (`gen_class_cards.py`), voice checklist (`VoiceControl.cc`), build options |
+| `source/lib/mlek/fwk/executorch/` | `EtModel` with one method per instance, and the DS-CNN keyword-spotter wrapper |
+| `dcops/jobs/`, `dcops/colab/` | Teacher, student, keyword-spotter and board fine-tune training |
+| `dcops/export/` | ExecuTorch + Ethos-U85 export scripts |
+| `dcops/board_capture/` | Clock-synced board-camera capture and dataset builder |
+| `dcops/board/` | J-Link measurement, snapshot and flash tools, with offline tests |
+| `dcops/docs/` | Architecture, results, Devpost text, demo script |
+| `scripts/alif/` | One-command demo build, and a flash script with a boot-table guard |
+| `resources/` | The deployed `.pte` models and labels |
 
-## 7. If something does not work
+## Where this goes
 
-- **J-Link connects but never stops at `main`:** either the table of contents
-  does not point at the debug stub or was built for another part, which the
-  Secure Enclave skips (repeat step 5), or the image cannot boot.
-  Look before reprogramming: in the debugger, read the vector table at
-  `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
-  lockup at reset, which an image linked to run from ITCM produces when the
-  code that copies it there is itself in ITCM.
-- **Debug hangs at "Connecting":** the target-set was switched to
-  `protocol: jtag`. Keep SWD: the generated load task blocks on JLinkExe's
-  JTAG-chain prompt, and the device stays in SWD mode after any SWD use
-  until it is power-cycled.
-- **No console output:** SW4 is still on `SEUART`, or the port was opened
-  before the switch was moved. Set `UART4` and reopen the port.
-- **Every SETOOLS tool prints `Revision is invalid!`:** SETOOLS stores the
-  selected part and revision in `utils/global-cfg.db`, and a
-  `tools-config -p` without `-r` (another project switching to an E7, for
-  example) keeps a revision the new part does not have. From then on even
-  `tools-config` refuses to run. The stub tasks of step 5 write their
-  board's part and revision into that file before they call `tools-config`,
-  so they recover by themselves; for SETOOLS commands of your own, set
-  `"Part#"` to `"E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM"` (DevKit) or
-  `"E8 (AE822FA0E5597BS0) - 5.5 MRAM / 9.75 SRAM"` (AppKit) and `"Revision"`
-  to `"A0"` there.
-- **`app-write-mram` gets no answer:** press reset while it waits, check SW4
-  is on `SEUART`, close any terminal holding the port.
-- **The build stops at `model_pte_data.inc is missing`:** the model data is
-  not committed; run the tasks **Setup Python virtual environment** and
-  **Create AI layer** (step 4).
-- **"`.venv` does not exist" or "`model/pico_faces/...` is missing":** run the
-  task **Setup Python virtual environment** first; it creates the
-  environment and downloads the checkpoints.
-- `.vscode/launch.json` is generated by the extension for the target-types
-  and is not committed; after **Apply** it has a J-Link entry for the
-  DevKit-E8 or the AppKit-E8. That is expected.
+Today the device answers *which unit* to pull or check, at rack level. The servicing win is one
+level down: *which part on the board* failed, with its specs and fix. A public dataset already
+labels 21 board-level part types across 672 photos (CC BY 4.0): IC, capacitor, electrolytic
+capacitor, resistor, resistor network, diode, inductor, transistor, clock crystal, connector, LED,
+switch, button, ferrite bead, pins, pads, test point, jumpers and EM. A resistor is about 2 px at our
+160 px input, so the next step is a small detector on high-resolution tiles, through the same
+ExecuTorch → Ethos-U85 flow. Also next: always-on voice on the HE core and Ethos-U55, and
+board-camera data for the 11 trained-but-hidden rack classes.
 
-## Read on
+## Credits and licences
 
-- [documentation/example.md](documentation/example.md): the example, the
-  command-line flow, how the model is generated.
-- [board/DevKit-E8/README.md](board/DevKit-E8/README.md): the board layer,
-  memory map and RTE configuration.
-- [board/AppKit-E8/README.md](board/AppKit-E8/README.md): the AppKit-E8
-  layer and what differs from the DevKit.
-- [documentation/mlops-flow.md](documentation/mlops-flow.md): the `mlops:`
-  node and `*.cbuild-mlops.yml` in detail.
-- [documentation/pack-provenance.md](documentation/pack-provenance.md): where
-  the `PyTorch::ExecuTorch` pack comes from and how to move to a new version.
+- **Camera pipeline:** the E8 camera pipeline is by Nissan Pow
+  ([alif-mlek-yolo](https://github.com/npow/alif-mlek-yolo)).
+- **Data:** component photos come from Roboflow Universe datasets under CC BY 4.0. The sources are
+  listed in `dcops/data/README.md` in the full repository.
+- **Built before the event:** the component dataset and the YOLOv8n-seg auto-labeller. Everything that
+  runs on the E8 was built at the event.
+- **Tools:** built on Arm MLEK, ExecuTorch 1.1.0, Vela, CMSIS and LVGL.

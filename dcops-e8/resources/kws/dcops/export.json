@@ -1,0 +1,11 @@
+{
+  "pte": "models/hub/kws/dscnn_m_agc//kws_ethos-u85-256.pte",
+  "kb": 93,
+  "cpu_ops": [
+    "cortex_m::dequantize_per_tensor",
+    "cortex_m::quantize_per_tensor"
+  ],
+  "calib_acc_float": 0.953125,
+  "calib_acc_int8": 0.865234375,
+  "float_int8_agreement": 0.8828125
+}
