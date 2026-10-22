@@ -57,7 +57,8 @@ MEMORY
   SRAM1 (rwx) : ORIGIN = APP_SRAM1_BASE, LENGTH = APP_SRAM1_SIZE
   #endif
   MRAM  (rx)  : ORIGIN = __ROM_BASE, LENGTH = __ROM_SIZE
-  MRAM_USER  (rw)  : ORIGIN = APP_MRAM_USER_BASE, LENGTH = APP_MRAM_USER_SIZE
+  /* Final 0x100 bytes belong to Sentinel's persistent profile records. */
+  MRAM_USER  (rw)  : ORIGIN = APP_MRAM_USER_BASE, LENGTH = APP_MRAM_USER_SIZE - 0x100
 }
 
 ENTRY(Reset_Handler)
@@ -156,6 +157,7 @@ SECTIONS
 
   .code.at_itcm : ALIGN(8)
   {
+    *(.sentinel_itcm)
     *(.text*)
     /* Clang's libc++ places its operator new/delete overrides in an orphan
        section; without this line lld gives it a load segment of its own that

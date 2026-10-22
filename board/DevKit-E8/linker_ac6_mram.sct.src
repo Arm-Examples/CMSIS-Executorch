@@ -57,7 +57,7 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
   }
 
   ITCM_RAM __ITCM_BASE __ITCM_SIZE  {                     ; RW code
-   ; Specify objects intended to execute out of ITCM
+   * (.sentinel_itcm) ; MRAM programming must execute outside MRAM
   }
 
   RW_RAM __RW_BASE __RW_SIZE  {                     ; RW data
@@ -86,7 +86,8 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
   ARM_LIB_STACK __STACK_TOP EMPTY -__STACK_SIZE {   ; Reserve empty region for stack
   }
 
-  MRAM_USER  APP_MRAM_USER_BASE  APP_MRAM_USER_SIZE  {
+  ; Reserve the final 0x100 bytes for the two persistent Sentinel profiles.
+  MRAM_USER  APP_MRAM_USER_BASE  (APP_MRAM_USER_SIZE - 0x100)  {
    * (.mram_user)
    * (.mram_user_bss)
   }

@@ -21,7 +21,8 @@
  * scaled up by the largest integer factor that fits the panel, centred on a
  * black background and written into the RGB888 frame buffer in bulk SRAM.
  * The display is brought up on the first call (CDC200 + DSI + panel), as in
- * the pack's Boards/Templates/Baremetal/demo_cdc200.c.
+ * the pack's Boards/Templates/Baremetal/demo_cdc200.c. board_display_line()
+ * and board_display_rect() draw the Sentinel status text.
  *---------------------------------------------------------------------------*/
 
 #include <stdint.h>
@@ -138,5 +139,178 @@ int board_display_image(const uint8_t *rgb, int width, int height, int channels)
     /* The frame buffer is read by the display controller's DMA: push the
        cached lines out (bulk SRAM is write-through, but be explicit). */
     SCB_CleanDCache_by_Addr((uint32_t *) &lcd_frame[y0][0][0], (int32_t)(out_h * LCD_WIDTH * LCD_BPP));
+    return 0;
+}
+
+/* 5 x 7 glyphs (bit 4 = left column): A-Z, 0-9 and : / - . ; other
+   characters are drawn blank. */
+static const struct {
+    char    c;
+    uint8_t rows[7];
+} text_font[] = {
+    {'A', {0x0E, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11}},
+    {'B', {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E}},
+    {'C', {0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E}},
+    {'D', {0x1E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1E}},
+    {'E', {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F}},
+    {'F', {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10}},
+    {'G', {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F}},
+    {'H', {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11}},
+    {'I', {0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E}},
+    {'J', {0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C}},
+    {'K', {0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11}},
+    {'L', {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F}},
+    {'M', {0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11}},
+    {'N', {0x11, 0x19, 0x15, 0x13, 0x11, 0x11, 0x11}},
+    {'O', {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E}},
+    {'P', {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10}},
+    {'Q', {0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D}},
+    {'R', {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11}},
+    {'S', {0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E}},
+    {'T', {0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04}},
+    {'U', {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E}},
+    {'V', {0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04}},
+    {'W', {0x11, 0x11, 0x11, 0x15, 0x15, 0x15, 0x0A}},
+    {'X', {0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11}},
+    {'Y', {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04}},
+    {'Z', {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F}},
+    {'0', {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E}},
+    {'1', {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E}},
+    {'2', {0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F}},
+    {'3', {0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E}},
+    {'4', {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02}},
+    {'5', {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E}},
+    {'6', {0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E}},
+    {'7', {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08}},
+    {'8', {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E}},
+    {'9', {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C}},
+    {':', {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00}},
+    {'/', {0x01, 0x01, 0x02, 0x04, 0x08, 0x10, 0x10}},
+    {'-', {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00}},
+    {'.', {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C}},
+};
+
+/* Logical view for the status text. Portrait by default (the panel's
+   480 x 800 rows, as board_display_image()); with APP_DISPLAY_LANDSCAPE the
+   panel is viewed with its long side horizontal: an 800 x 480 view drawn
+   rotated by 90 degrees into the frame buffer, the other way round with
+   DISPLAY_LANDSCAPE_FLIP 1, so text reads left to right. */
+#ifdef APP_DISPLAY_LANDSCAPE
+#ifndef DISPLAY_LANDSCAPE_FLIP
+#define DISPLAY_LANDSCAPE_FLIP 0
+#endif
+#define VIEW_W LCD_HEIGHT
+#define VIEW_H LCD_WIDTH
+static inline uint8_t *view_px(int lx, int ly)
+{
+#if DISPLAY_LANDSCAPE_FLIP
+    return lcd_frame[VIEW_W - 1 - lx][ly];
+#else
+    return lcd_frame[lx][VIEW_H - 1 - ly];
+#endif
+}
+#else
+#define VIEW_W LCD_WIDTH
+#define VIEW_H LCD_HEIGHT
+static inline uint8_t *view_px(int lx, int ly)
+{
+    return lcd_frame[ly][lx];
+}
+#endif
+
+static int view_ready(void)
+{
+    if (!display_ready) {
+        if (display_init() != 0) {
+            return -1;
+        }
+        display_ready = 1;
+    }
+    return 0;
+}
+
+/* Fill a view rectangle (clipped to the view) with a 0xRRGGBB colour */
+static void view_fill(int x0, int y0, int w, int h, uint32_t rgb)
+{
+    for (int y = y0 < 0 ? 0 : y0; y < y0 + h && y < VIEW_H; y++) {
+        for (int x = x0 < 0 ? 0 : x0; x < x0 + w && x < VIEW_W; x++) {
+            uint8_t *px = view_px(x, y);
+            /* CDC200 RGB888: B, G, R in memory */
+            px[0] = (uint8_t) rgb;
+            px[1] = (uint8_t) (rgb >> 8);
+            px[2] = (uint8_t) (rgb >> 16);
+        }
+    }
+}
+
+/* Push the frame buffer out of the cache for the display controller's DMA
+   (in landscape a band of view rows spans every frame row). */
+static void view_clean(int y0, int h)
+{
+#ifdef APP_DISPLAY_LANDSCAPE
+    (void) y0;
+    (void) h;
+    SCB_CleanDCache_by_Addr((uint32_t *) lcd_frame, (int32_t) sizeof(lcd_frame));
+#else
+    SCB_CleanDCache_by_Addr((uint32_t *) &lcd_frame[y0][0][0], (int32_t)(h * LCD_WIDTH * LCD_BPP));
+#endif
+}
+
+/*
+  Draw one line of text across the view: fill the band of rows y .. y+h-1
+  with bg, then draw text centred in it with 5 x 7 glyphs scaled by scale
+  (a glyph is 5*scale x 7*scale pixels, one glyph column apart). Text that
+  does not fit the view width is cut. Colours are 0xRRGGBB.
+
+  \return      0 on success, -1 when the display is not available
+*/
+int board_display_line(int y, int h, int scale, const char *text, uint32_t fg, uint32_t bg)
+{
+    if (view_ready() != 0 || y < 0 || h <= 0 || y + h > VIEW_H || scale <= 0) {
+        return -1;
+    }
+    view_fill(0, y, VIEW_W, h, bg);
+
+    const int adv = 6 * scale;
+    int       n   = (int) strlen(text);
+    if (n * adv - scale > VIEW_W) {
+        n = (VIEW_W + scale) / adv;
+    }
+    const int x0 = (VIEW_W - (n * adv - scale)) / 2;
+    const int y0 = y + (h - 7 * scale) / 2;
+    for (int i = 0; i < n; i++) {
+        const uint8_t *rows = NULL;
+        for (unsigned k = 0; k < sizeof text_font / sizeof text_font[0]; k++) {
+            if (text_font[k].c == text[i]) {
+                rows = text_font[k].rows;
+            }
+        }
+        if (rows == NULL) {
+            continue;
+        }
+        for (int gy = 0; gy < 7 * scale; gy++) {
+            for (int gx = 0; gx < 5 * scale; gx++) {
+                if (rows[gy / scale] & (0x10u >> (gx / scale))) {
+                    view_fill(x0 + i * adv + gx, y0 + gy, 1, 1, fg);
+                }
+            }
+        }
+    }
+    view_clean(y, h);
+    return 0;
+}
+
+/*
+  Fill a rectangle of the view with a 0xRRGGBB colour (for bars).
+
+  \return      0 on success, -1 when the display is not available
+*/
+int board_display_rect(int x, int y, int w, int h, uint32_t rgb)
+{
+    if (view_ready() != 0) {
+        return -1;
+    }
+    view_fill(x, y, w, h, rgb);
+    view_clean(y, h);
     return 0;
 }

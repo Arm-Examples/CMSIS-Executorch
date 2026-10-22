@@ -79,6 +79,40 @@ extern "C" unsigned board_buttons(void);
 extern "C" int board_console_poll(void);
 constexpr unsigned kButtonLeft = 1u << 0;
 constexpr unsigned kButtonRight = 1u << 1;
+constexpr unsigned kButtonUp = 1u << 2;
+#endif
+#ifdef APP_SENTINEL
+// Board layer (board/DevKit-E8/sentinel.c): machine-health scoring from the
+// microphones and the accelerometer. Init starts both sensors; learn starts
+// learning the normal baseline (SW2 up); poll samples, scores and shows the
+// state when called from the main loop.
+extern "C" int board_sentinel_init(void);
+extern "C" void board_sentinel_select(unsigned id);
+extern "C" void board_sentinel_learn(void);
+extern "C" void board_sentinel_poll(uint32_t now_ms);
+#endif
+#if defined(APP_STATUS_ONLY) && (!defined(APP_SENTINEL) || !defined(APP_BUTTONS))
+#error "APP_STATUS_ONLY runs Sentinel and the SW2 joystick: define APP_SENTINEL and APP_BUTTONS"
+#endif
+#ifdef APP_IMU_VIBRATION_PROBE
+// Board layer (board/DevKit-E8/imu_vib_probe.c): accelerometer rate and
+// vibration diagnostic; init brings up the IMU, poll samples and prints two
+// lines per second when called from the main loop.
+extern "C" int board_imu_vib_init(void);
+extern "C" void board_imu_vib_poll(uint32_t now_ms);
+#endif
+#ifdef APP_IMU_PROBE
+// Board layer (board/DevKit-E8/imu_probe.c): bring up the IMU (0 when ready),
+// and print the accelerometer every 100 ms when called from the main loop.
+extern "C" int board_imu_init(void);
+extern "C" void board_imu_poll(uint32_t now_ms);
+#endif
+#ifdef APP_MIC_PROBE
+// Board layer (board/DevKit-E8/mic_probe.c): start the PDM microphones (0 when
+// capturing), and keep the capture going and print its statistics every
+// 500 ms when called from the main loop.
+extern "C" int board_mic_init(void);
+extern "C" void board_mic_poll(uint32_t now_ms);
 #endif
 #ifdef APP_DISPLAY
 // Board layer (board/DevKit-E8/display.c): show an 8-bit RGB image on the
@@ -588,12 +622,42 @@ void serve_request(EmbeddedModule& module, const char* line) {
   printf("Joystick: left = one new image, right = start/stop continuous generation\n");
   (void)board_buttons();  // drop presses latched during boot
 #endif
+#ifdef APP_IMU_PROBE
+  (void)board_imu_init();
+#endif
+#ifdef APP_MIC_PROBE
+  (void)board_mic_init();
+#endif
+#ifdef APP_SENTINEL
+  (void)board_sentinel_init();
+  board_sentinel_select(0);  // legacy image mode keeps the first profile active
+#endif
+#ifdef APP_IMU_VIBRATION_PROBE
+  (void)board_imu_vib_init();
+#endif
   fflush(stdout);
   char line[64];
   int n = 0;
   for (;;) {
+#ifdef APP_MIC_PROBE
+    board_mic_poll(ms_now());
+#endif
+#ifdef APP_IMU_PROBE
+    board_imu_poll(ms_now());
+#endif
+#ifdef APP_SENTINEL
+    board_sentinel_poll(ms_now());
+#endif
+#ifdef APP_IMU_VIBRATION_PROBE
+    board_imu_vib_poll(ms_now());
+#endif
 #ifdef APP_BUTTONS
     const unsigned pressed = board_buttons();
+#ifdef APP_SENTINEL
+    if (pressed & kButtonUp) {
+      board_sentinel_learn();
+    }
+#endif
     if (pressed & kButtonRight) {
       g_continuous = !g_continuous;
       printf("Continuous generation %s\n", g_continuous ? "started" : "stopped");
@@ -629,6 +693,29 @@ void serve_request(EmbeddedModule& module, const char* line) {
 }
 #endif
 
+#ifdef APP_STATUS_ONLY
+// Status-only demo (board layers that define APP_STATUS_ONLY): no model load
+// and no face generation; the Sentinel sensors, scoring and LCD status run
+// here. SW2 left/right selects a profile; up learns the selected normal.
+[[noreturn]] void sensor_view() {
+  printf("Status-only demo: face generation off; SW2 left FAN, right PHONE, up learn\n");
+  (void)board_buttons();  // drop presses latched during boot
+  (void)board_sentinel_init();
+  fflush(stdout);
+  for (;;) {
+    board_sentinel_poll(ms_now());
+    const unsigned pressed = board_buttons();
+    if (pressed & kButtonLeft) {
+      board_sentinel_select(0);
+    } else if (pressed & kButtonRight) {
+      board_sentinel_select(1);
+    } else if (pressed & kButtonUp) {
+      board_sentinel_learn();
+    }
+  }
+}
+#endif
+
 }  // namespace
 
 extern "C" void SysTick_Handler(void) { g_ms_ticks++; }
@@ -646,6 +733,9 @@ extern "C" int app_main(void) {
   ticks_init();
   crc32_init();
 
+#ifdef APP_STATUS_ONLY
+  sensor_view();  // does not return: no model load, no face generation
+#endif
   printf("ExecuTorch pico-faces (%s, %s): %lu byte program\n", PF_VARIANT, PF_QUANT, model_pte_size);
 
   static EmbeddedModule module(

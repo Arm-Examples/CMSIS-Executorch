@@ -48,6 +48,24 @@ layer:
     # Every generated image is shown on the LCD (board_display_image(),
     # display.c).
     - APP_DISPLAY
+    # Sentinel v1 (sentinel.c): score the PDM microphones and the BMI323
+    # accelerometer against a selected baseline learned on SW2 up, show IDLE,
+    # LEARNING, OK, CHECK or ALERT on the LCD and one line per second on the
+    # console. SW2 left/right selects FAN/DEVICE 2; learned profiles are
+    # stored in the final 256 bytes of user MRAM. It uses the sensor bring-up
+    # of imu_probe.c and mic_probe.c;
+    # for the raw sensor prints define APP_IMU_PROBE and APP_MIC_PROBE
+    # instead. For the accelerometer rate and vibration diagnostic
+    # (imu_vib_probe.c) define APP_IMU_VIBRATION_PROBE instead of
+    # APP_SENTINEL.
+    - APP_SENTINEL
+    # Status-only demo (sentinel.c, app_main.cpp sensor_view()): the LCD shows
+    # SENTINEL and the machine state in text; no model load, no face
+    # generation.
+    - APP_STATUS_ONLY
+    # The panel is viewed landscape, text reading left to right (display.c;
+    # DISPLAY_LANDSCAPE_FLIP: 1 turns it the other way).
+    - APP_DISPLAY_LANDSCAPE
 
   packs:
     - pack: AlifSemiconductor::Ensemble@^2.2.0-0
@@ -86,6 +104,16 @@ layer:
     - component: Device:SOC Peripherals:GPIO
     - component: BSP:External peripherals:ILI9806E LCD panel
 
+    # IMU: the BMI323 on I3C (P7_6/P7_7, muxed by board_pins_config()). Only
+    # one IMU driver at a time: the ICM42670P driver defines the same
+    # IMU_I3CCallBack.
+    - component: Device:SOC Peripherals:I3C
+    - component: BSP:External peripherals:BMI323
+
+    # Microphones: PDM channels 4/5 (PDM_C2_A on P6_7, PDM_D2_B on P5_4,
+    # muxed by board_pins_config()).
+    - component: Device:SOC Peripherals:PDM
+
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
 
     - component: Services:Retarget IO:STDERR
@@ -104,6 +132,11 @@ layer:
         - file: ./retarget_stdio.c
         - file: ./display.c
         - file: ./buttons.c
+        - file: ./imu_probe.c
+        - file: ./mic_probe.c
+        - file: ./sentinel.c
+        - file: ./sentinel_profile_store.c
+        - file: ./imu_vib_probe.c
 
     - group: Ethos Interface
       files:

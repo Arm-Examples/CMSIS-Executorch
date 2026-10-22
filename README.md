@@ -1,242 +1,123 @@
-# pico-faces on Ethos-U85 with ExecuTorch: hackathon guide
+# Sentinel — learned "normal state" monitor on the Alif Ensemble E8
 
-The Arm ExecuTorch example, on its `hackathon` branch: a generative model on
-a microcontroller. [pico-faces](https://github.com/cpldcpu/pico-faces) by
-cpldcpu, a latent diffusion transformer (2.5M parameters) with a small
-decoder, generates 128x128 faces; exported through ExecuTorch, every layer of
-it runs on the Ethos-U85 NPU while the Cortex-M drives the sampling loop. One
-CMSIS solution runs it on the **Alif Ensemble E8 DevKit** or the **Ensemble E8
-AI/ML AppKit** (Cortex-M55 HP core; the faces appear on the board's LCD, a new
-one per joystick press) and on the **Corstone-320 FVP**; you switch between
-them by target-type. The model is
-exported from PyTorch in three steps: the CMSIS-Toolbox describes the target,
-`create_ai_layer.py` turns that into the AI layer, the toolbox builds the
-application. This page takes you from an empty machine to a debug session on
-the board. Everything about the example itself is in
-[documentation/example.md](documentation/example.md).
+> Built at the **Arm × Alif Ensemble E8 Hackathon** (October 2026) by
+> **Param Charnanand** and **Arya Varia**.
+>
+> **Also see:** [paramcharnanand/sentinel](https://github.com/paramcharnanand/sentinel) — the standalone Sentinel repo where it was developed during the hackathon.
 
-## 1. Host tools
+Sentinel is bare-metal firmware for the Alif Ensemble E8 DevKit that learns
+how one machine normally sounds and vibrates. It keeps that baseline in
+on-chip MRAM and shows on the LCD, live, whether the machine still matches
+it.
 
-1. Install [VS Code](https://code.visualstudio.com/).
-2. Install the extensions **Keil Studio Pack** (`Arm.keil-studio-pack`, which
-   brings the CMSIS Solution extension 1.72.0 or newer with CMSIS-Toolbox
-   2.15) and **Python** (`ms-python.python`). Sign in with an
-   Arm account when Keil Studio asks; the free Keil MDK Community license is
-   enough.
-3. Nothing else by hand: when you open the project, the Arm Tools Environment
-   Manager offers to install the tools pinned in `vcpkg-configuration.json`
-   (CMSIS-Toolbox, Arm Compiler 6, GCC, CMake, Ninja, and on Linux and
-   Windows the Corstone-320 FVP; macOS runs it in Docker, see step 6). Accept.
-4. Optional: the **CMSIS Developer Assistant** extension lets an AI agent
-   (Claude Code or GitHub Copilot Chat) build, flash and debug the board
-   through an MCP server. Install it, install one of the agents, run
-   **CMSIS Developer Assistant: Configure Agents and Skills** from the command
-   palette and pick at least the `cmsis-debug-live` and `cmsis-help` skills.
+- **Demonstrated on hardware:** a desk fan changing from its learned medium
+  speed to high speed (amber **CHECK** about 2 s after the sound changed), and
+  back (green **OK**). Baselines survive full power cycles.
+- **Not demonstrated:** fault diagnosis.
 
-## 2. Alif and SEGGER tools (board only)
+**Tech:** C / C++ on Arm Cortex-M55 · CMSIS-Toolbox · Alif Ensemble DFP ·
+PDM microphones · BMI323 IMU over I3C · MIPI-DSI LCD · on-chip MRAM ·
+SEGGER J-Link · host unit tests in C · Python log analysis.
 
-1. **Alif SETOOLS** V1.110.00 or later (V1.112.00 is current) from the
-   [Alif software and tools page](https://alifsemi.com/support/software-tools/ensemble/)
-   (login required). Unpack it; on Linux and macOS make the tools executable
-   and install the Python packages its README lists. Add the root directory
-   (the one with `app-gen-toc` and `app-write-mram`) to your VS Code user
-   settings:
+Built on Arm's CMSIS-ExecuTorch pico-faces example (Apache-2.0). The original
+guide is in [docs/pico-faces-guide.md](docs/pico-faces-guide.md).
 
-   ```json
-   "alif.setools.root": "/absolute/path/to/setools"
+## Hardware actually used (Cortex-M55 HP core)
+
+| Peripheral | Use |
+|---|---|
+| PDM microphones (channels 4/5) | 16 kHz audio into a 4 x 100 ms interrupt-fed ring |
+| BMI323 accelerometer (I3C) | Read at the driver's fixed rate of about 50 Hz |
+| MIPI-DSI LCD | Landscape text status |
+| MRAM | Two baselines (FAN, PHONE) in the last 256 bytes of user MRAM |
+| SW2 joystick | Select a profile and learn |
+| UART4 (115200 8N1) | One status line per second |
+
+The live Sentinel mode uses **statistical scoring on the M55 CPU**. It does
+**not** run ExecuTorch or the Ethos-U85 NPU; the pico-faces ExecuTorch/NPU
+code remains in the repository but is not linked in this mode. The worst
+measured audio-block processing was 192 microseconds per 100 ms block (about
+0.19 % of that interval); this is not total CPU utilization, and power was
+not measured.
+
+## How it works
+
+1. **Windows:** every 1 s window combines ten 100 ms audio blocks with about
+   50 accelerometer reads.
+2. **Features:** four per window:
+   - log sound power of each microphone channel;
+   - a high/low-frequency ratio;
+   - log variance of the acceleration magnitude.
+3. **Learning:** SW2 up records 30 windows (30 s) and stores each feature's
+   mean and standard deviation in MRAM. The save is checksummed and read back.
+4. **Scoring:** each window gives a z-score per feature against that baseline.
+   - A sensor counts as changed after 3 windows in a row with |z| > 4, and as
+     normal again after 3 windows with |z| < 2.5.
+   - No sensor changed = **OK**, one = **CHECK**, both = **ALERT**.
+
+## Run the FAN demo
+
+1. Build and flash. A fresh clone first needs the "Create AI layer" step from
+   the [pico-faces guide](docs/pico-faces-guide.md):
    ```
+   cbuild cmsis-executorch.csolution.yml --active DevKit-E8 --rebuild
+   JLinkExe -device AE822FA0E5597LS0_M55_HP -if swd -speed 4000   # LoadFile the .hex, then reset
+   ```
+2. Set up:
+   - fan guard on, oscillation off;
+   - board beside the fan, out of its airflow;
+   - both positions fixed;
+   - fan on medium for about 10 s, room quiet.
+3. **SW2 left** selects FAN. **SW2 up** learns: blue LEARNING for 30 s, then
+   green **OK**.
+4. Switch the fan to **high**: amber **CHECK**, `SOUND: CHANGED`, about 2 s
+   after the sound changes.
+5. Switch back to **medium**: green **OK** again.
 
-2. **SEGGER J-Link Software** V8.42 or later from
-   [segger.com](https://www.segger.com/downloads/jlink/). The board has an
-   on-board J-Link.
+## What was demonstrated (2026-10-17/18, on the board)
 
-## 3. Board
+- Medium → high gave CHECK 2 s after the sound changed, and back gave OK,
+  in the 2026-10-17 runs; an operator confirmed it on the LCD.
+- At the final demo location (2026-10-18): the first cycle gave ALERT because
+  the board had moved; two cycles after securing it gave sound-only CHECK
+  about 2 s after the first abnormal sound window. Recovery to OK was
+  confirmed on screen, but its exact time was not logged because the
+  laptop's serial link dropped.
+- Baselines saved to MRAM and reloaded after full power cycles.
+- 0 audio FIFO errors and 0 ring-full stops in every log.
+- Worst measured audio-block processing: 192 microseconds per 100 ms block
+  (about 0.19 % of that interval); not total CPU utilization.
+- Logs can be analysed offline with `tools/sentinel_log_report.py`.
 
-- Connect a USB cable to **PRG USB** (USB-C in the corner of the DevKit,
-  Micro-USB on the AppKit). It powers the board and carries the J-Link and a
-  USB-to-UART bridge. Leave the other USB device connector unconnected.
-- DevKit: jumpers at their defaults, **JP5 on 1-2**, **JP7 on 3-4**. Never
-  move jumpers with power applied.
-- **SW4** (on both boards) selects what the UART bridge is connected to:
+## Run the host tests
 
-  | SW4 | Connected to | Used for |
-  |-----|--------------|----------|
-  | `SEUART` (default) | Secure Enclave UART | SETOOLS (step 5) |
-  | `UART2` (AppKit only, middle position) | Application UART2 | Not used here |
-  | `UART4` | Application UART4, 115200 8N1 | The example's console (step 6) |
+The MRAM profile store and the select/learn/save control path are tested on
+the host with a plain C compiler, no board needed:
 
-- With the board attached, run these once: in the SETOOLS directory
-  `updateSystemPackage -d` (SW4 on `SEUART`; picks the serial port, checks the
-  system firmware, offers to make the E8 the default target: answer yes), and
-  J-Link Commander (`JLinkExe`, `JLink.exe` on Windows), which updates the
-  on-board J-Link firmware and installs its serial-port drivers.
-
-## 4. Project
-
-```bash
-git clone https://github.com/Arm-Examples/CMSIS-Executorch.git
-cd CMSIS-Executorch
-git checkout hackathon
+```
+cc -std=c11 -I tests/fakes tests/sentinel_profile_store_test.c -lm -o store_test && ./store_test
+cc -std=c11 -I tests/fakes tests/sentinel_profile_control_test.c -lm -o control_test && ./control_test
 ```
 
-Open the folder in VS Code and accept the tool activation and the pack
-installation (`PyTorch::ExecuTorch`, `AlifSemiconductor::Ensemble`, CMSIS).
-In the CMSIS view open **Manage Solution**, choose the target-type
-of your board, **DevKit-E8** or **AppKit-E8** (**SSE-320-U85** for the FVP),
-and click **Apply**.
+Each prints `PASS`.
 
-The model data is generated rather than committed, so a fresh checkout
-needs Python once before the first build:
+## Main limitations
 
-1. **Terminal > Run Task > Setup Python virtual environment** (several GB of
-   PyTorch, takes a while; the **(uv)** variant of the task uses uv and can
-   download the Python version it asks for). It also downloads the
-   pico-faces checkpoints (about 60 MB, checked by SHA-256) into
-   `model/pico_faces/`.
-2. **Terminal > Run Task > Create AI layer** exports the model for the NPU
-   and writes `ai_layer/` (a few minutes). It reads
-   `cmsis-executorch.cbuild-mlops.yml`, which the CMSIS Solution extension
-   writes when it loads the solution (click **Build** once if the file is
-   missing). Run the task again after changing `model/model.py`.
+- **Fault diagnosis:** not shown. It reports a *change* from the learned
+  normal state; OK is not a health verdict.
+- **Fan vibration:** not validated. The installed BMI323 driver gives about
+  50 Hz samples, and fan speeds stay at the noise floor.
+- **Phone vibration:** inconclusive. No loom or real machine fault was tested.
+- **Sensitivity to the room:** voices or bumps near the board cause short
+  CHECKs, and moving the board after learning needs a relearn.
+- **Power:** not measured.
 
-## 5. Prepare the board once
+## More
 
-The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
-debugger needs that table to point at a debug stub.
-
-1. SW4 to **SEUART**, PRG USB attached.
-2. **Terminal > Run Task > Alif: Install M55_HP debug stubs (DevKit-E8, single core configuration)**,
-   or the **(AppKit-E8, ...)** task for the AppKit. Choose COM port
-   discovery (`-d`) the first time; SETOOLS remembers the port. The task
-   selects the board's part in SETOOLS (`tools-config -p 'E8
-   (AE822FA0E5597LS0) ...' -r A0` for the DevKit, `AE822FA0E5597BS0` for the
-   AppKit: the part goes into the table of contents,
-   and the Secure Enclave does not boot a table built for another part),
-   copies the configuration and stub from `.alif/` into the SETOOLS tree and
-   runs `app-gen-toc` and `app-write-mram`. If `app-write-mram` reports a
-   different revision of the board, answer `y`: only the part number decides
-   whether the table boots.
-3. SW4 to **UART4**.
-
-Repeat this after another project has reprogrammed the table.
-
-## 6. Build, run, debug
-
-1. With SW4 on **UART4**, open the **Serial Monitor** panel on the PRG USB
-   port, 115200 baud.
-2. In the CMSIS view click **Build**, then **Debug** (or **Run**). Keil Studio
-   starts the J-Link GDB server over SWD, loads the image into MRAM and stops
-   at `main`; continue with F5. The console shows the Ethos-U banner, the
-   program and its two methods, the timings of the boot demo, the CRC of the
-   image, an ASCII preview of the face and the pass marker:
-
-   ```text
-   Ethos-U version info:
-       Arch:       v2.0.0
-       MACs/cc:    256
-       Cmd stream: v1
-   ExecuTorch pico-faces (m3_long_cfg, a16w8/a8w8): 2796016 byte program
-   Methods:
-     dit_step  2 input(s), 1 output(s), 16384 planned byte(s)
-     decode    1 input(s), 1 output(s), 245760 planned byte(s)
-   Generating: seed 3, 4 steps, class 1, w 4.0
-   Display: 480x800 RGB888 panel started
-     dit_step: 8 call(s), 68 ms total (8 ms each)
-     decode:   3 ms
-     total:    78 ms at 400 MHz (wall clock; not meaningful on the FVP)
-     dit_step: NPU 27132 kcycles, active 95%, MAC active 39%, 32 MAC/cycle, read 21279 kB on AXI0 + 0 kB on AXI1
-     decode:   NPU 1303 kcycles, active 50%, MAC active 37%, 83 MAC/cycle, read 434 kB on AXI0 + 0 kB on AXI1
-   Image: 128x128x3, CRC32 6b938c66
-     |::::::::.......  .    ..........|
-     |::::::::...........     .....   |
-     ...
-   Test_result: PASS
-   Interactive: send "G <seed> [k_steps] [class] [w]" (viewer/view_serial.py) or "I"
-   Joystick: left = one new image, right = start/stop continuous generation
-   ```
-
-   A face with guidance takes 78 ms: eight `dit_step` calls of 8.5 ms on the
-   NPU and a 3 ms decode. The same face appears on the LCD, scaled to
-   384 x 384 in the centre of the screen; it is bit for bit the image the FVP
-   produces. (The CRC depends on the exported program, which can differ
-   slightly between the machines that run **Create AI layer**.)
-3. Press the **SW2 joystick** to the left for a new face (the next seed; class
-   and guidance follow from it), to the right to generate faces back to back
-   until you press right again. Each one is reported on the console.
-4. Or request faces from the host with pico-faces' viewer (close the Serial
-   Monitor first, the viewer needs the port; in a clone of
-   [pico-faces](https://github.com/cpldcpu/pico-faces),
-   `pip install pyserial pillow`):
-
-   ```bash
-   python viewer/view_serial.py --port /dev/tty.usbmodemXXXX --seed 3 --steps 4 --class 1 --cfg 4 --show
-   ```
-
-   Classes are 0 (female, neutral), 1 (female, smiling), 2 (male, neutral),
-   3 (male, smiling) and 4 (unconditional); `--cfg` is the guidance strength
-   (0 = plain), `--steps` 8, 4, 2 or 1.
-5. Set a breakpoint after `generate()` in `src/app_main.cpp` and inspect the
-   timings in `tm`, or ask the CMSIS Developer Assistant to do it: "Build for
-   the DevKit-E8, load it, break after the first generate() and show me the
-   NPU cycles per method."
-
-**FVP instead of the board:** choose the **SSE-320-U85** target-type and click
-**Run** or **Debug**; the same output appears in the terminal (a run takes a
-few minutes), and the image lands in `out/fvp_image.bin`.
-`python3 model/verify_export.py --compare out/fvp_image.bin <reference.png>`
-compares it with the host's rendering of the same seed (see
-[documentation/example.md](documentation/example.md)). On macOS, where Arm
-ships no FVP build, the FVP runs in Docker: set `model:` in the csolution's
-SSE-320-U85 target-set to `${workspaceFolder}/.vscode/fvp.sh`, copy
-`.vscode/launch.json.mac` to `.vscode/launch.json`, and keep Docker Desktop
-running (the first run builds the image, about 100 MB).
-
-## 7. If something does not work
-
-- **J-Link connects but never stops at `main`:** either the table of contents
-  does not point at the debug stub or was built for another part, which the
-  Secure Enclave skips (repeat step 5), or the image cannot boot.
-  Look before reprogramming: in the debugger, read the vector table at
-  `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
-  lockup at reset, which an image linked to run from ITCM produces when the
-  code that copies it there is itself in ITCM.
-- **Debug hangs at "Connecting":** the target-set was switched to
-  `protocol: jtag`. Keep SWD: the generated load task blocks on JLinkExe's
-  JTAG-chain prompt, and the device stays in SWD mode after any SWD use
-  until it is power-cycled.
-- **No console output:** SW4 is still on `SEUART`, or the port was opened
-  before the switch was moved. Set `UART4` and reopen the port.
-- **Every SETOOLS tool prints `Revision is invalid!`:** SETOOLS stores the
-  selected part and revision in `utils/global-cfg.db`, and a
-  `tools-config -p` without `-r` (another project switching to an E7, for
-  example) keeps a revision the new part does not have. From then on even
-  `tools-config` refuses to run. The stub tasks of step 5 write their
-  board's part and revision into that file before they call `tools-config`,
-  so they recover by themselves; for SETOOLS commands of your own, set
-  `"Part#"` to `"E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM"` (DevKit) or
-  `"E8 (AE822FA0E5597BS0) - 5.5 MRAM / 9.75 SRAM"` (AppKit) and `"Revision"`
-  to `"A0"` there.
-- **`app-write-mram` gets no answer:** press reset while it waits, check SW4
-  is on `SEUART`, close any terminal holding the port.
-- **The build stops at `model_pte_data.inc is missing`:** the model data is
-  not committed; run the tasks **Setup Python virtual environment** and
-  **Create AI layer** (step 4).
-- **"`.venv` does not exist" or "`model/pico_faces/...` is missing":** run the
-  task **Setup Python virtual environment** first; it creates the
-  environment and downloads the checkpoints.
-- `.vscode/launch.json` is generated by the extension for the target-types
-  and is not committed; after **Apply** it has a J-Link entry for the
-  DevKit-E8 or the AppKit-E8. That is expected.
-
-## Read on
-
-- [documentation/example.md](documentation/example.md): the example, the
-  command-line flow, how the model is generated.
-- [board/DevKit-E8/README.md](board/DevKit-E8/README.md): the board layer,
-  memory map and RTE configuration.
-- [board/AppKit-E8/README.md](board/AppKit-E8/README.md): the AppKit-E8
-  layer and what differs from the DevKit.
-- [documentation/mlops-flow.md](documentation/mlops-flow.md): the `mlops:`
-  node and `*.cbuild-mlops.yml` in detail.
-- [documentation/pack-provenance.md](documentation/pack-provenance.md): where
-  the `PyTorch::ExecuTorch` pack comes from and how to move to a new version.
+- [docs/sentinel-details.md](docs/sentinel-details.md): architecture,
+  measured performance and memory, build modes, test records, troubleshooting.
+- `board/DevKit-E8/`: Sentinel sources
+  - `sentinel.c` (scoring and LCD), `mic_probe.c`, `imu_probe.c`
+  - `sentinel_profile_store.c` (MRAM profiles)
+- `tests/`: host tests of the profile store
+- `tools/`: offline log report
