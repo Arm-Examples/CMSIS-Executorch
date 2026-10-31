@@ -39,13 +39,11 @@ layer:
     - APP_POOL_SECTION: \".bss.ai_pool\"
     - APP_METHOD_POOL_SIZE: 0x100000
     - APP_TEMP_POOL_SIZE: 0x180000
-    # After the boot demo the runner keeps serving pico-faces' serial protocol
-    # on the console, for pico-faces' viewer/view_serial.py (APP_INTERACTIVE),
-    # and generates a new face when the on-screen OK badge is tapped.
+    # Serve pico-faces' serial protocol on the console and show a touchscreen
+    # mode selector; the Generate badge uses the selected options.
     - APP_INTERACTIVE
     - APP_TOUCH
-    # Every generated image is shown on the LCD (board_display_image(),
-    # display.c).
+    # Touch-generated images are shown with the controls on the LCD.
     - APP_DISPLAY
 
   packs:

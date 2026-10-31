@@ -18,9 +18,8 @@
  * DevKit-E8 display: shows an RGB image on the 4.3" MIPI-DSI panel (ILI9806E,
  * 480 x 800 portrait) through the CDC200 display controller. The application
  * calls board_display_image() with an 8-bit RGB image (HWC); the image is
- * scaled up by the largest integer factor that fits the panel, centred on a
- * black background with an OK badge below it, and written into the RGB888
- * frame buffer in bulk SRAM.
+ * scaled up on the panel and written into the RGB888 frame buffer in bulk SRAM.
+ * The touchscreen UI draws mode and conditioning controls above the image.
  * The display is brought up on the first call (CDC200 + DSI + panel), as in
  * the pack's Boards/Templates/Baremetal/demo_cdc200.c.
  *---------------------------------------------------------------------------*/
@@ -34,6 +33,7 @@
 #include "RTE_Device.h"
 
 #include "Driver_CDC200.h"
+#include "touch_ui.h"
 
 #define LCD_WIDTH   RTE_PANEL_HACTIVE_TIME   /* 480 */
 #define LCD_HEIGHT  RTE_PANEL_VACTIVE_LINE   /* 800 */
@@ -41,6 +41,15 @@
 #define OK_HEIGHT   108
 #define OK_X        ((LCD_WIDTH - OK_WIDTH) / 2)
 #define OK_Y        (LCD_HEIGHT - OK_HEIGHT - 32)
+
+#define MODE_Y      66
+#define MODE_H      80
+#define CHOICE_Y1   222
+#define CHOICE_Y2   312
+#define CHOICE_H    58
+#define LEFT_X      24
+#define RIGHT_X     246
+#define CHOICE_W    210
 
 #if RTE_CDC200_PIXEL_FORMAT != 1
 #error "display.c expects RTE_CDC200_PIXEL_FORMAT 1 (RGB888) in RTE_Device.h"
@@ -64,6 +73,75 @@ static void set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b)
     pixel[0] = b;
     pixel[1] = g;
     pixel[2] = r;
+}
+
+static void fill_rect(int x, int y, int width, int height, uint8_t r, uint8_t g, uint8_t b)
+{
+    for (int py = y; py < y + height; py++) {
+        for (int px = x; px < x + width; px++) {
+            set_pixel(px, py, r, g, b);
+        }
+    }
+}
+
+/* Five-column uppercase bitmap font; each bit in a column is a row. */
+static void glyph(char ch, uint8_t out[5])
+{
+    static const struct { char ch; uint8_t cols[5]; } letters[] = {
+        {'A', {0x7e, 0x11, 0x11, 0x11, 0x7e}},
+        {'C', {0x3e, 0x41, 0x41, 0x41, 0x22}},
+        {'D', {0x7f, 0x41, 0x41, 0x22, 0x1c}},
+        {'E', {0x7f, 0x49, 0x49, 0x49, 0x41}},
+        {'F', {0x7f, 0x09, 0x09, 0x09, 0x01}},
+        {'G', {0x3e, 0x41, 0x49, 0x49, 0x7a}},
+        {'I', {0x41, 0x41, 0x7f, 0x41, 0x41}},
+        {'L', {0x7f, 0x40, 0x40, 0x40, 0x40}},
+        {'M', {0x7f, 0x02, 0x0c, 0x02, 0x7f}},
+        {'N', {0x7f, 0x04, 0x08, 0x10, 0x7f}},
+        {'O', {0x3e, 0x41, 0x41, 0x41, 0x3e}},
+        {'P', {0x7f, 0x09, 0x09, 0x09, 0x06}},
+        {'R', {0x7f, 0x09, 0x19, 0x29, 0x46}},
+        {'S', {0x46, 0x49, 0x49, 0x49, 0x31}},
+        {'T', {0x01, 0x01, 0x7f, 0x01, 0x01}},
+        {'U', {0x3f, 0x40, 0x40, 0x40, 0x3f}},
+        {'X', {0x63, 0x14, 0x08, 0x14, 0x63}},
+        {'Y', {0x07, 0x08, 0x70, 0x08, 0x07}},
+    };
+    memset(out, 0, 5);
+    for (size_t i = 0; i < sizeof(letters) / sizeof(letters[0]); i++) {
+        if (letters[i].ch == ch) {
+            memcpy(out, letters[i].cols, 5);
+            return;
+        }
+    }
+}
+
+static void draw_text(int x, int y, const char *s, int scale, uint8_t r, uint8_t g, uint8_t b)
+{
+    while (*s) {
+        uint8_t cols[5];
+        glyph(*s++, cols);
+        for (int col = 0; col < 5; col++) {
+            for (int row = 0; row < 7; row++) {
+                if (cols[col] & (1u << row)) {
+                    fill_rect(x + col * scale, y + row * scale, scale, scale, r, g, b);
+                }
+            }
+        }
+        x += 6 * scale;
+    }
+}
+
+static void draw_button(int x, int y, int width, int height, const char *label, int selected)
+{
+    const int scale = 2;
+    fill_rect(x, y, width, height, selected ? 48 : 65, selected ? 173 : 72,
+              selected ? 117 : 88);
+    fill_rect(x + 3, y + 3, width - 6, height - 6, selected ? 19 : 27,
+              selected ? 110 : 35, selected ? 74 : 48);
+    int text_width = (int)strlen(label) * 6 * scale - scale;
+    draw_text(x + (width - text_width) / 2, y + (height - 7 * scale) / 2,
+              label, scale, 255, 255, 255);
 }
 
 static void fill_circle(int cx, int cy, int radius, uint8_t r, uint8_t g, uint8_t b)
@@ -90,7 +168,7 @@ static void draw_stroke(int x0, int y0, int x1, int y1, int radius,
     }
 }
 
-/* Rounded green badge with a checkmark and white vector lettering. */
+/* Rounded green Generate badge with a checkmark. */
 static int draw_ok_sign(void)
 {
     const int badge_width = OK_WIDTH, badge_height = OK_HEIGHT;
@@ -125,27 +203,12 @@ static int draw_ok_sign(void)
     draw_stroke(icon_x - 15, mid_y, icon_x - 4, mid_y + 11, 4, 24, 132, 70);
     draw_stroke(icon_x - 4, mid_y + 11, icon_x + 18, mid_y - 15, 4, 24, 132, 70);
 
-    /* O: a six-pixel ellipse outline. */
-    const int ox = badge_x + 150;
-    for (int dy = -25; dy <= 25; dy++) {
-        for (int dx = -20; dx <= 20; dx++) {
-            const int outer = dx * dx * 25 * 25 + dy * dy * 20 * 20;
-            const int inner = dx * dx * 19 * 19 + dy * dy * 14 * 14;
-            if (outer <= 20 * 20 * 25 * 25 && inner > 14 * 14 * 19 * 19) {
-                set_pixel(ox + dx, mid_y + dy, 255, 255, 255);
-            }
-        }
-    }
-    /* K: three rounded strokes, aligned with the O. */
-    const int kx = badge_x + 190;
-    draw_stroke(kx, mid_y - 24, kx, mid_y + 24, 3, 255, 255, 255);
-    draw_stroke(kx + 2, mid_y + 2, kx + 29, mid_y - 24, 3, 255, 255, 255);
-    draw_stroke(kx + 2, mid_y - 2, kx + 29, mid_y + 24, 3, 255, 255, 255);
+    draw_text(badge_x + 105, mid_y - 10, "GENERATE", 3, 255, 255, 255);
     return bar_top;
 }
 
 /* Use the same bounds for drawing and touch hit testing. */
-int board_display_ok_contains(int x, int y)
+static int board_display_ok_contains(int x, int y)
 {
     if (x < OK_X || x >= OK_X + OK_WIDTH ||
         y < OK_Y || y >= OK_Y + OK_HEIGHT) {
@@ -158,6 +221,29 @@ int board_display_ok_contains(int x, int y)
     }
     const int dx = x - cap_x, dy = y - (OK_Y + radius);
     return dx * dx + dy * dy <= radius * radius;
+}
+
+static int in_rect(int x, int y, int left, int top, int width, int height)
+{
+    return x >= left && x < left + width && y >= top && y < top + height;
+}
+
+int board_display_hit_test(int x, int y, int mode, int gender, int expression)
+{
+    if (in_rect(x, y, LEFT_X, MODE_Y, CHOICE_W, MODE_H)) return TOUCH_EVENT_CONDITIONAL;
+    if (in_rect(x, y, RIGHT_X, MODE_Y, CHOICE_W, MODE_H)) return TOUCH_EVENT_UNCONDITIONAL;
+    if (mode == TOUCH_MODE_CONDITIONAL) {
+        if (in_rect(x, y, LEFT_X, CHOICE_Y1, CHOICE_W, CHOICE_H)) return TOUCH_EVENT_MALE;
+        if (in_rect(x, y, RIGHT_X, CHOICE_Y1, CHOICE_W, CHOICE_H)) return TOUCH_EVENT_FEMALE;
+        if (in_rect(x, y, LEFT_X, CHOICE_Y2, CHOICE_W, CHOICE_H)) return TOUCH_EVENT_NEUTRAL;
+        if (in_rect(x, y, RIGHT_X, CHOICE_Y2, CHOICE_W, CHOICE_H)) return TOUCH_EVENT_SMILING;
+    }
+    if ((mode == TOUCH_MODE_UNCONDITIONAL ||
+         (mode == TOUCH_MODE_CONDITIONAL && gender != TOUCH_CHOICE_NONE &&
+          expression != TOUCH_CHOICE_NONE)) && board_display_ok_contains(x, y)) {
+        return TOUCH_EVENT_GENERATE;
+    }
+    return TOUCH_EVENT_NONE;
 }
 
 static void display_callback(uint32_t event)
@@ -249,5 +335,67 @@ int board_display_image(const uint8_t *rgb, int width, int height, int channels)
     const int bar_top = draw_ok_sign();
     SCB_CleanDCache_by_Addr((uint32_t *) &lcd_frame[bar_top][0][0],
                             (int32_t)((LCD_HEIGHT - bar_top) * LCD_WIDTH * LCD_BPP));
+    return 0;
+}
+
+/* Draw all touchscreen controls and the latest face in one frame. A null image
+   leaves the preview area empty, including on the initial mode-only screen. */
+int board_display_ui(int mode, int gender, int expression, const uint8_t *image,
+                     int width, int height, int channels)
+{
+    if (!display_ready) {
+        if (display_init() != 0) return -1;
+        display_ready = 1;
+    }
+    memset(lcd_frame, 0, sizeof(lcd_frame));
+    draw_text(150, 25, "GENERATION MODE", 2, 232, 240, 246);
+    draw_button(LEFT_X, MODE_Y, CHOICE_W, MODE_H, "CONDITIONAL",
+                mode == TOUCH_MODE_CONDITIONAL);
+    draw_button(RIGHT_X, MODE_Y, CHOICE_W, MODE_H, "UNCONDITIONAL",
+                mode == TOUCH_MODE_UNCONDITIONAL);
+
+    if (mode == TOUCH_MODE_CONDITIONAL) {
+        draw_text(120, 164, "CONDITIONING OPTIONS", 2, 190, 205, 221);
+        draw_text(24, 193, "GENDER", 2, 232, 240, 246);
+        draw_button(LEFT_X, CHOICE_Y1, CHOICE_W, CHOICE_H, "MALE",
+                    gender == TOUCH_GENDER_MALE);
+        draw_button(RIGHT_X, CHOICE_Y1, CHOICE_W, CHOICE_H, "FEMALE",
+                    gender == TOUCH_GENDER_FEMALE);
+        draw_text(24, 289, "EXPRESSION", 2, 232, 240, 246);
+        draw_button(LEFT_X, CHOICE_Y2, CHOICE_W, CHOICE_H, "NEUTRAL",
+                    expression == TOUCH_EXPRESSION_NEUTRAL);
+        draw_button(RIGHT_X, CHOICE_Y2, CHOICE_W, CHOICE_H, "SMILING",
+                    expression == TOUCH_EXPRESSION_SMILING);
+    }
+
+    if (image != NULL) {
+        const int top = mode == TOUCH_MODE_CONDITIONAL ? 378 : 164;
+        const int available_h = 636 - top;
+        if (width <= 0 || height <= 0 || (channels != 1 && channels != 3) ||
+            width > LCD_WIDTH || height > available_h) return -1;
+        int scale = LCD_WIDTH / width;
+        if (available_h / height < scale) scale = available_h / height;
+        const int out_w = width * scale, out_h = height * scale;
+        const int x0 = (LCD_WIDTH - out_w) / 2;
+        const int y0 = top + (available_h - out_h) / 2;
+        for (int y = 0; y < out_h; y++) {
+            const uint8_t *row = image + (size_t)(y / scale) * width * channels;
+            uint8_t *dst = &lcd_frame[y0 + y][x0][0];
+            for (int x = 0; x < out_w; x++) {
+                const uint8_t *px = row + (x / scale) * channels;
+                dst[0] = channels == 3 ? px[2] : px[0];
+                dst[1] = channels == 3 ? px[1] : px[0];
+                dst[2] = px[0];
+                dst += LCD_BPP;
+            }
+        }
+    }
+
+    if (mode == TOUCH_MODE_UNCONDITIONAL ||
+        (mode == TOUCH_MODE_CONDITIONAL && gender != TOUCH_CHOICE_NONE &&
+         expression != TOUCH_CHOICE_NONE)) {
+        draw_ok_sign();
+    }
+    SCB_CleanDCache_by_Addr((uint32_t *)lcd_frame, sizeof(lcd_frame));
     return 0;
 }

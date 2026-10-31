@@ -38,13 +38,13 @@
 
 #include "board_defs.h"
 #include "Driver_Touch_Screen.h"
+#include "touch_ui.h"
 
 extern ARM_DRIVER_TOUCH_SCREEN GT911;
 /* The pack driver sets this flag only when a fresh GT911 interrupt arrives.
    GetState() also returns zero touches when there is no new interrupt, so
    checking the flag lets us distinguish a release from an idle poll. */
 extern volatile uint8_t touch_event_gpio;
-extern int board_display_ok_contains(int x, int y);
 
 int board_touch_init(void)
 {
@@ -62,9 +62,8 @@ int board_touch_init(void)
     return 0;
 }
 
-/* Return 1 once when a new touch starts inside the on-screen OK badge.
-   A release interrupt arms the button for the next tap. */
-int board_touch_ok_poll(void)
+/* Return one UI event per new tap. A release interrupt arms the next tap. */
+int board_touch_poll(int mode, int gender, int expression)
 {
     static int touch_down = 0;
     ARM_TOUCH_STATE state;
@@ -85,9 +84,9 @@ int board_touch_ok_poll(void)
     }
     touch_down = 1;
     for (int i = 0; i < state.numtouches; i++) {
-        if (board_display_ok_contains(state.coordinates[i].x, state.coordinates[i].y)) {
-            return 1;
-        }
+        int event = board_display_hit_test(state.coordinates[i].x, state.coordinates[i].y,
+                                           mode, gender, expression);
+        if (event != TOUCH_EVENT_NONE) return event;
     }
     return 0;
 }

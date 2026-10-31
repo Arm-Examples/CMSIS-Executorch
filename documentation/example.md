@@ -276,9 +276,12 @@ build. `--check-upstream <clone>` verifies the re-implementation in
 
 #### 6. Generate faces on the DevKit-E8
 
-On the board the runner keeps going after the boot demo. Every face appears
-on the LCD; tapping the green OK badge at the bottom generates the next image.
-The runner also serves image
+On the DevKit-E8 touchscreen, choose Conditional or Unconditional at the top.
+Conditional reveals independent Gender (Male/Female) and Expression
+(Neutral/Smiling) choices below; Unconditional hides them. After selecting a
+mode and, for Conditional, both choices, tap the green Generate badge to make a
+face. The selected options and generated face stay on the same screen. The
+runner also serves image
 requests on the UART console in the serial protocol of pico-faces' firmware,
 so pico-faces' viewer works unchanged (in a clone of the upstream repository,
 `pip install pyserial pillow`):
