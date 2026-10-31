@@ -9018,6 +9018,10 @@
 // <i> Default: 0
 #define RTE_I2C0_RX_FIFO_THRESHOLD 0
 
+// I2C0 stuck-low timeouts (pack 2.2.1 defaults)
+#define RTE_I2C0_SCL_STUCK_LOW_TIMEOUT 1000000
+#define RTE_I2C0_SDA_STUCK_LOW_TIMEOUT 1000000
+
 // <o> I2C0 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9054,6 +9058,10 @@
 // <i> Defines RX FIFO threshold for I2C1.
 // <i> Default: 0
 #define RTE_I2C1_RX_FIFO_THRESHOLD 0
+
+// I2C1 stuck-low timeouts (pack 2.2.1 defaults)
+#define RTE_I2C1_SCL_STUCK_LOW_TIMEOUT 1000000
+#define RTE_I2C1_SDA_STUCK_LOW_TIMEOUT 1000000
 
 // <o> I2C1 DMA ENABLE
 //    <0=> DISABLE
@@ -9092,6 +9100,10 @@
 // <i> Default: 0
 #define RTE_I2C2_RX_FIFO_THRESHOLD 0
 
+// I2C2 stuck-low timeouts (pack 2.2.1 defaults)
+#define RTE_I2C2_SCL_STUCK_LOW_TIMEOUT 1000000
+#define RTE_I2C2_SDA_STUCK_LOW_TIMEOUT 1000000
+
 // <o> I2C2 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9129,6 +9141,10 @@
 // <i> Defines RX FIFO threshold for I2C3.
 // <i> Default: 0
 #define RTE_I2C3_RX_FIFO_THRESHOLD 0
+
+// I2C3 stuck-low timeouts (pack 2.2.1 defaults)
+#define RTE_I2C3_SCL_STUCK_LOW_TIMEOUT 1000000
+#define RTE_I2C3_SDA_STUCK_LOW_TIMEOUT 1000000
 
 // <o> I2C3 DMA ENABLE
 //    <0=> DISABLE

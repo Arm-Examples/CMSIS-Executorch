@@ -37,8 +37,8 @@ the first debug session, is the [getting-started README](../README.md).
   trajectories, with both methods fully delegated to the Ethos-U85.
 - A runner (`src/app_main.cpp`) that loads both methods once and runs the
   rectified-flow Euler sampler with classifier-free guidance around them; on
-  the DevKit it shows every face on the board's LCD, generates new ones on the
-  joystick, and serves pico-faces' serial protocol so the upstream viewer
+  the DevKit it shows every face on the board's LCD, generates new ones when the
+  on-screen OK badge is tapped, and serves pico-faces' serial protocol so the upstream viewer
   displays them on the host too.
 - Exporting an ExecuTorch model for Ethos-U from a Python virtual environment.
 - The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
@@ -277,8 +277,8 @@ build. `--check-upstream <clone>` verifies the re-implementation in
 #### 6. Generate faces on the DevKit-E8
 
 On the board the runner keeps going after the boot demo. Every face appears
-on the LCD; the SW2 joystick generates new ones (left: one image; right:
-start or stop generating back to back). The runner also serves image
+on the LCD; tapping the green OK badge at the bottom generates the next image.
+The runner also serves image
 requests on the UART console in the serial protocol of pico-faces' firmware,
 so pico-faces' viewer works unchanged (in a clone of the upstream repository,
 `pip install pyserial pillow`):
@@ -411,9 +411,9 @@ together. More information is available in
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer, Alif debug stubs) merged by the CMSIS Solution extension |
 | `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration; the linker scripts in its `RTE/` put the model in DDR |
-| `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console, LCD, joystick) |
+| `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console, touchscreen) |
 | `.alif/` | SETOOLS configuration and debug stubs for the DevKit-E8 (from the Ensemble pack) |
-| `src/app_main.cpp` | Loads the two methods and runs the sampler; board features through `APP_DISPLAY`, `APP_INTERACTIVE`, `APP_BUTTONS`; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
+| `src/app_main.cpp` | Loads the two methods and runs the sampler; board features through `APP_DISPLAY`, `APP_INTERACTIVE`, `APP_TOUCH`; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
 | `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading (BSD-3-Clause, `src/LICENSE-ExecuTorch`) |
 | `board/DevKit-E8/README.md` | The DevKit-E8 layer, its memory map and RTE configuration |
 | `documentation/mlops-flow.md` | The MLOps flow in detail |

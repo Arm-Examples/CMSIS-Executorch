@@ -7,7 +7,7 @@ decoder, generates 128x128 faces; exported through ExecuTorch, every layer of
 it runs on the Ethos-U85 NPU while the Cortex-M drives the sampling loop. One
 CMSIS solution runs it on the **Alif Ensemble E8 DevKit** or the **Ensemble E8
 AI/ML AppKit** (Cortex-M55 HP core; the faces appear on the board's LCD, a new
-one per joystick press) and on the **Corstone-320 FVP**; you switch between
+one per tap on the screen's OK badge) and on the **Corstone-320 FVP**; you switch between
 them by target-type. The model is
 exported from PyTorch in three steps: the CMSIS-Toolbox describes the target,
 `create_ai_layer.py` turns that into the AI layer, the toolbox builds the
@@ -152,7 +152,7 @@ Repeat this after another project has reprogrammed the table.
      ...
    Test_result: PASS
    Interactive: send "G <seed> [k_steps] [class] [w]" (viewer/view_serial.py) or "I"
-   Joystick: left = one new image, right = start/stop continuous generation
+   Touch: tap OK for a new image
    ```
 
    A face with guidance takes 78 ms: eight `dit_step` calls of 8.5 ms on the
@@ -160,9 +160,9 @@ Repeat this after another project has reprogrammed the table.
    384 x 384 in the centre of the screen; it is bit for bit the image the FVP
    produces. (The CRC depends on the exported program, which can differ
    slightly between the machines that run **Create AI layer**.)
-3. Press the **SW2 joystick** to the left for a new face (the next seed; class
-   and guidance follow from it), to the right to generate faces back to back
-   until you press right again. Each one is reported on the console.
+3. Tap the green **OK** badge at the bottom of the touchscreen for a new face
+   (the next seed; class and guidance follow from it). Each one is reported
+   on the console.
 4. Or request faces from the host with pico-faces' viewer (close the Serial
    Monitor first, the viewer needs the port; in a clone of
    [pico-faces](https://github.com/cpldcpu/pico-faces),

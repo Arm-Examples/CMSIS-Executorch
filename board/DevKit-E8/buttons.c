@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * DevKit-E8 user input for the runner: the SW2 joystick and a non-blocking
- * console read.
+ * DevKit-E8 user input for the runner: the GT911 touchscreen, SW2 joystick,
+ * and a non-blocking console read.
  *
  * SW2 is a five-way switch on LPGPIO (port 15) pins 0-4, active low with the
  * pad pull-ups (schematic 220-00319-B sheet 12, "Use Internal GPIO Pullups").
@@ -31,11 +31,66 @@
  *---------------------------------------------------------------------------*/
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "RTE_Components.h"
 #include CMSIS_device_header
 
 #include "board_defs.h"
+#include "Driver_Touch_Screen.h"
+
+extern ARM_DRIVER_TOUCH_SCREEN GT911;
+/* The pack driver sets this flag only when a fresh GT911 interrupt arrives.
+   GetState() also returns zero touches when there is no new interrupt, so
+   checking the flag lets us distinguish a release from an idle poll. */
+extern volatile uint8_t touch_event_gpio;
+extern int board_display_ok_contains(int x, int y);
+
+int board_touch_init(void)
+{
+    int32_t ret = GT911.Initialize();
+    if (ret != ARM_DRIVER_OK) {
+        printf("Touch: GT911 Initialize failed (%d)\n", (int)ret);
+        return -1;
+    }
+    ret = GT911.PowerControl(ARM_POWER_FULL);
+    if (ret != ARM_DRIVER_OK) {
+        printf("Touch: GT911 PowerControl failed (%d)\n", (int)ret);
+        GT911.Uninitialize();
+        return -1;
+    }
+    return 0;
+}
+
+/* Return 1 once when a new touch starts inside the on-screen OK badge.
+   A release interrupt arms the button for the next tap. */
+int board_touch_ok_poll(void)
+{
+    static int touch_down = 0;
+    ARM_TOUCH_STATE state;
+    if (!touch_event_gpio) {
+        return 0;
+    }
+    int32_t ret = GT911.GetState(&state);
+    if (ret != ARM_DRIVER_OK) {
+        printf("Touch: GT911 GetState failed (%d)\n", (int)ret);
+        return -1;
+    }
+    if (state.numtouches == 0) {
+        touch_down = 0;
+        return 0;
+    }
+    if (touch_down) {
+        return 0;
+    }
+    touch_down = 1;
+    for (int i = 0; i < state.numtouches; i++) {
+        if (board_display_ok_contains(state.coordinates[i].x, state.coordinates[i].y)) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 #define BUTTON_LEFT   (1u << 0)
 #define BUTTON_RIGHT  (1u << 1)
@@ -82,7 +137,7 @@ unsigned board_buttons_held(void)
 /*
   Return the next console character, or -1 when none is waiting. The pack's
   stdin_getchar() blocks until a character arrives, which would stop the
-  runner from polling the joystick; this reads the console UART's receive
+  runner from polling the touchscreen; this reads the console UART's receive
   register directly (UART4 on the PRG USB connector, set up by stdio_init()).
 */
 int board_console_poll(void)

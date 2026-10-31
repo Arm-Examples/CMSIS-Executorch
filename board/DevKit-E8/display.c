@@ -37,6 +37,10 @@
 
 #define LCD_WIDTH   RTE_PANEL_HACTIVE_TIME   /* 480 */
 #define LCD_HEIGHT  RTE_PANEL_VACTIVE_LINE   /* 800 */
+#define OK_WIDTH    264
+#define OK_HEIGHT   108
+#define OK_X        ((LCD_WIDTH - OK_WIDTH) / 2)
+#define OK_Y        (LCD_HEIGHT - OK_HEIGHT - 32)
 
 #if RTE_CDC200_PIXEL_FORMAT != 1
 #error "display.c expects RTE_CDC200_PIXEL_FORMAT 1 (RGB888) in RTE_Device.h"
@@ -89,9 +93,8 @@ static void draw_stroke(int x0, int y0, int x1, int y1, int radius,
 /* Rounded green badge with a checkmark and white vector lettering. */
 static int draw_ok_sign(void)
 {
-    const int badge_width = 264, badge_height = 108;
-    const int badge_x = (LCD_WIDTH - badge_width) / 2;
-    const int badge_y = LCD_HEIGHT - badge_height - 32;
+    const int badge_width = OK_WIDTH, badge_height = OK_HEIGHT;
+    const int badge_x = OK_X, badge_y = OK_Y;
     const int bar_top = badge_y - 24;
     const int radius = badge_height / 2;
     const int icon_x = badge_x + 60, mid_y = badge_y + radius;
@@ -139,6 +142,22 @@ static int draw_ok_sign(void)
     draw_stroke(kx + 2, mid_y + 2, kx + 29, mid_y - 24, 3, 255, 255, 255);
     draw_stroke(kx + 2, mid_y - 2, kx + 29, mid_y + 24, 3, 255, 255, 255);
     return bar_top;
+}
+
+/* Use the same bounds for drawing and touch hit testing. */
+int board_display_ok_contains(int x, int y)
+{
+    if (x < OK_X || x >= OK_X + OK_WIDTH ||
+        y < OK_Y || y >= OK_Y + OK_HEIGHT) {
+        return 0;
+    }
+    const int radius = OK_HEIGHT / 2;
+    int cap_x = x < OK_X + radius ? OK_X + radius : x;
+    if (cap_x > OK_X + OK_WIDTH - radius - 1) {
+        cap_x = OK_X + OK_WIDTH - radius - 1;
+    }
+    const int dx = x - cap_x, dy = y - (OK_Y + radius);
+    return dx * dx + dy * dy <= radius * radius;
 }
 
 static void display_callback(uint32_t event)

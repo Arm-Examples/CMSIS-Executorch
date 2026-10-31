@@ -4,8 +4,8 @@ Device: `Alif Semiconductor::AE822FA0E5597LS0:M55_HP` (Cortex-M55 high-performan
 core, 400 MHz) with the Ethos-U85 (256 MACs) of the Ensemble E8.
 
 Derived from the Ensemble pack's `Boards/DevKit-e8/Layers/M55_HP/Board_HP-U85.clayer.yml`
-and trimmed to what the face generator needs: the console, the NPU, the SW2
-joystick and the 4.3" MIPI-DSI display (ILI9806E, 480 x 800) on connector
+and trimmed to what the face generator needs: the console, the NPU, and the 4.3"
+MIPI-DSI touchscreen (ILI9806E display and GT911 touch controller, 480 x 800) on connector
 J21, driven by the CDC200 display controller. Camera, Ethernet, USB, VIO and
 the vStream drivers are left out. The target-set in the csolution debugs it
 through the on-board J-Link (`J-Link Server`, SWD at 4 MHz,
@@ -16,7 +16,7 @@ through the on-board J-Link (`J-Link Server`, SWD at 4 MHz,
 | `Board-U85.clayer.yml` | Layer: startup, SE services, UART4 stdio, Ethos-U85 driver, display, memory placement |
 | `main.c` | Cache invalidation, pin/GPIO config, SE services, clocks, MIPI DPHY power-up, stdio, NPU init, then `app_main()` |
 | `display.c` | `board_display_image()`: brings up CDC200 + DSI + panel on first use and shows an RGB image scaled and centred in the RGB888 frame buffer, with a rounded green OK badge at the bottom |
-| `buttons.c` | `board_buttons()`: SW2 joystick presses since the last call; `board_console_poll()`: a console read that does not block |
+| `buttons.c` | `board_touch_ok_poll()`: one event per tap on the OK badge; `board_console_poll()`: a console read that does not block |
 | `retarget_stdio.c` | `stdio_init()` for UART4 through the CMSIS USART driver (115200 8N1) |
 | `ethos_setup.c` | Ethos-U85 driver init at `NPU_HG_BASE`, IRQ 366, prints the NPU banner |
 | `ethosu_cb_dcache.c` | D-cache clean/invalidate hooks for NPU buffers outside the TCMs |
@@ -28,8 +28,7 @@ the pool sizes and their section (`APP_METHOD_POOL_SIZE`,
 `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION`), `APP_DISPLAY` (show every image
 on the LCD, 128x128 scaled 3x to 384x384 and centred on black),
 `APP_INTERACTIVE` (serve image requests on the console after the boot demo,
-see STDIO) and `APP_BUTTONS` (SW2 left: one new image; right: start or stop
-generating back to back).
+see STDIO) and `APP_TOUCH` (tap the OK badge for one new image).
 
 ## Memory layout
 

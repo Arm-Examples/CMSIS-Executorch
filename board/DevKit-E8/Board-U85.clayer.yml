@@ -41,10 +41,9 @@ layer:
     - APP_TEMP_POOL_SIZE: 0x180000
     # After the boot demo the runner keeps serving pico-faces' serial protocol
     # on the console, for pico-faces' viewer/view_serial.py (APP_INTERACTIVE),
-    # and generates new faces on the SW2 joystick: left, one image; right,
-    # start or stop back-to-back generation (APP_BUTTONS, buttons.c).
+    # and generates a new face when the on-screen OK badge is tapped.
     - APP_INTERACTIVE
-    - APP_BUTTONS
+    - APP_TOUCH
     # Every generated image is shown on the LCD (board_display_image(),
     # display.c).
     - APP_DISPLAY
@@ -84,7 +83,9 @@ layer:
     - component: Device:SOC Peripherals:MIPI DSI
     - component: Device:SOC Peripherals:MIPI DSI CSI2 DPHY
     - component: Device:SOC Peripherals:GPIO
+    - component: CMSIS Driver:I2C
     - component: BSP:External peripherals:ILI9806E LCD panel
+    - component: BSP:External peripherals:GT911 Touch Controller
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
 

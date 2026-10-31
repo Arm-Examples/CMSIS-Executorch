@@ -71,14 +71,12 @@ using executorch::runtime::TensorInfo;
 
 extern "C" int stdout_putchar(int ch);  // CMSIS-Compiler retarget hooks
 extern "C" int stdin_getchar(void);
-#ifdef APP_BUTTONS
-// Board layer (board/DevKit-E8/buttons.c): SW2 joystick presses since the last
-// call (bit mask), and a console read that does not block (-1 when nothing is
-// waiting).
-extern "C" unsigned board_buttons(void);
+#ifdef APP_TOUCH
+// Board layer (board/DevKit-E8/buttons.c): a tap on the display's OK badge
+// and a console read that does not block (-1 when nothing is waiting).
+extern "C" int board_touch_init(void);
+extern "C" int board_touch_ok_poll(void);
 extern "C" int board_console_poll(void);
-constexpr unsigned kButtonLeft = 1u << 0;
-constexpr unsigned kButtonRight = 1u << 1;
 #endif
 #ifdef APP_DISPLAY
 // Board layer (board/DevKit-E8/display.c): show an 8-bit RGB image on the
@@ -469,9 +467,9 @@ void print_timing(const Timing& tm) {
   print_npu("decode:", tm.decode_npu, 1, PF_MACS_DECODE);
 }
 
-#if defined(APP_INTERACTIVE) || defined(APP_BUTTONS)
+#if defined(APP_INTERACTIVE) || defined(APP_TOUCH)
 // ---------------------------------------------------------------------------
-// After the boot demo (board layers that define APP_INTERACTIVE or APP_BUTTONS)
+// After the boot demo (board layers that define APP_INTERACTIVE or APP_TOUCH)
 
 // Raw output: the image frames bypass stdio's text handling.
 void uart_write(const void* data, size_t n) {
@@ -512,12 +510,11 @@ float default_w(uint32_t seed) {
   return w_idx >= 0 ? pf_cfg_w[w_idx] : 0.0f;
 }
 
-#ifdef APP_BUTTONS
-// Every joystick press picks the next seed, with class and guidance as for a
+#ifdef APP_TOUCH
+// Every OK tap picks the next seed, with class and guidance as for a
 // bare "G <seed>".
 uint32_t g_next_seed = APP_DEMO_SEED + 1;
-uint32_t g_button_images = 0;
-bool g_continuous = false;
+uint32_t g_touch_images = 0;
 
 void generate_next(EmbeddedModule& module) {
   const uint32_t seed = g_next_seed++;
@@ -528,17 +525,16 @@ void generate_next(EmbeddedModule& module) {
     printf("ERR generate\n");
     return;
   }
-  g_button_images++;
-  printf("Image %u: seed %u, class %d, w %.1f, %u ms%s\n", static_cast<unsigned>(g_button_images),
-         static_cast<unsigned>(seed), cls, static_cast<double>(w), static_cast<unsigned>(tm.total_ms),
-         g_continuous ? " (continuous)" : "");
+  g_touch_images++;
+  printf("Image %u: seed %u, class %d, w %.1f, %u ms\n", static_cast<unsigned>(g_touch_images),
+         static_cast<unsigned>(seed), cls, static_cast<double>(w), static_cast<unsigned>(tm.total_ms));
 }
 #endif
 
 // A console character without blocking when the board layer offers a poll
-// (the retarget's stdin_getchar() waits for one, which would stall the joystick).
+// (the retarget's stdin_getchar() waits for one, which would stall touch polling).
 int console_getchar() {
-#ifdef APP_BUTTONS
+#ifdef APP_TOUCH
   return board_console_poll();
 #else
   return stdin_getchar();
@@ -578,28 +574,29 @@ void serve_request(EmbeddedModule& module, const char* line) {
 }
 
 // Main loop after the boot demo: the serial protocol (APP_INTERACTIVE) and the
-// SW2 joystick (APP_BUTTONS: left = one new image, right = start or stop
-// continuous generation).
+// on-screen OK badge (APP_TOUCH: one new image per tap).
 [[noreturn]] void serve(EmbeddedModule& module) {
 #ifdef APP_INTERACTIVE
   printf("Interactive: send \"G <seed> [k_steps] [class] [w]\" (viewer/view_serial.py) or \"I\"\n");
 #endif
-#ifdef APP_BUTTONS
-  printf("Joystick: left = one new image, right = start/stop continuous generation\n");
-  (void)board_buttons();  // drop presses latched during boot
+#ifdef APP_TOUCH
+  bool touch_ready = board_touch_init() == 0;
+  if (touch_ready) {
+    printf("Touch: tap OK for a new image\n");
+  }
 #endif
   fflush(stdout);
   char line[64];
   int n = 0;
   for (;;) {
-#ifdef APP_BUTTONS
-    const unsigned pressed = board_buttons();
-    if (pressed & kButtonRight) {
-      g_continuous = !g_continuous;
-      printf("Continuous generation %s\n", g_continuous ? "started" : "stopped");
-    }
-    if ((pressed & kButtonLeft) || g_continuous) {
-      generate_next(module);
+#ifdef APP_TOUCH
+    if (touch_ready) {
+      const int tapped = board_touch_ok_poll();
+      if (tapped > 0) {
+        generate_next(module);
+      } else if (tapped < 0) {
+        touch_ready = false;
+      }
     }
 #endif
     int ch = console_getchar();
@@ -704,7 +701,7 @@ extern "C" int app_main(void) {
   printf("\x04");  // EOT: the end marker for a console log
   fflush(stdout);
 
-#if defined(APP_INTERACTIVE) || defined(APP_BUTTONS)
+#if defined(APP_INTERACTIVE) || defined(APP_TOUCH)
   serve(module);
 #endif
   return 0;
