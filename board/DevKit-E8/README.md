@@ -15,7 +15,7 @@ through the on-board J-Link (`J-Link Server`, SWD at 4 MHz,
 |------|---------|
 | `Board-U85.clayer.yml` | Layer: startup, SE services, UART4 stdio, Ethos-U85 driver, display, memory placement |
 | `main.c` | Cache invalidation, pin/GPIO config, SE services, clocks, MIPI DPHY power-up, stdio, NPU init, then `app_main()` |
-| `display.c` | `board_display_image()`: brings up CDC200 + DSI + panel on first use and shows an RGB image scaled and centred in the RGB888 frame buffer |
+| `display.c` | `board_display_image()`: brings up CDC200 + DSI + panel on first use and shows an RGB image scaled and centred in the RGB888 frame buffer, with a rounded green OK badge at the bottom |
 | `buttons.c` | `board_buttons()`: SW2 joystick presses since the last call; `board_console_poll()`: a console read that does not block |
 | `retarget_stdio.c` | `stdio_init()` for UART4 through the CMSIS USART driver (115200 8N1) |
 | `ethos_setup.c` | Ethos-U85 driver init at `NPU_HG_BASE`, IRQ 366, prints the NPU banner |

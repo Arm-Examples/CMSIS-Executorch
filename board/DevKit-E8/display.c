@@ -19,7 +19,8 @@
  * 480 x 800 portrait) through the CDC200 display controller. The application
  * calls board_display_image() with an 8-bit RGB image (HWC); the image is
  * scaled up by the largest integer factor that fits the panel, centred on a
- * black background and written into the RGB888 frame buffer in bulk SRAM.
+ * black background with an OK badge below it, and written into the RGB888
+ * frame buffer in bulk SRAM.
  * The display is brought up on the first call (CDC200 + DSI + panel), as in
  * the pack's Boards/Templates/Baremetal/demo_cdc200.c.
  *---------------------------------------------------------------------------*/
@@ -51,6 +52,94 @@ static uint8_t lcd_frame[LCD_HEIGHT][LCD_WIDTH][LCD_BPP]
     __attribute__((section(".bss.lcd_frame_buf"), aligned(32)));
 
 static int display_ready = 0;
+
+/* CDC200 stores RGB888 pixels in B, G, R byte order. */
+static void set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    uint8_t *pixel = &lcd_frame[y][x][0];
+    pixel[0] = b;
+    pixel[1] = g;
+    pixel[2] = r;
+}
+
+static void fill_circle(int cx, int cy, int radius, uint8_t r, uint8_t g, uint8_t b)
+{
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if (x * x + y * y <= radius * radius) {
+                set_pixel(cx + x, cy + y, r, g, b);
+            }
+        }
+    }
+}
+
+static void draw_stroke(int x0, int y0, int x1, int y1, int radius,
+                        uint8_t r, uint8_t g, uint8_t b)
+{
+    int dx = x1 - x0, dy = y1 - y0;
+    int steps = (dx < 0 ? -dx : dx);
+    if ((dy < 0 ? -dy : dy) > steps) {
+        steps = dy < 0 ? -dy : dy;
+    }
+    for (int i = 0; i <= steps; i++) {
+        fill_circle(x0 + dx * i / steps, y0 + dy * i / steps, radius, r, g, b);
+    }
+}
+
+/* Rounded green badge with a checkmark and white vector lettering. */
+static int draw_ok_sign(void)
+{
+    const int badge_width = 264, badge_height = 108;
+    const int badge_x = (LCD_WIDTH - badge_width) / 2;
+    const int badge_y = LCD_HEIGHT - badge_height - 32;
+    const int bar_top = badge_y - 24;
+    const int radius = badge_height / 2;
+    const int icon_x = badge_x + 60, mid_y = badge_y + radius;
+
+    /* Keep the badge readable even if a future image extends into this area. */
+    memset(&lcd_frame[bar_top][0][0], 0,
+           (size_t)(LCD_HEIGHT - bar_top) * LCD_WIDTH * LCD_BPP);
+    for (int y = badge_y; y < badge_y + badge_height; y++) {
+        for (int x = badge_x; x < badge_x + badge_width; x++) {
+            int cap_x = x < badge_x + radius ? badge_x + radius : x;
+            if (cap_x > badge_x + badge_width - radius - 1) {
+                cap_x = badge_x + badge_width - radius - 1;
+            }
+            const int dx = x - cap_x, dy = y - mid_y;
+            const int distance = dx * dx + dy * dy;
+            if (distance <= radius * radius) {
+                if (distance > (radius - 3) * (radius - 3)) {
+                    set_pixel(x, y, 78, 220, 125);
+                } else {
+                    const int shade = (y - badge_y) * 34 / badge_height;
+                    set_pixel(x, y, 35 - shade / 2, 178 - shade, 87 - shade / 2);
+                }
+            }
+        }
+    }
+
+    fill_circle(icon_x, mid_y, 31, 242, 255, 245);
+    draw_stroke(icon_x - 15, mid_y, icon_x - 4, mid_y + 11, 4, 24, 132, 70);
+    draw_stroke(icon_x - 4, mid_y + 11, icon_x + 18, mid_y - 15, 4, 24, 132, 70);
+
+    /* O: a six-pixel ellipse outline. */
+    const int ox = badge_x + 150;
+    for (int dy = -25; dy <= 25; dy++) {
+        for (int dx = -20; dx <= 20; dx++) {
+            const int outer = dx * dx * 25 * 25 + dy * dy * 20 * 20;
+            const int inner = dx * dx * 19 * 19 + dy * dy * 14 * 14;
+            if (outer <= 20 * 20 * 25 * 25 && inner > 14 * 14 * 19 * 19) {
+                set_pixel(ox + dx, mid_y + dy, 255, 255, 255);
+            }
+        }
+    }
+    /* K: three rounded strokes, aligned with the O. */
+    const int kx = badge_x + 190;
+    draw_stroke(kx, mid_y - 24, kx, mid_y + 24, 3, 255, 255, 255);
+    draw_stroke(kx + 2, mid_y + 2, kx + 29, mid_y - 24, 3, 255, 255, 255);
+    draw_stroke(kx + 2, mid_y - 2, kx + 29, mid_y + 24, 3, 255, 255, 255);
+    return bar_top;
+}
 
 static void display_callback(uint32_t event)
 {
@@ -138,5 +227,8 @@ int board_display_image(const uint8_t *rgb, int width, int height, int channels)
     /* The frame buffer is read by the display controller's DMA: push the
        cached lines out (bulk SRAM is write-through, but be explicit). */
     SCB_CleanDCache_by_Addr((uint32_t *) &lcd_frame[y0][0][0], (int32_t)(out_h * LCD_WIDTH * LCD_BPP));
+    const int bar_top = draw_ok_sign();
+    SCB_CleanDCache_by_Addr((uint32_t *) &lcd_frame[bar_top][0][0],
+                            (int32_t)((LCD_HEIGHT - bar_top) * LCD_WIDTH * LCD_BPP));
     return 0;
 }
