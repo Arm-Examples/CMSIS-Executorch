@@ -239,7 +239,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--variant",
-        default=os.environ.get("PICO_FACES_VARIANT", "m3_long_cfg"),
+        default=os.environ.get("PICO_FACES_VARIANT", "m3_decD_deep_full"),
         choices=sorted(PICO_FACES_FILES),
         help="pico-faces model variant whose checkpoints to download (default: %(default)s)",
     )

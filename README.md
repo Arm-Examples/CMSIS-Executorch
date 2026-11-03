@@ -99,6 +99,15 @@ needs Python once before the first build:
    writes when it loads the solution (click **Build** once if the file is
    missing). Run the task again after changing `model/model.py`.
 
+The default variant is now `m3_decD_deep_full`. Its exported program is
+4,454,368 bytes. The DevKit-E8 HP image now starts at `0x80000000`, using the
+lower MRAM formerly reserved for HE. The AC6 load image is 4,750,736 bytes
+against a 5,701,632-byte HP MRAM region, leaving 950,896 bytes free. The
+DevKit boot-table entry and debug stub are relocated to match. The AppKit-E8
+still starts at `0x80200000`; its smaller MRAM region cannot hold this default
+model. The successful console transcript below is from the smaller
+`m3_long_cfg` variant; the full model has only been checked by building.
+
 ## 5. Prepare the board once
 
 The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
@@ -197,7 +206,8 @@ running (the first run builds the image, about 100 MB).
   does not point at the debug stub or was built for another part, which the
   Secure Enclave skips (repeat step 5), or the image cannot boot.
   Look before reprogramming: in the debugger, read the vector table at
-  `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
+  `0x80000000` on DevKit-E8 (`0x80200000` on AppKit-E8) and the fault registers
+  (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
   lockup at reset, which an image linked to run from ITCM produces when the
   code that copies it there is itself in ITCM.
 - **Debug hangs at "Connecting":** the target-set was switched to

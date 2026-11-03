@@ -15,7 +15,7 @@ through the on-board J-Link (`J-Link Server`, SWD at 4 MHz,
 |------|---------|
 | `Board-U85.clayer.yml` | Layer: startup, SE services, UART4 stdio, Ethos-U85 driver, display, memory placement |
 | `main.c` | Cache invalidation, pin/GPIO config, SE services, clocks, MIPI DPHY power-up, stdio, NPU init, then `app_main()` |
-| `display.c` | Brings up CDC200 + DSI + panel and draws the mode selector, conditional controls, image preview and Generate badge in the RGB888 frame buffer |
+| `display.c` | Brings up CDC200 + DSI + panel and draws the mode selector, conditional controls, image preview, Generate badge and Ethos-U85 image in the RGB888 frame buffer |
 | `buttons.c` | `board_touch_poll()`: one event per tap on a visible control; `board_console_poll()`: a console read that does not block |
 | `touch_ui.h` | Shared touchscreen mode, choice and event values |
 | `retarget_stdio.c` | `stdio_init()` for UART4 through the CMSIS USART driver (115200 8N1) |
@@ -37,18 +37,21 @@ those choices and uses the model's null class.
 
 | Region | Address | Used for |
 |--------|---------|----------|
-| MRAM (HP application region) | `0x80200000`, 3.4375 MB | Constants and the embedded 2.8 MB `.pte` model; with AC6 also the code, which executes in place. With GCC and Clang the startup code executes from MRAM and copies the rest of the code to ITCM (`linker_gnu_mram.ld.src`) |
+| MRAM (HP application region) | `0x80000000`, 5.4375 MB | Constants and the embedded `.pte` model; with AC6 also the code, which executes in place. With GCC and Clang the startup code executes from MRAM and copies the rest of the code to ITCM (`linker_gnu_mram.ld.src`). |
 | MRAM (user region) | `0x80570000`, 32 kB | Unused; keeps the pack's MPU setup well-formed |
 | DTCM (SRAM3) | `0x20000000` (core alias; `0x50800000` global), 1 MB | `.data`/`.bss` (latents, image buffer), 96 kB heap, 32 kB stack |
-| SRAM0 (bulk) | `0x02010000`, 4 MB less 64 kB | `.bss.ai_pool`: the runner's 1 MB method pool and 1.5 MB temp pool (NPU scratch); `.bss.lcd_frame_buf`: the 1.15 MB RGB888 frame buffer |
+| SRAM0 (bulk) | `0x02010000`, 4 MB less 64 kB | `.bss.ai_pool`: the runner's 1.5 MB method pool and 2 MB temp pool (NPU scratch) |
+| SRAM1 (bulk) | `0x02400000`, 4 MB | `.bss.lcd_frame_buf`: the 1.15 MB RGB888 frame buffer |
 
 The numbers are set in `RTE/Device/AE822FA0E5597LS0_M55_HP/app_mem_regions.h`.
 The pack's default splits the 5.5 MB of application MRAM into 2 MB for the
-HE core, 2 MB for the HP core and a 1.5 MB user region; the model does not
-fit 2 MB, and this layer runs only the HP core, so its code region extends
-over the user area up to `0x80570000`. The HP vector table stays at
-`0x80200000`, where the debug stub's ATOC entry boots from, and the ATOC
-package at the top of MRAM is not touched. The A32 boot stub the ATOC loads
+HE core, 2 MB for the HP core and a 1.5 MB user region. This layer runs the
+application on HP only, so its code region starts at `0x80000000` and extends
+up to `0x80570000`. The HP vector table, the ATOC `HP_APP.mramAddress` entry,
+and the relocated debug stub all use `0x80000000`. The ATOC package at the top
+of MRAM is not touched. The original `0x80200000` stub is kept in `.alif/` for
+the AppKit-E8 task, whose application still uses that address. The A32 boot
+stub the ATOC loads
 to the start of SRAM0 is the reason the pools start 64 kB in
 (`APP_SRAM_POOL_OFFSET`).
 
@@ -56,7 +59,13 @@ SRAM1 follows SRAM0 at `0x02400000` (the ATOC device configuration stitches
 the two banks together; the device pack's `0x08000000` is not mapped then).
 The M55_HP and the debugger can use it, but the Ethos-U85 could not run with
 its weights there (`ethosu_invoke` returned -1), so the layer keeps
-`SRAM0_SRAM1_COMBINED 0` and places nothing the NPU reads in SRAM1.
+`SRAM0_SRAM1_COMBINED 0` and places nothing the NPU reads in SRAM1. The LCD
+controller receives the framebuffer's global SRAM1 address from its driver;
+check the LCD on hardware after changing its placement.
+
+Moving the framebuffer gives the inference pools 1 MB more SRAM0 in this
+configuration. The enlarged HP MRAM region fits the full model in the AC6
+linker check; execution on the board has not yet been verified.
 
 > [!Warning]
 > Do not change the Secure Enclave run profile from this core. On the

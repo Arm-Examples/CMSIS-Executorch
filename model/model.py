@@ -47,7 +47,7 @@ from torch import nn
 
 HERE = Path(__file__).resolve().parent
 
-VARIANT = os.environ.get("PICO_FACES_VARIANT", "m3_long_cfg")
+VARIANT = os.environ.get("PICO_FACES_VARIANT", "m3_decD_deep_full")
 # The DiT's residual stream needs more than 8 bits; the decoder's convolutions
 # do not, and run about twice as fast with 8-bit activations.
 QUANTIZATION = os.environ.get("PICO_FACES_QUANT", "a16w8")

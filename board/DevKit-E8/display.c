@@ -18,7 +18,7 @@
  * DevKit-E8 display: shows an RGB image on the 4.3" MIPI-DSI panel (ILI9806E,
  * 480 x 800 portrait) through the CDC200 display controller. The application
  * calls board_display_image() with an 8-bit RGB image (HWC); the image is
- * scaled up on the panel and written into the RGB888 frame buffer in bulk SRAM.
+ * scaled up on the panel and written into the RGB888 frame buffer in SRAM1.
  * The touchscreen UI draws mode and conditioning controls above the image.
  * The display is brought up on the first call (CDC200 + DSI + panel), as in
  * the pack's Boards/Templates/Baremetal/demo_cdc200.c.
@@ -34,13 +34,17 @@
 
 #include "Driver_CDC200.h"
 #include "touch_ui.h"
+#include "ethos_u85_logo.h"
 
 #define LCD_WIDTH   RTE_PANEL_HACTIVE_TIME   /* 480 */
 #define LCD_HEIGHT  RTE_PANEL_VACTIVE_LINE   /* 800 */
 #define OK_WIDTH    264
 #define OK_HEIGHT   108
-#define OK_X        ((LCD_WIDTH - OK_WIDTH) / 2)
+#define LOGO_GAP    12
+#define OK_X        ((LCD_WIDTH - OK_WIDTH - LOGO_GAP - ETHOS_U85_LOGO_WIDTH) / 2)
 #define OK_Y        (LCD_HEIGHT - OK_HEIGHT - 32)
+#define LOGO_X      (OK_X + OK_WIDTH + LOGO_GAP)
+#define LOGO_Y      (OK_Y + (OK_HEIGHT - ETHOS_U85_LOGO_HEIGHT) / 2)
 
 #define MODE_Y      66
 #define MODE_H      80
@@ -59,8 +63,8 @@
 extern ARM_DRIVER_CDC200 Driver_CDC200;
 static ARM_DRIVER_CDC200 *CDCdrv = &Driver_CDC200;
 
-/* RGB888 frame buffer, 480 x 800 x 3 = 1152000 bytes, in bulk SRAM (NPU and
-   display DMA accessible); the layer's linker scripts route the section. */
+/* RGB888 frame buffer, 480 x 800 x 3 = 1152000 bytes, in SRAM1 so SRAM0 stays
+   available to the NPU; the layer's linker scripts route the section. */
 static uint8_t lcd_frame[LCD_HEIGHT][LCD_WIDTH][LCD_BPP]
     __attribute__((section(".bss.lcd_frame_buf"), aligned(32)));
 
@@ -168,7 +172,24 @@ static void draw_stroke(int x0, int y0, int x1, int y1, int radius,
     }
 }
 
-/* Rounded green Generate badge with a checkmark. */
+/* The source JPEG is converted to RGB565 so the LCD needs no JPEG decoder. */
+static void draw_ethos_u85_logo(void)
+{
+    for (int y = 0; y < ETHOS_U85_LOGO_HEIGHT; y++) {
+        for (int x = 0; x < ETHOS_U85_LOGO_WIDTH; x++) {
+            const uint16_t pixel = ethos_u85_logo[y * ETHOS_U85_LOGO_WIDTH + x];
+            const uint8_t r = (uint8_t)(pixel >> 11);
+            const uint8_t g = (uint8_t)((pixel >> 5) & 0x3f);
+            const uint8_t b = (uint8_t)(pixel & 0x1f);
+            set_pixel(LOGO_X + x, LOGO_Y + y,
+                      (uint8_t)((r << 3) | (r >> 2)),
+                      (uint8_t)((g << 2) | (g >> 4)),
+                      (uint8_t)((b << 3) | (b >> 2)));
+        }
+    }
+}
+
+/* Rounded green Generate badge with the Ethos-U85 image beside it. */
 static int draw_ok_sign(void)
 {
     const int badge_width = OK_WIDTH, badge_height = OK_HEIGHT;
@@ -204,6 +225,7 @@ static int draw_ok_sign(void)
     draw_stroke(icon_x - 4, mid_y + 11, icon_x + 18, mid_y - 15, 4, 24, 132, 70);
 
     draw_text(badge_x + 105, mid_y - 10, "GENERATE", 3, 255, 255, 255);
+    draw_ethos_u85_logo();
     return bar_top;
 }
 

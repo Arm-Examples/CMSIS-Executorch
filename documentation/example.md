@@ -83,8 +83,8 @@ The example can be built and run entirely in Keil Studio for VS Code.
    the NPU of the active target and writes the `ai_layer/` directory. It reads
    `cmsis-executorch.cbuild-mlops.yml`, which the extension writes when the
    solution is loaded or built (`cbuild setup` on the command line). The
-   model data (`ai_layer/model_pte_data.inc`, 2.8 MB of program as 14 MB of
-   C source) is generated, not committed, so this step is needed once per checkout and
+   model data (`ai_layer/model_pte_data.inc`) is generated, not committed, so
+   this step is needed once per checkout and
    again after changing the model.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
@@ -99,8 +99,9 @@ For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
 **Manage Solution** and follow the [getting-started README](../README.md) for the
 one-time board preparation (SETOOLS, switches, J-Link).
 
-A successful run prints the Ethos-U configuration, the loaded methods, the
-timings of the boot demo (seed 3, 4 steps, class 1, guidance 4), the CRC-32
+A successful run of the smaller `m3_long_cfg` variant prints the Ethos-U
+configuration, the loaded methods, the timings of the boot demo (seed 3,
+4 steps, class 1, guidance 4), the CRC-32
 of the image, a coarse ASCII preview and a pass result. On the Corstone-320
 FVP:
 
@@ -178,7 +179,7 @@ On Windows:
 
 The setup script creates `.venv/`, installs the packages required to
 quantize and export the model, and downloads the three pico-faces checkpoint
-files from a pinned upstream commit into `model/pico_faces/m3_long_cfg/`,
+files from a pinned upstream commit into `model/pico_faces/m3_decD_deep_full/`,
 verifying their SHA-256. It is safe to run again; use `--recreate` when you
 want a completely new environment, `--skip-download` to leave the checkpoints
 alone, or `--download-only` to fetch just the checkpoints. With
@@ -384,14 +385,15 @@ and constants for the firmware come through `get_methods()` and
 `src/app_main.cpp` is written for pico-faces' two methods, so another model
 needs a runner of its own; `EmbeddedModule` (`src/arm_embedded_module.hpp`)
 loads and executes methods by name. Then re-run `create_ai_layer.py` and
-build. `PICO_FACES_VARIANT=m3_decD_deep_full` exports pico-faces' larger
-model (12 layers, 3.7 MB of weights), which does not fit the DevKit's MRAM
-region without further memory work.
+build. The default `m3_decD_deep_full` variant has 12 layers and about
+3.7 MB of weights. It fits the relocated DevKit-E8 HP MRAM region in the AC6
+build; it still exceeds the AppKit-E8's current HP MRAM region.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically; `vela: misc:` takes any
-further Vela option, for example `--optimise Size`. Moving to a different
+options then follow that configuration automatically; `vela: misc:` passes
+additional Vela options. This solution currently uses `--optimise Size` to
+favor lower peak NPU SRAM over inference speed. Moving to a different
 board or reference platform also requires the corresponding device pack, board
 support, memory layout, and FVP configuration.
 

@@ -22,15 +22,15 @@
 //   <o> RTSS HE Region size [bytes] <0x0-0x00580000:8>
 //   <i> Defines size of RTSS HE application memory region.
 //   <i> Default: 0x00200000
-#define APP_MRAM_HE_SIZE       0x00200000
+#define APP_MRAM_HE_SIZE       0x00000000   // HE boots its debug stub from SRAM4; lower MRAM is assigned to HP
 //   <o> RTSS HP Base address <0x80000000-0x8057FFFF:8>
 //   <i> Defines base address of RTSS HP application memory region.
 //   <i> Default: 0x80000000
-#define APP_MRAM_HP_BASE       0x80200000
+#define APP_MRAM_HP_BASE       0x80000000
 //   <o> RTSS HP Region size [bytes] <0x0-0x00580000:8>
 //   <i> Defines size of RTSS HP application memory region.
 //   <i> Default: 0x00200000
-#define APP_MRAM_HP_SIZE       0x00370000   // 3.4375 MB: HP code region extended over the former MRAM_USER area for the ~2.8 MB model
+#define APP_MRAM_HP_SIZE       0x00570000   // 5.4375 MB: HP image occupies MRAM up to the reserved user area
 // </h>
 
 // <h>MRAM User Configuration
