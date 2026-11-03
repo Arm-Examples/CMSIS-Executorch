@@ -129,6 +129,9 @@ solution:
       # come from that file (the FVP's Ethos_U85_SYS_DRAM_Mid is not in it).
       system: Ethos_U85_SRAM_MRAM
       memory: Shared_Sram
+      # Minimise peak NPU SRAM when exporting a larger model; this can
+      # increase inference time compared with Vela's Performance default.
+      misc: --optimise Size
     model:
       clayer: $AI-Layer$
       name: PicoFaces

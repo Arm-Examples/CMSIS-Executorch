@@ -129,7 +129,7 @@ for an MLOps system. It reads the file and:
 | `ai_layer/model.pte` | the program itself, for inspection |
 
 The clayer, the headers and `model_pte.c` are committed; `model_pte_data.inc`
-(14 MB of C source for the 2.8 MB program) and `model.pte` are not, so a
+and `model.pte` are not, so a
 fresh checkout runs step 2
 once before it builds. For a fully delegated model the component list is
 short: `Runtime`, `Kernel Utils`, `Kernel Registration`, `Backend EthosU`,

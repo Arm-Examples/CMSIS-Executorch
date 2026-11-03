@@ -31,9 +31,10 @@ everything the face generator uses is wired the same on both boards.
 
 The `define:` node sets the same pools, sections, `APP_DISPLAY`,
 `APP_INTERACTIVE` and `APP_BUTTONS` as the DevKit layer; see
-[its README](../DevKit-E8/README.md) for the memory layout, the SRAM1 and
-Secure Enclave run-profile notes and the serial protocol. They apply
-unchanged.
+[its README](../DevKit-E8/README.md) for the SRAM1 and Secure Enclave
+run-profile notes and the serial protocol. The AppKit HP MRAM layout still
+starts at `0x80200000` and provides 3.4375 MB; the DevKit has been relocated
+to `0x80000000` for the larger model.
 
 ## RTE configuration
 
@@ -57,7 +58,7 @@ port to the Secure Enclave for SETOOLS, the middle one to UART2.
 
 Program the debug stubs into the device's ATOC with Alif SETOOLS once:
 **Terminal > Run Task > Alif: Install M55_HP debug stubs (AppKit-E8, single core configuration)**.
-It is the DevKit task with the AppKit's part, `E8 (AE822FA0E5597BS0) - 5.5
-MRAM / 9.75 SRAM`; the ATOC configuration and the HP stub in `.alif/` are the
-same. The task needs the VS Code setting `alif.setools.root` and SW4 in
+It selects the AppKit's part, `E8 (AE822FA0E5597BS0) - 5.5 MRAM / 9.75 SRAM`,
+and uses the preserved `0x80200000` ATOC configuration and HP stub in `.alif/`.
+The task needs the VS Code setting `alif.setools.root` and SW4 in
 position SEUART. See [the getting-started README](../../README.md).

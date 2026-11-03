@@ -11,8 +11,9 @@
 // and model_params.h with the sampling schedule and the conditioning vectors
 // c(t_k, class). This file runs the rectified-flow Euler loop (with optional
 // classifier-free guidance) around those methods, converts the image to 8-bit
-// RGB and prints a CRC and an ASCII preview. With APP_INTERACTIVE (the
-// DevKit-E8 board layer) it then serves pico-faces' serial protocol, so that
+// RGB and prints a CRC and an ASCII preview on non-touch targets. With
+// APP_INTERACTIVE (the DevKit-E8 board layer) it serves pico-faces' serial
+// protocol, so that
 // pico-faces' viewer (viewer/view_serial.py) can request and display images:
 //
 //   host -> "G <seed> [k_steps] [class] [w]\n"      "I\n" prints an info line
@@ -48,6 +49,9 @@
 #include "arm_embedded_module.hpp"
 #include "model_params.h"
 #include "model_pte.h"
+#ifdef APP_TOUCH
+#include "touch_ui.h"
+#endif
 
 #if defined(ETHOSU_ARCH)
 #include "ethosu_driver.h"
@@ -71,14 +75,10 @@ using executorch::runtime::TensorInfo;
 
 extern "C" int stdout_putchar(int ch);  // CMSIS-Compiler retarget hooks
 extern "C" int stdin_getchar(void);
-#ifdef APP_BUTTONS
-// Board layer (board/DevKit-E8/buttons.c): SW2 joystick presses since the last
-// call (bit mask), and a console read that does not block (-1 when nothing is
-// waiting).
-extern "C" unsigned board_buttons(void);
+#ifdef APP_TOUCH
+// Board layer (board/DevKit-E8/buttons.c): touchscreen events and a console
+// read that does not block (-1 when nothing is waiting).
 extern "C" int board_console_poll(void);
-constexpr unsigned kButtonLeft = 1u << 0;
-constexpr unsigned kButtonRight = 1u << 1;
 #endif
 #ifdef APP_DISPLAY
 // Board layer (board/DevKit-E8/display.c): show an 8-bit RGB image on the
@@ -415,7 +415,7 @@ bool generate(EmbeddedModule& module, uint32_t seed, int k_steps, int cls, float
     return false;
   }
   tm.total_ms = ms_now() - t_start;
-#ifdef APP_DISPLAY
+#if defined(APP_DISPLAY) && !defined(APP_TOUCH)
   board_display_image(img, PF_IMG_HW, PF_IMG_HW, PF_IMG_CH);
 #endif
   return true;
@@ -469,9 +469,9 @@ void print_timing(const Timing& tm) {
   print_npu("decode:", tm.decode_npu, 1, PF_MACS_DECODE);
 }
 
-#if defined(APP_INTERACTIVE) || defined(APP_BUTTONS)
+#if defined(APP_INTERACTIVE) || defined(APP_TOUCH)
 // ---------------------------------------------------------------------------
-// After the boot demo (board layers that define APP_INTERACTIVE or APP_BUTTONS)
+// After the boot demo (board layers that define APP_INTERACTIVE or APP_TOUCH)
 
 // Raw output: the image frames bypass stdio's text handling.
 void uart_write(const void* data, size_t n) {
@@ -512,33 +512,38 @@ float default_w(uint32_t seed) {
   return w_idx >= 0 ? pf_cfg_w[w_idx] : 0.0f;
 }
 
-#ifdef APP_BUTTONS
-// Every joystick press picks the next seed, with class and guidance as for a
-// bare "G <seed>".
-uint32_t g_next_seed = APP_DEMO_SEED + 1;
-uint32_t g_button_images = 0;
-bool g_continuous = false;
+#ifdef APP_TOUCH
+// The model's class order is female neutral/smiling, then male
+// neutral/smiling; PF_NULL_CLASS uses only the null conditioning vector.
+static_assert(PF_N_CLASSES == 4 && PF_NULL_CLASS == 4, "unexpected PicoFaces classes");
+int g_touch_mode = TOUCH_MODE_NONE;
+int g_touch_gender = TOUCH_CHOICE_NONE;
+int g_touch_expression = TOUCH_CHOICE_NONE;
+uint32_t g_next_seed = APP_DEMO_SEED;
+uint32_t g_touch_images = 0;
 
 void generate_next(EmbeddedModule& module) {
   const uint32_t seed = g_next_seed++;
-  const int cls = static_cast<int>(seed % PF_N_COND);
-  const float w = default_w(seed);
+  const int cls = g_touch_mode == TOUCH_MODE_UNCONDITIONAL ? PF_NULL_CLASS :
+                  (g_touch_gender == TOUCH_GENDER_FEMALE ? 0 : 2) + g_touch_expression;
+  const float w = g_touch_mode == TOUCH_MODE_UNCONDITIONAL ? 0.0f : APP_DEMO_W;
   Timing tm;
   if (!generate(module, seed, APP_DEMO_STEPS, cls, w, g_img, tm)) {
     printf("ERR generate\n");
     return;
   }
-  g_button_images++;
-  printf("Image %u: seed %u, class %d, w %.1f, %u ms%s\n", static_cast<unsigned>(g_button_images),
-         static_cast<unsigned>(seed), cls, static_cast<double>(w), static_cast<unsigned>(tm.total_ms),
-         g_continuous ? " (continuous)" : "");
+  board_display_ui(g_touch_mode, g_touch_gender, g_touch_expression, g_img,
+                   PF_IMG_HW, PF_IMG_HW, PF_IMG_CH);
+  g_touch_images++;
+  printf("Image %u: seed %u, class %d, w %.1f, %u ms\n", static_cast<unsigned>(g_touch_images),
+         static_cast<unsigned>(seed), cls, static_cast<double>(w), static_cast<unsigned>(tm.total_ms));
 }
 #endif
 
 // A console character without blocking when the board layer offers a poll
-// (the retarget's stdin_getchar() waits for one, which would stall the joystick).
+// (the retarget's stdin_getchar() waits for one, which would stall touch polling).
 int console_getchar() {
-#ifdef APP_BUTTONS
+#ifdef APP_TOUCH
   return board_console_poll();
 #else
   return stdin_getchar();
@@ -577,29 +582,43 @@ void serve_request(EmbeddedModule& module, const char* line) {
   send_frame(seed, cls, g_img, tm.total_ms);
 }
 
-// Main loop after the boot demo: the serial protocol (APP_INTERACTIVE) and the
-// SW2 joystick (APP_BUTTONS: left = one new image, right = start or stop
-// continuous generation).
+// Main loop for the serial protocol (APP_INTERACTIVE) and touchscreen controls.
 [[noreturn]] void serve(EmbeddedModule& module) {
 #ifdef APP_INTERACTIVE
   printf("Interactive: send \"G <seed> [k_steps] [class] [w]\" (viewer/view_serial.py) or \"I\"\n");
 #endif
-#ifdef APP_BUTTONS
-  printf("Joystick: left = one new image, right = start/stop continuous generation\n");
-  (void)board_buttons();  // drop presses latched during boot
+#ifdef APP_TOUCH
+  bool touch_ready = board_touch_init() == 0;
+  if (touch_ready) {
+    touch_ready = board_display_ui(g_touch_mode, g_touch_gender, g_touch_expression,
+                                   nullptr, 0, 0, 0) == 0;
+    if (touch_ready) printf("Touch: select a generation mode\n");
+  }
 #endif
   fflush(stdout);
   char line[64];
   int n = 0;
   for (;;) {
-#ifdef APP_BUTTONS
-    const unsigned pressed = board_buttons();
-    if (pressed & kButtonRight) {
-      g_continuous = !g_continuous;
-      printf("Continuous generation %s\n", g_continuous ? "started" : "stopped");
-    }
-    if ((pressed & kButtonLeft) || g_continuous) {
-      generate_next(module);
+#ifdef APP_TOUCH
+    if (touch_ready) {
+      const int event = board_touch_poll(g_touch_mode, g_touch_gender, g_touch_expression);
+      if (event < 0) {
+        touch_ready = false;
+      } else if (event == TOUCH_EVENT_GENERATE) {
+        generate_next(module);
+      } else if (event != TOUCH_EVENT_NONE) {
+        switch (event) {
+          case TOUCH_EVENT_CONDITIONAL: g_touch_mode = TOUCH_MODE_CONDITIONAL; break;
+          case TOUCH_EVENT_UNCONDITIONAL: g_touch_mode = TOUCH_MODE_UNCONDITIONAL; break;
+          case TOUCH_EVENT_MALE: g_touch_gender = TOUCH_GENDER_MALE; break;
+          case TOUCH_EVENT_FEMALE: g_touch_gender = TOUCH_GENDER_FEMALE; break;
+          case TOUCH_EVENT_NEUTRAL: g_touch_expression = TOUCH_EXPRESSION_NEUTRAL; break;
+          case TOUCH_EVENT_SMILING: g_touch_expression = TOUCH_EXPRESSION_SMILING; break;
+          default: break;
+        }
+        board_display_ui(g_touch_mode, g_touch_gender, g_touch_expression,
+                         nullptr, 0, 0, 0);
+      }
     }
 #endif
     int ch = console_getchar();
@@ -670,6 +689,7 @@ extern "C" int app_main(void) {
     }
   }
 
+#ifndef APP_TOUCH
   // Boot demo: one image with fixed parameters. The CRC identifies the image:
   // the same program gives the same CRC on every run and on the FVP.
   Timing tm;
@@ -703,8 +723,9 @@ extern "C" int app_main(void) {
   printf("Test_result: PASS\n");
   printf("\x04");  // EOT: the end marker for a console log
   fflush(stdout);
+#endif
 
-#if defined(APP_INTERACTIVE) || defined(APP_BUTTONS)
+#if defined(APP_INTERACTIVE) || defined(APP_TOUCH)
   serve(module);
 #endif
   return 0;

@@ -7,7 +7,7 @@ decoder, generates 128x128 faces; exported through ExecuTorch, every layer of
 it runs on the Ethos-U85 NPU while the Cortex-M drives the sampling loop. One
 CMSIS solution runs it on the **Alif Ensemble E8 DevKit** or the **Ensemble E8
 AI/ML AppKit** (Cortex-M55 HP core; the faces appear on the board's LCD, a new
-one per joystick press) and on the **Corstone-320 FVP**; you switch between
+one per tap on the screen's OK badge) and on the **Corstone-320 FVP**; you switch between
 them by target-type. The model is
 exported from PyTorch in three steps: the CMSIS-Toolbox describes the target,
 `create_ai_layer.py` turns that into the AI layer, the toolbox builds the
@@ -99,6 +99,15 @@ needs Python once before the first build:
    writes when it loads the solution (click **Build** once if the file is
    missing). Run the task again after changing `model/model.py`.
 
+The default variant is now `m3_decD_deep_full`. Its exported program is
+4,454,368 bytes. The DevKit-E8 HP image now starts at `0x80000000`, using the
+lower MRAM formerly reserved for HE. The AC6 load image is 4,750,736 bytes
+against a 5,701,632-byte HP MRAM region, leaving 950,896 bytes free. The
+DevKit boot-table entry and debug stub are relocated to match. The AppKit-E8
+still starts at `0x80200000`; its smaller MRAM region cannot hold this default
+model. The successful console transcript below is from the smaller
+`m3_long_cfg` variant; the full model has only been checked by building.
+
 ## 5. Prepare the board once
 
 The Secure Enclave boots the M55 cores from a table of contents in MRAM; the
@@ -152,7 +161,7 @@ Repeat this after another project has reprogrammed the table.
      ...
    Test_result: PASS
    Interactive: send "G <seed> [k_steps] [class] [w]" (viewer/view_serial.py) or "I"
-   Joystick: left = one new image, right = start/stop continuous generation
+   Touch: tap OK for a new image
    ```
 
    A face with guidance takes 78 ms: eight `dit_step` calls of 8.5 ms on the
@@ -160,9 +169,9 @@ Repeat this after another project has reprogrammed the table.
    384 x 384 in the centre of the screen; it is bit for bit the image the FVP
    produces. (The CRC depends on the exported program, which can differ
    slightly between the machines that run **Create AI layer**.)
-3. Press the **SW2 joystick** to the left for a new face (the next seed; class
-   and guidance follow from it), to the right to generate faces back to back
-   until you press right again. Each one is reported on the console.
+3. Tap the green **OK** badge at the bottom of the touchscreen for a new face
+   (the next seed; class and guidance follow from it). Each one is reported
+   on the console.
 4. Or request faces from the host with pico-faces' viewer (close the Serial
    Monitor first, the viewer needs the port; in a clone of
    [pico-faces](https://github.com/cpldcpu/pico-faces),
@@ -197,7 +206,8 @@ running (the first run builds the image, about 100 MB).
   does not point at the debug stub or was built for another part, which the
   Secure Enclave skips (repeat step 5), or the image cannot boot.
   Look before reprogramming: in the debugger, read the vector table at
-  `0x80200000` and the fault registers (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
+  `0x80000000` on DevKit-E8 (`0x80200000` on AppKit-E8) and the fault registers
+  (CFSR/HFSR); a PC of `0xEFFFFFFE` is a
   lockup at reset, which an image linked to run from ITCM produces when the
   code that copies it there is itself in ITCM.
 - **Debug hangs at "Connecting":** the target-set was switched to

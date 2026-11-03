@@ -37,8 +37,8 @@ the first debug session, is the [getting-started README](../README.md).
   trajectories, with both methods fully delegated to the Ethos-U85.
 - A runner (`src/app_main.cpp`) that loads both methods once and runs the
   rectified-flow Euler sampler with classifier-free guidance around them; on
-  the DevKit it shows every face on the board's LCD, generates new ones on the
-  joystick, and serves pico-faces' serial protocol so the upstream viewer
+  the DevKit it shows every face on the board's LCD, generates new ones when the
+  on-screen OK badge is tapped, and serves pico-faces' serial protocol so the upstream viewer
   displays them on the host too.
 - Exporting an ExecuTorch model for Ethos-U from a Python virtual environment.
 - The pack [`PyTorch::ExecuTorch`](https://www.keil.arm.com/packs/executorch-pytorch/) links only the required and operator components that the ML model needs.
@@ -83,8 +83,8 @@ The example can be built and run entirely in Keil Studio for VS Code.
    the NPU of the active target and writes the `ai_layer/` directory. It reads
    `cmsis-executorch.cbuild-mlops.yml`, which the extension writes when the
    solution is loaded or built (`cbuild setup` on the command line). The
-   model data (`ai_layer/model_pte_data.inc`, 2.8 MB of program as 14 MB of
-   C source) is generated, not committed, so this step is needed once per checkout and
+   model data (`ai_layer/model_pte_data.inc`) is generated, not committed, so
+   this step is needed once per checkout and
    again after changing the model.
 5. Use the CMSIS action buttons to build the application, then select **Run** or
    **Debug**. Keil Studio starts the Corstone-320 FVP automatically. On macOS,
@@ -99,8 +99,9 @@ For the Alif Ensemble E8 DevKit, choose the `DevKit-E8` target-type in
 **Manage Solution** and follow the [getting-started README](../README.md) for the
 one-time board preparation (SETOOLS, switches, J-Link).
 
-A successful run prints the Ethos-U configuration, the loaded methods, the
-timings of the boot demo (seed 3, 4 steps, class 1, guidance 4), the CRC-32
+A successful run of the smaller `m3_long_cfg` variant prints the Ethos-U
+configuration, the loaded methods, the timings of the boot demo (seed 3,
+4 steps, class 1, guidance 4), the CRC-32
 of the image, a coarse ASCII preview and a pass result. On the Corstone-320
 FVP:
 
@@ -178,7 +179,7 @@ On Windows:
 
 The setup script creates `.venv/`, installs the packages required to
 quantize and export the model, and downloads the three pico-faces checkpoint
-files from a pinned upstream commit into `model/pico_faces/m3_long_cfg/`,
+files from a pinned upstream commit into `model/pico_faces/m3_decD_deep_full/`,
 verifying their SHA-256. It is safe to run again; use `--recreate` when you
 want a completely new environment, `--skip-download` to leave the checkpoints
 alone, or `--download-only` to fetch just the checkpoints. With
@@ -276,9 +277,12 @@ build. `--check-upstream <clone>` verifies the re-implementation in
 
 #### 6. Generate faces on the DevKit-E8
 
-On the board the runner keeps going after the boot demo. Every face appears
-on the LCD; the SW2 joystick generates new ones (left: one image; right:
-start or stop generating back to back). The runner also serves image
+On the DevKit-E8 touchscreen, choose Conditional or Unconditional at the top.
+Conditional reveals independent Gender (Male/Female) and Expression
+(Neutral/Smiling) choices below; Unconditional hides them. After selecting a
+mode and, for Conditional, both choices, tap the green Generate badge to make a
+face. The selected options and generated face stay on the same screen. The
+runner also serves image
 requests on the UART console in the serial protocol of pico-faces' firmware,
 so pico-faces' viewer works unchanged (in a clone of the upstream repository,
 `pip install pyserial pillow`):
@@ -381,14 +385,15 @@ and constants for the firmware come through `get_methods()` and
 `src/app_main.cpp` is written for pico-faces' two methods, so another model
 needs a runner of its own; `EmbeddedModule` (`src/arm_embedded_module.hpp`)
 loads and executes methods by name. Then re-run `create_ai_layer.py` and
-build. `PICO_FACES_VARIANT=m3_decD_deep_full` exports pico-faces' larger
-model (12 layers, 3.7 MB of weights), which does not fit the DevKit's MRAM
-region without further memory work.
+build. The default `m3_decD_deep_full` variant has 12 layers and about
+3.7 MB of weights. It fits the relocated DevKit-E8 HP MRAM region in the AC6
+build; it still exceeds the AppKit-E8's current HP MRAM region.
 
 To target another Ethos-U configuration, update the target and `mlops:`
 settings in the CMSIS solution and re-run all three steps. The generated Vela
-options then follow that configuration automatically; `vela: misc:` takes any
-further Vela option, for example `--optimise Size`. Moving to a different
+options then follow that configuration automatically; `vela: misc:` passes
+additional Vela options. This solution currently uses `--optimise Size` to
+favor lower peak NPU SRAM over inference speed. Moving to a different
 board or reference platform also requires the corresponding device pack, board
 support, memory layout, and FVP configuration.
 
@@ -411,9 +416,9 @@ together. More information is available in
 | `.vscode.d/tasks.json` | The VS Code tasks (venv setup, Create AI layer, Alif debug stubs) merged by the CMSIS Solution extension |
 | `.vscode/fvp.sh`, `.vscode/fvp.Dockerfile`, `.vscode/launch.json.mac` | macOS only: runs the FVP in Docker, and the debug configuration that waits for it |
 | `board/Corstone-320/` | Corstone-320 platform support and FVP configuration; the linker scripts in its `RTE/` put the model in DDR |
-| `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console, LCD, joystick) |
+| `board/DevKit-E8/` | Alif Ensemble E8 DevKit board layer (M55_HP core, Ethos-U85, UART console, touchscreen) |
 | `.alif/` | SETOOLS configuration and debug stubs for the DevKit-E8 (from the Ensemble pack) |
-| `src/app_main.cpp` | Loads the two methods and runs the sampler; board features through `APP_DISPLAY`, `APP_INTERACTIVE`, `APP_BUTTONS`; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
+| `src/app_main.cpp` | Loads the two methods and runs the sampler; board features through `APP_DISPLAY`, `APP_INTERACTIVE`, `APP_TOUCH`; pool sizes overridable with `APP_METHOD_POOL_SIZE`, `APP_TEMP_POOL_SIZE`, `APP_POOL_SECTION` |
 | `src/arm_embedded_module.*` | `EmbeddedModule`: ExecuTorch's `Module` class without the POSIX file loading (BSD-3-Clause, `src/LICENSE-ExecuTorch`) |
 | `board/DevKit-E8/README.md` | The DevKit-E8 layer, its memory map and RTE configuration |
 | `documentation/mlops-flow.md` | The MLOps flow in detail |
