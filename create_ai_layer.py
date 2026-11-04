@@ -12,16 +12,22 @@ Step 2 of the three-step flow:
     cbuild <solution>.csolution.yml --active <target>         # compile and link
 
 The *.cbuild-mlops.yml is what CMSIS-Toolbox generates from the `mlops:` node
-of the csolution. This script reads the NPU and Vela settings from it, exports
-the PyTorch model in model/model.py for that NPU (quantize, delegate to
-Ethos-U, compile with Vela) and writes the complete AI layer into the
-directory of the clayer named under `model.clayer`. The extra keys of the
-`model:` node (input-shape, calibration-samples) are model parameters that
-CMSIS-Toolbox passes through to this script:
+of the csolution. This script reads the processor, NPU and Vela settings from
+it, exports the PyTorch model in model/model.py for that target and writes the
+complete AI layer into the directory of the clayer named under `model.clayer`:
 
-    ai_layer.clayer.yml   runtime, kernel utilities and registration, Ethos-U
-                          backend and the operator components the exported
-                          program actually uses
+    with an `npu:` node     quantize, delegate the graph to the Ethos-U and
+                            compile it with Vela
+    without one             quantize for the Cortex-M alone: the ExecuTorch
+                            Cortex-M backend lowers the operators to CMSIS-NN
+
+The extra keys of the `model:` node (input-shape, calibration-samples) are
+model parameters that CMSIS-Toolbox passes through to this script:
+
+    ai_layer.clayer.yml   runtime, kernel utilities and registration, the
+                          Ethos-U backend on an NPU target (CMSIS-NN on a
+                          CPU-only one) and the operator components the
+                          exported program actually uses
     model_pte.c / .h      the ExecuTorch program as a C array
     model.pte             the program itself, for inspection
 
@@ -36,6 +42,7 @@ import re
 import shlex
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -141,12 +148,16 @@ def vela_options(options: str) -> tuple[dict[str, str], list[str]]:
 
 
 def compile_spec(mlops: dict, mlops_dir: Path):
-    """EthosUCompileSpec from the npu: and vela: nodes of the cbuild-mlops.yml."""
-    from executorch.backends.arm.ethosu import EthosUCompileSpec
+    """EthosUCompileSpec from the npu: and vela: nodes of the cbuild-mlops.yml.
 
+    No npu: node means a CPU-only target: the model is then compiled for the
+    processor with the Cortex-M backend (see cpu_target) and None is returned.
+    """
     npu = mlops.get("npu")
     if not npu:
-        sys.exit("the solution's mlops: node names no NPU; this template needs an Ethos-U")
+        return None
+    from executorch.backends.arm.ethosu import EthosUCompileSpec
+
     vela = mlops.get("vela", {})
     spec, extra = vela_options(vela.get("options", ""))
 
@@ -166,6 +177,28 @@ def compile_spec(mlops: dict, mlops_dir: Path):
     return EthosUCompileSpec(**kwargs)
 
 
+def cpu_target(mlops: dict):
+    """CortexMTargetConfig for the processor: node of the cbuild-mlops.yml.
+
+    The toolbox writes the core as the DFP names it (Cortex-M55, Cortex-M0+,
+    Cortex-M35P); the Cortex-M backend's target strings are cortex-m55,
+    cortex-m0plus, cortex-m35p. The config picks the CMSIS-NN kernel variant
+    (scalar, DSP or MVE) the core can run.
+    """
+    from executorch.backends.cortex_m.target_config import CortexMTargetConfig
+
+    core = mlops.get("processor", {}).get("type")
+    if not core:
+        sys.exit("the cbuild-mlops.yml names neither an NPU nor a processor")
+    target = core.lower().replace("+", "plus")
+    try:
+        config = CortexMTargetConfig.from_target_string(target)
+    except ValueError as error:
+        sys.exit(f"no Cortex-M backend target for processor {core!r}: {error}")
+    print(f"[ai_layer] Cortex-M: {config.target_string}, CMSIS-NN {config.backend.name} kernels")
+    return config
+
+
 def model_params(mlops: dict) -> dict:
     """The extra keys of the model: node, as keyword arguments for model/model.py."""
     params = {}
@@ -181,13 +214,9 @@ def model_params(mlops: dict) -> dict:
     return params
 
 
-def export_model(spec, params: dict) -> bytes:
-    """Quantize model/model.py, delegate it to the Ethos-U and return the .pte."""
+def load_model(params: dict):
+    """model/model.py's model and calibration samples; the first sample is the export example."""
     import torch
-    from executorch.backends.arm.ethosu import EthosUPartitioner
-    from executorch.backends.arm.quantizer import EthosUQuantizer, get_symmetric_quantization_config
-    from executorch.exir import EdgeCompileConfig, ExecutorchBackendConfig, to_edge_transform_and_lower
-    from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
 
     sys.path.insert(0, str(HERE / "model"))
     from model import get_calibration_inputs, get_model
@@ -195,17 +224,35 @@ def export_model(spec, params: dict) -> bytes:
     model = get_model(**{k: v for k, v in params.items() if k == "input_shape"})
     samples = get_calibration_inputs(**params)
     example = (samples[0],)
-    graph = torch.export.export(model, example).module()
+    return torch.export.export(model, example).module(), samples, example
+
+
+def quantize(graph, quantizer, samples):
+    """PT2E quantization: annotate, calibrate with every sample, convert."""
+    import torch
+    from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e
+
+    prepared = prepare_pt2e(graph, quantizer)
+    with torch.no_grad():
+        for sample in samples:
+            prepared(sample)  # calibrate
+    return convert_pt2e(prepared)
+
+
+def export_model(spec, params: dict) -> bytes:
+    """Quantize model/model.py, delegate it to the Ethos-U and return the .pte."""
+    import torch
+    from executorch.backends.arm.ethosu import EthosUPartitioner
+    from executorch.backends.arm.quantizer import EthosUQuantizer, get_symmetric_quantization_config
+    from executorch.exir import EdgeCompileConfig, ExecutorchBackendConfig, to_edge_transform_and_lower
+
+    graph, samples, example = load_model(params)
 
     # Quantize the whole graph so the partitioner can move every node into the
     # Ethos-U delegate; only a float<->int8 boundary stays on the CPU.
     quantizer = EthosUQuantizer(spec)
     quantizer.set_global(get_symmetric_quantization_config(is_per_channel=True))
-    prepared = prepare_pt2e(graph, quantizer)
-    with torch.no_grad():
-        for sample in samples:
-            prepared(sample)  # calibrate
-    quantized = convert_pt2e(prepared)
+    quantized = quantize(graph, quantizer, samples)
 
     edge = to_edge_transform_and_lower(
         torch.export.export(quantized, example),
@@ -216,23 +263,86 @@ def export_model(spec, params: dict) -> bytes:
     return bytes(program.buffer)
 
 
-def components(pte: bytes, pack: Path) -> tuple[list[str], list[str]]:
-    """Runtime, kernel utils and registration, backend, plus one operator component per operator the .pte uses.
+def export_model_cpu(target, params: dict) -> bytes:
+    """Quantize model/model.py for the Cortex-M alone and return the .pte.
 
-    The pack's "Extension Tensor" is not selected: its tensor_ptr_maker.cpp
-    needs std::random_device, which the LLVM embedded toolchain lacks; the
-    runner wraps its input in a TensorImpl instead.
+    The Cortex-M backend delegates nothing: its passes rewrite the quantized
+    operators in place into cortex_m:: operators, which the pack implements
+    with CMSIS-NN. The sequence is the one of ExecuTorch's aot_arm_compiler
+    for a cortex-m<n> target, in its explicit-layout mode: the convolution
+    and pooling kernels then take NHWC tensors and the passes cancel the
+    NHWC-to-NCHW permute a model like model/model.py applies to its camera
+    frame input, so the program consumes the frame as is. (The backend's
+    default dim-order mode turns that permute into a data-moving transpose
+    whose output the kernels reject at run time.)
     """
-    pdsc = next(pack.glob("*.pdsc"))
-    available = set(re.findall(r'Csub="([^"]+)"', pdsc.read_text()))
-    family = {"aten": "Portable", "quantized_decomposed": "Quantized", "cortex_m": "Cortex-M"}
+    import torch
+    from executorch.backends.cortex_m.edge_compile_config import cortex_m_edge_compile_config
+    from executorch.backends.cortex_m.passes.cortex_m_pass_manager import CortexMPassManager
+    from executorch.backends.cortex_m.quantizer.quantizer import CortexMQuantizer
+    from executorch.exir import ExecutorchBackendConfig, to_edge_transform_and_lower
+
+    graph, samples, example = load_model(params)
+    quantized = quantize(graph, CortexMQuantizer(use_explicit_layout=True), samples)
+
+    edge = to_edge_transform_and_lower(
+        torch.export.export(quantized, example),
+        compile_config=cortex_m_edge_compile_config(),
+    )
+    edge._edge_programs["forward"] = CortexMPassManager(
+        edge.exported_program(), target_config=target, use_explicit_layout=True
+    ).transform()
+    program = edge.to_executorch(ExecutorchBackendConfig(extract_delegate_segments=False))
+    return bytes(program.buffer)
+
+
+# Operator namespaces in the .pte and the pack's component families; a few
+# component names abbreviate the operator.
+FAMILY = {"aten": "Portable", "dim_order_ops": "Portable", "quantized_decomposed": "Quantized", "cortex_m": "Cortex-M"}
+ALIASES = {"quantized_depthwise_conv2d": "quantized_dw_conv2d", "quantized_transpose_conv2d": "quantized_tr_conv2d"}
+
+
+def pack_components(pack: Path) -> tuple[set[str], set[str]]:
+    """The pack's operator components, and those of them that need CMSIS-NN.
+
+    A component needs CMSIS-NN when its condition requires the pack's CMSIS-NN
+    condition, directly or through another condition.
+    """
+    root = ET.parse(next(pack.glob("*.pdsc"))).getroot()
+    requires = {
+        c.get("id"): [r.get("condition") for r in c if r.tag == "require" and r.get("condition")]
+        for c in root.iter("condition")
+    }
+
+    def needs_cmsis_nn(condition: str | None) -> bool:
+        return condition == "CMSIS-NN" or any(needs_cmsis_nn(r) for r in requires.get(condition, []))
+
+    operators = {
+        c.get("Csub"): c.get("condition") for c in root.iter("component") if c.get("Cgroup") == "ExecuTorch Operators"
+    }
+    return set(operators), {name for name, condition in operators.items() if needs_cmsis_nn(condition)}
+
+
+def components(pte: bytes, pack: Path, delegated: bool) -> tuple[list[str], list[str], bool]:
+    """Runtime components and one operator component per operator the .pte uses, and whether CMSIS-NN is needed.
+
+    The runtime list is Runtime, Kernel Utils and Kernel Registration, plus
+    the Ethos-U backend for a delegated program. The pack's "Extension Tensor"
+    is not selected: its tensor_ptr_maker.cpp needs std::random_device, which
+    the LLVM embedded toolchain lacks; the runner wraps its input in a
+    TensorImpl instead.
+    """
+    available, cmsis_nn = pack_components(pack)
+    namespaces = "|".join(FAMILY)
 
     selected, unknown = set(), []
-    for ns, op in sorted(set(re.findall(rb"(aten|quantized_decomposed|cortex_m)::(\w+)", pte))):
+    for ns, op in sorted(set(re.findall(rf"({namespaces})::(\w+)".encode(), pte))):
         ns, op = ns.decode(), op.decode()
+        op = ALIASES.get(op, op)
         candidates = [
-            f"{family[ns]} {op}",
-            f"{family[ns]} {re.sub(r'_(per_tensor|per_channel|byte|copy)$', '', op)}",
+            f"{FAMILY[ns]} {op}",
+            f"{FAMILY[ns]} {op.lstrip('_')}",
+            f"{FAMILY[ns]} {re.sub(r'_(per_tensor|per_channel|byte|copy|nhwc)$', '', op)}",
         ]
         if match := next((c for c in candidates if c in available), None):
             selected.add(match)
@@ -241,7 +351,8 @@ def components(pte: bytes, pack: Path) -> tuple[list[str], list[str]]:
     if unknown:
         print(f"[ai_layer] warning: no component in {pack.name} for {unknown}", file=sys.stderr)
 
-    return ["Runtime", "Kernel Utils", "Kernel Registration", "Backend EthosU"], sorted(selected)
+    runtime = ["Runtime", "Kernel Utils", "Kernel Registration"] + (["Backend EthosU"] if delegated else [])
+    return runtime, sorted(selected), bool(selected & cmsis_nn)
 
 
 def c_array(pte: bytes) -> str:
@@ -267,7 +378,13 @@ extern const unsigned long {SYMBOL}_size;
 """
 
 
-def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Path, version: str) -> str:
+def clayer(
+    mlops: dict, runtime: list[str], operators: list[str], cmsis_nn: bool, mlops_file: Path, version: str
+) -> str:
+    # The Cortex-M operator components are CMSIS-NN kernels: they need the
+    # library, and on a core with Helium floating point (Cortex-M55, M85) the
+    # CMSIS-NN 8.0.0 pack only compiles with its float support enabled (see
+    # the ExecuTorch pack's README).
     lines = [
         f"# Generated by create_ai_layer.py from {mlops_file.name} -- do not edit.",
         f"# Re-run `python create_ai_layer.py {mlops_file.name}` after changing",
@@ -278,9 +395,11 @@ def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Pa
         "",
         "  packs:",
         f"    - pack: {PACK}@{version}",
+        *(["    - pack: ARM::CMSIS-NN"] if cmsis_nn else []),
         "",
         "  define:",
         "    - ET_LOG_ENABLED: 0",
+        *(["    - ARM_NN_ENABLE_F32: 1", "    - ARM_NN_ENABLE_F16: 1"] if cmsis_nn else []),
         "",
         "  add-path:",
         "    - .",
@@ -288,6 +407,7 @@ def clayer(mlops: dict, runtime: list[str], operators: list[str], mlops_file: Pa
         "  components:",
         *[f"    - component: Machine Learning:ExecuTorch:{c}" for c in runtime],
         *[f"    - component: Machine Learning:ExecuTorch Operators:{c}" for c in operators],
+        *(["    - component: CMSIS:NN Lib"] if cmsis_nn else []),
         "",
         "  groups:",
         f"    - group: {mlops['model'].get('name', 'Model')}",
@@ -311,15 +431,17 @@ def main() -> None:
     layer_file = mlops_file.parent / mlops["model"]["clayer"]
     layer_dir = layer_file.parent
 
-    pte = export_model(compile_spec(mlops, mlops_file.parent), model_params(mlops))
+    params = model_params(mlops)
+    spec = compile_spec(mlops, mlops_file.parent)
+    pte = export_model(spec, params) if spec else export_model_cpu(cpu_target(mlops), params)
     version = executorch_version(mlops_file)
-    runtime, operators = components(pte, executorch_pack(version))
+    runtime, operators, cmsis_nn = components(pte, executorch_pack(version), delegated=spec is not None)
 
     layer_dir.mkdir(parents=True, exist_ok=True)
     (layer_dir / "model.pte").write_bytes(pte)
     (layer_dir / f"{SYMBOL}.c").write_text(c_array(pte), newline="\n")
     (layer_dir / f"{SYMBOL}.h").write_text(HEADER, newline="\n")
-    layer_file.write_text(clayer(mlops, runtime, operators, mlops_file, version), newline="\n")
+    layer_file.write_text(clayer(mlops, runtime, operators, cmsis_nn, mlops_file, version), newline="\n")
 
     print(f"[ai_layer] {len(pte)} byte program, operators: {operators}")
     print(f"[ai_layer] wrote {layer_file}")
