@@ -139,7 +139,9 @@ fi
 MOUNTS=(--mount "type=bind,src=${HOME}/,dst=${HOME}/")
 [[ "${PWD}" == "${HOME}"* ]] || MOUNTS+=(--mount "type=bind,src=${PWD}/,dst=${PWD}/")
 
-exec docker run --rm -i --init "${NAME[@]}" "${PORTS[@]}" "${MOUNTS[@]}" \
+# Bash 3.2 treats empty arrays as unset under set -u. Expand optional Docker
+# arguments only when present, preserving each argument's quoting.
+exec docker run --rm -i --init ${NAME[@]+"${NAME[@]}"} ${PORTS[@]+"${PORTS[@]}"} "${MOUNTS[@]}" \
     --workdir "${PWD}" \
     --env "ARMLM_CACHED_LICENSES_LOCATION=${HOME}/.armlm" \
     "${IMAGE}" stdbuf -oL -eL "${MODEL}" "${ARGS[@]}"
